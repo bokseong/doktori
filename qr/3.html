@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>복성고 독토리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Jua&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0b0b0b;
+            color: #ff6600;
+            text-align: center;
+            font-family: 'Jua', sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            font-family: 'Creepster', cursive;
+            font-size: 3rem;
+            color: #ff3300;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #990000;
+            margin: 0 0 5px 0;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #cccccc;
+            margin: 0 0 20px 0;
+        }
+
+        /* 모바일 최적화된 이미지 컨테이너 (반응형) */
+        #image-container {
+            position: relative;
+            width: 85vw;          /* 모바일 화면 너비의 85% */
+            max-width: 350px;     /* PC에서는 최대 350px로 제한 */
+            height: 350px;        /* 정사각형 비율 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px dashed #ff3300;
+            border-radius: 20px;
+            background-color: #1a1a1a;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            animation: popIn 0.3s ease-in-out;
+        }
+
+        /* 이미지가 나타날 때의 애니메이션 효과 */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 스마트폰 화면이 아주 작을 때(SE 등)의 추가 조정 */
+        @media (max-width: 380px) {
+            h1 { font-size: 2.5rem; }
+            #image-container { height: 280px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>HALLOWEEN</h1>
+    <p>나타난 귀신을 확인하세요!</p>
+
+    <div id="image-container">
+        <img src="3.jpg" alt="귀신 이미지 3">
+    </div>
+
+</body>
+</html>

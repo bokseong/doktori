@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>복성고 독토리</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 350px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .qr-box {
+            margin-top: 20px;
+            display: none;
+        }
+        .qr-box img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .download-btn {
+            background-color: #28a745;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>QR코드 생성기</h2>
+        <input type="text" id="textInput" placeholder="URL 또는 텍스트를 입력하세요">
+        <button onclick="generateQR()">QR코드 생성</button>
+
+        <div class="qr-box" id="qrBox">
+            <img id="qrImage" src="" alt="QR코드">
+            <br>
+            <button class="download-btn" onclick="downloadQR()">QR코드 다운로드</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQRUrl = "";
+
+        function generateQR() {
+            const textInput = document.getElementById("textInput").value.trim();
+            const qrBox = document.getElementById("qrBox");
+            const qrImage = document.getElementById("qrImage");
+
+            if (!textInput) {
+                alert("텍스트나 URL을 입력해주세요!");
+                return;
+            }
+
+            // 구글 기반 QR 코드 API 주소 (크기: 200x200)
+            currentQRUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(textInput)}`;
+            
+            qrImage.src = currentQRUrl;
+            qrBox.style.display = "block";
+        }
+
+        function downloadQR() {
+            if (!currentQRUrl) return;
+
+            // 이미지를 다운로드하기 위한 가상의 링크 생성
+            const a = document.createElement('a');
+            a.href = currentQRUrl;
+            a.download = 'qrcode.png';
+            // 외부 이미지일 경우 브라우저 보안 정책으로 인해 새 창이 열릴 수 있으므로 
+            // 안전하게 fetch를 이용해 Blob으로 다운로드 처리
+            fetch(currentQRUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    a.href = blobUrl;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(blobUrl);
+                })
+                .catch(() => {
+                    // 실패 시 기본 링크 방식으로 백업
+                    window.open(currentQRUrl, '_blank');
+                });
+        }
+    </script>
+
+</body>
+</html>

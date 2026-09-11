@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>복성고 독토리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Jua&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 드래그 방지 */
+        }
+        body {
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(135deg, #0b0b0b, #1a0926);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #ff9f43;
+        }
+
+        h1 {
+            font-family: 'Creepster', cursive;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #ff4757;
+            text-shadow: 0 0 10px #ff4757, 0 0 20px #e84118;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #1e1e24;
+            border: 3px solid #ff6b81;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.4);
+            width: 380px;
+        }
+
+        /* 돌림판 영역 */
+        .roulette-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            border: 4px solid #3d3d4d;
+        }
+
+        /* 멈춤 바늘 */
+        .pointer {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 32px solid #ff4757;
+            z-index: 10;
+            filter: drop-shadow(0 0 8px #ff4757);
+        }
+
+        /* 조작부 */
+        .controls {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 파워 게이지 바 */
+        .power-bar-container {
+            width: 100%;
+            height: 14px;
+            background-color: #2f3542;
+            border-radius: 7px;
+            overflow: hidden;
+            display: none; /* 누를 때만 보임 */
+            border: 1px solid #ff6b81;
+        }
+
+        .power-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffa502, #ff4757, #ff3838);
+            transition: width 0.05s linear;
+        }
+
+        button {
+            background-color: #e58e26;
+            color: #fff;
+            border: none;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: 'Jua', sans-serif;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(229, 142, 38, 0.5);
+            transition: background 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #f6b93b;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>HALLOWEEN ROULETTE</h1>
+
+    <div class="container">
+        <!-- 돌림판 -->
+        <div class="roulette-wrapper">
+            <div class="pointer"></div>
+            <canvas id="canvas" width="400" height="400"></canvas>
+        </div>
+
+        <!-- 조작부 -->
+        <div class="controls">
+            <div class="power-bar-container" id="powerContainer">
+                <div class="power-bar" id="powerBar"></div>
+            </div>
+            <!-- 마우스 클릭 및 모바일 터치 이벤트 모두 지원 -->
+            <button id="spinBtn">꾹 눌렀다 떼세요! 👻</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const powerContainer = document.getElementById('powerContainer');
+        const powerBar = document.getElementById('powerBar');
+
+        let items = [
+            { name: "상품1", weight: 2 },
+            { name: "상품2", weight: 2 },
+            { name: "상품3", weight: 2 },
+            { name: "상품4", weight: 2 },
+            { name: "상품5", weight: 2 },
+            { name: "상품6", weight: 2 } // 숫자가 크므로 가장 잘 당첨됨
+        ];
+
+        let startAngle = 0;
+        let spinning = false;
+        let currentAngle = 0;
+        let totalWeight = 0;
+
+        let pressStartTime = 0;
+        let powerInterval = null;
+        let powerPercent = 0;
+
+        // 할로윈 테마 컬러 팔레트
+        const halloweenColors = [
+            "#e58e26", "#b71540", "#6a1b9a", "#2c2c54", 
+            "#ff7f50", "#c0392b", "#8e44ad", "#34495e"
+        ];
+
+        // 초기 돌림판 세팅
+        function initRoulette() {
+            if (items.length === 0) {
+                items = [{ name: "항목을 입력하세요", weight: 1 }];
+            }
+            
+            // 모든 항목의 가중치를 더해 총합 계산
+            totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+            
+            drawRoulette();
+        }
+
+        // 돌림판 그리기 (가중치에 따라 각도 조절)
+        function drawRoulette() {
+            const outsideRadius = 180;
+            const textRadius = 115;
+            const insideRadius = 0;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "#1e1e24";
+            ctx.lineWidth = 3;
+
+            let currentStartAngle = startAngle;
+
+            for (let i = 0; i < items.length; i++) {
+                // 각 항목이 차지하는 비율(각도) 계산 = (해당 가중치 / 총 가중치) * 2파이
+                const sliceAngle = (items[i].weight / totalWeight) * (2 * Math.PI);
+                const angle = currentStartAngle;
+
+                ctx.fillStyle = halloweenColors[i % halloweenColors.length];
+                ctx.beginPath();
+                ctx.arc(200, 200, outsideRadius, angle, angle + sliceAngle, false);
+                ctx.arc(200, 200, insideRadius, angle + sliceAngle, angle, true);
+                ctx.stroke();
+                ctx.fill();
+
+                ctx.save();
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 18px 'Jua', sans-serif";
+                ctx.translate(
+                    200 + Math.cos(angle + sliceAngle / 2) * textRadius,
+                    200 + Math.sin(angle + sliceAngle / 2) * textRadius
+                );
+                ctx.rotate(angle + sliceAngle / 2 + Math.PI / 2);
+
+                const text = items[i].name;
+                ctx.fillText(text, -ctx.measureText(text).width / 2, 0);
+                ctx.restore();
+
+                currentStartAngle += sliceAngle;
+            }
+        }
+
+        // 버튼 누르기 시작
+        function startPress(e) {
+            e.preventDefault();
+            if (spinning) return;
+
+            pressStartTime = Date.now();
+            powerPercent = 0;
+            powerBar.style.width = '0%';
+            powerContainer.style.display = 'block';
+            spinBtn.style.backgroundColor = '#b71540';
+            spinBtn.innerText = '마력 모으는 중... 🔥';
+
+            powerInterval = setInterval(() => {
+                const elapsed = Date.now() - pressStartTime;
+                powerPercent = Math.min((elapsed / 2000) * 100, 100);
+                powerBar.style.width = powerPercent + '%';
+
+                if (powerPercent >= 100) {
+                    clearInterval(powerInterval);
+                }
+            }, 30);
+        }
+
+        // 버튼 뗄 때
+        function endPress(e) {
+            e.preventDefault();
+            if (spinning) return;
+            if (!pressStartTime) return;
+
+            clearInterval(powerInterval);
+            powerContainer.style.display = 'none';
+            spinBtn.style.backgroundColor = '#e58e26';
+            spinBtn.innerText = '꾹 눌렀다 떼세요! 👻';
+
+            const pressDuration = Date.now() - pressStartTime;
+            pressStartTime = 0;
+
+            executeSpin(pressDuration);
+        }
+
+        // 실제 회전 실행 함수
+        function executeSpin(duration) {
+            if (items.length <= 1) {
+                alert("항목이 2개 이상 필요합니다!");
+                return;
+            }
+
+            spinning = true;
+
+            const clampedDuration = Math.min(duration, 2000);
+            const powerRatio = clampedDuration / 2000;
+
+            const randomSpin = Math.PI * 12 + powerRatio * (Math.PI * 28);
+            const spinTimeTotal = 4000 + powerRatio * 6000; 
+            let startTime = null;
+            const initialAngle = startAngle;
+
+            function rotateFrame(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+
+                if (progress < spinTimeTotal) {
+                    const easeOut = 1 - Math.pow(1 - progress / spinTimeTotal, 3);
+                    startAngle = initialAngle + easeOut * randomSpin;
+                    drawRoulette();
+                    requestAnimationFrame(rotateFrame);
+                } else {
+                    startAngle = initialAngle + randomSpin;
+                    currentAngle = startAngle % (2 * Math.PI);
+                    startAngle = currentAngle;
+                    spinning = false;
+                    drawRoulette();
+                    determineWinner();
+                }
+            }
+
+            requestAnimationFrame(rotateFrame);
+        }
+
+        // 당첨 항목 판별 함수 (가중치 영역 반영)
+        function determineWinner() {
+            const pointerAngle = (Math.PI * 1.5 - startAngle) % (2 * Math.PI);
+            const normalizedAngle = (pointerAngle + 2 * Math.PI) % (2 * Math.PI);
+            
+            let accumulatedAngle = 0;
+            for (let i = 0; i < items.length; i++) {
+                const sliceAngle = (items[i].weight / totalWeight) * (2 * Math.PI);
+                accumulatedAngle += sliceAngle;
+                
+                if (normalizedAngle <= accumulatedAngle) {
+                    // 당첨 결과를 화면에 띄우고 싶다면 아래 주석을 해제하세요
+                    // alert(`당첨: ${items[i].name}! 🎃`);
+                    break;
+                }
+            }
+        }
+
+        // PC 이벤트
+        spinBtn.addEventListener('mousedown', startPress);
+        spinBtn.addEventListener('mouseup', endProvider = endPress);
+        spinBtn.addEventListener('mouseup', endPress);
+        spinBtn.addEventListener('mouseleave', (e) => {
+            if (pressStartTime && !spinning) {
+                endPress(e);
+            }
+        });
+
+        // 모바일 터치 이벤트
+        spinBtn.addEventListener('touchstart', startPress);
+        spinBtn.addEventListener('touchend', endPress);
+
+        // 최초 실행
+        initRoulette();
+    </script>
+
+</body>
+</html>
