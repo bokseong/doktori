@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google 로그인 - 복성고 독토리</title>
+</head>
+<body>
+    <main>
+        <h1>복성고 독토리 로그인</h1>
+        <p>Google 계정으로만 로그인할 수 있습니다.</p>
+        <button id="googleSignInButton" type="button">Google로 로그인</button>
+        <p id="message" role="alert"></p>
+    </main>
+    <script type="module">
+        import {
+            GoogleAuthProvider,
+            onAuthStateChanged,
+            signInWithPopup
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getUserProfile, ROLES } from "./auth.js";
+        import { auth, db } from "./firebase.js";
+
+        const provider = new GoogleAuthProvider();
+        const message = document.getElementById("message");
+
+        async function ensureUserProfile(user) {
+            const profileReference = doc(db, "users", user.uid);
+            const profileSnapshot = await getDoc(profileReference);
+
+            if (!profileSnapshot.exists()) {
+                await setDoc(profileReference, {
+                    email: user.email || "",
+                    displayName: user.displayName || "",
+                    photoURL: user.photoURL || "",
+                    role: ROLES.USER,
+                    createdAt: new Date().toISOString()
+                });
+                return { role: ROLES.USER };
+            }
+
+            return profileSnapshot.data();
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) return;
+
+            try {
+                const profile = await ensureUserProfile(user);
+                const destination = profile.role === ROLES.STAFF || profile.role === ROLES.ADMIN
+                    ? "./index.html"
+                    : "./qr/QR.html";
+                window.location.replace(destination);
+            } catch (error) {
+                console.error("Google 사용자 프로필을 확인하지 못했습니다.", error);
+                message.textContent = "사용자 권한 정보를 저장하지 못했습니다.";
+            }
+        });
+
+        document.getElementById("googleSignInButton").addEventListener("click", async () => {
+            message.textContent = "Google 로그인 중...";
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error(error);
+                message.textContent = "Google 로그인에 실패했습니다. 다시 시도하세요.";
+            }
+        });
+    </script>
+</body>
+</html>

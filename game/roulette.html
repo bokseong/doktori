@@ -11,6 +11,7 @@
             user-select: none; /* 드래그 방지 */
         }
         body {
+            visibility: hidden;
             font-family: 'Jua', sans-serif;
             background: linear-gradient(135deg, #0b0b0b, #1a0926);
             display: flex;
@@ -122,6 +123,19 @@
         button:active {
             transform: scale(0.96);
         }
+
+        #result {
+            min-height: 1.5em;
+            margin: 4px 0 0;
+            text-align: center;
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 12px; }
+            h1 { font-size: 2.2rem; }
+            .container { width: 100%; padding: 20px 12px; }
+            .roulette-wrapper { width: min(300px, 82vw); height: min(300px, 82vw); }
+        }
     </style>
 </head>
 <body>
@@ -142,15 +156,23 @@
             </div>
             <!-- 마우스 클릭 및 모바일 터치 이벤트 모두 지원 -->
             <button id="spinBtn">꾹 눌렀다 떼세요! 👻</button>
+            <p id="result" aria-live="polite"></p>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { watchAccess, ROLES } from "../auth.js";
+        await watchAccess({
+            allowedRoles: [ROLES.STAFF, ROLES.ADMIN]
+        });
+        document.body.style.visibility = 'visible';
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
         const powerContainer = document.getElementById('powerContainer');
         const powerBar = document.getElementById('powerBar');
+        const result = document.getElementById('result');
 
         let items = [
             { name: "상품1", weight: 2 },
@@ -172,7 +194,7 @@
 
         // 할로윈 테마 컬러 팔레트
         const halloweenColors = [
-            "#e58e26", "#b71540", "#6a1b9a", "#2c2c54", 
+            "#e58e26", "#b71540", "#6a1b9a", "#2c2c54",
             "#ff7f50", "#c0392b", "#8e44ad", "#34495e"
         ];
 
@@ -181,10 +203,10 @@
             if (items.length === 0) {
                 items = [{ name: "항목을 입력하세요", weight: 1 }];
             }
-            
+
             // 모든 항목의 가중치를 더해 총합 계산
             totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
-            
+
             drawRoulette();
         }
 
@@ -278,12 +300,13 @@
             }
 
             spinning = true;
+            result.textContent = '';
 
             const clampedDuration = Math.min(duration, 2000);
             const powerRatio = clampedDuration / 2000;
 
             const randomSpin = Math.PI * 12 + powerRatio * (Math.PI * 28);
-            const spinTimeTotal = 4000 + powerRatio * 6000; 
+            const spinTimeTotal = 4000 + powerRatio * 6000;
             let startTime = null;
             const initialAngle = startAngle;
 
@@ -313,15 +336,14 @@
         function determineWinner() {
             const pointerAngle = (Math.PI * 1.5 - startAngle) % (2 * Math.PI);
             const normalizedAngle = (pointerAngle + 2 * Math.PI) % (2 * Math.PI);
-            
+
             let accumulatedAngle = 0;
             for (let i = 0; i < items.length; i++) {
                 const sliceAngle = (items[i].weight / totalWeight) * (2 * Math.PI);
                 accumulatedAngle += sliceAngle;
-                
+
                 if (normalizedAngle <= accumulatedAngle) {
-                    // 당첨 결과를 화면에 띄우고 싶다면 아래 주석을 해제하세요
-                    // alert(`당첨: ${items[i].name}! 🎃`);
+                    result.textContent = `당첨: ${items[i].name}! 🎃`;
                     break;
                 }
             }
@@ -329,7 +351,6 @@
 
         // PC 이벤트
         spinBtn.addEventListener('mousedown', startPress);
-        spinBtn.addEventListener('mouseup', endProvider = endPress);
         spinBtn.addEventListener('mouseup', endPress);
         spinBtn.addEventListener('mouseleave', (e) => {
             if (pressStartTime && !spinning) {

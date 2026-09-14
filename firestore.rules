@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "관리자";
+    }
+
+    function isStaffOrAdmin() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          in ["스태프", "관리자"];
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(["email", "role"])
+        && request.resource.data.keys().hasOnly(["email", "displayName", "photoURL", "role", "createdAt"])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == "일반";
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["role"])
+        && request.resource.data.role in ["일반", "스태프", "관리자"]
+        && (request.auth.uid != userId || request.resource.data.role == "관리자");
+      allow delete: if isAdmin() && request.auth.uid != userId;
+    }
+
+    // 권한 정책: 로그인한 일반 사용자는 QR 콘텐츠만,
+    // 스태프는 관리자 문서를 제외한 콘텐츠,
+    // 관리자는 모든 콘텐츠를 사용할 수 있습니다.
+    match /settings/permissions {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /appContent/{document=**} {
+      allow read: if isStaffOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /adminContent/{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

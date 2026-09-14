@@ -1,27 +1,41 @@
 <!DOCTYPE html>
 <html lang="ko">
+<head>
     <meta charset="UTF-8">
-    <head>
-        <title>메인 화면</title>
-    </head>
-    <body>
-        <h3>
-        <a href="qr/1.html">1번 이미지</a>
-        <br>
-        <br>
-        <a href="qr/2.html">2번 이미지</a>
-        <br>
-        <br>
-        <a href="qr/3.html">3번 이미지</a>
-        <br>
-        <br>
-        <a href="game/roulette.html">돌림판</a>
-        <br>   
-        <br>
-        <a href="game/ladder.html">사다리</a>
-        <br>
-        <br>
-        <a href="qr/QR.html">QR 코드 생성</a>
-        </h3>
-    </body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>복성고 독토리</title>
+    <style>body { visibility: hidden; }</style>
+</head>
+<body>
+    <header>
+        <span id="userInfo">로그인 확인 중...</span>
+        <button id="logoutButton" type="button">로그아웃</button>
+    </header>
+    <main>
+        <h1>복성고 독토리</h1>
+        <nav aria-label="콘텐츠 메뉴">
+            <a href="qr/1.html">1번 이미지</a>
+            <a href="qr/2.html">2번 이미지</a>
+            <a href="qr/3.html">3번 이미지</a>
+            <a href="game/roulette.html">돌림판</a>
+            <a href="game/Ladder.html">사다리</a>
+            <a href="qr/QR.html">QR 코드 생성</a>
+            <a id="adminLink" href="admin.html" hidden>관리자 페이지</a>
+        </nav>
+    </main>
+    <script type="module">
+        import { watchAccess, logout, ROLES } from "./auth.js";
+
+        const access = await watchAccess({
+            allowedRoles: [ROLES.STAFF, ROLES.ADMIN]
+        });
+        if (access.user) {
+            document.body.style.visibility = "visible";
+            document.getElementById("userInfo").textContent =
+                `${access.user.email} (${access.role})`;
+            document.getElementById("logoutButton").addEventListener("click", logout);
+            document.getElementById("adminLink").hidden = access.role !== ROLES.ADMIN;
+        }
+    </script>
+</body>
 </html>

@@ -11,6 +11,7 @@
         }
 
         body {
+            visibility: hidden;
             background-color: #0b0b0b;
             color: #ff6600;
             text-align: center;
@@ -62,6 +63,17 @@
             animation: popIn 0.3s ease-in-out;
         }
 
+        .placeholder {
+            font-size: 4rem;
+            color: #cccccc;
+        }
+
+        .placeholder small {
+            display: block;
+            margin-top: 12px;
+            font-size: 1rem;
+        }
+
         /* 이미지가 나타날 때의 애니메이션 효과 */
         @keyframes popIn {
             0% { transform: scale(0.5); opacity: 0; }
@@ -81,8 +93,13 @@
     <p>나타난 귀신을 확인하세요!</p>
 
     <div id="image-container">
-        <img src="1.jpg" alt="귀신 이미지 1">
+        <div class="placeholder" role="img" aria-label="1번 이미지 준비 중">👻<small>1번 이미지 준비 중</small></div>
     </div>
 
+    <script type="module">
+        import { watchAccess } from "../auth.js";
+        await watchAccess();
+        document.body.style.visibility = "visible";
+    </script>
 </body>
 </html>

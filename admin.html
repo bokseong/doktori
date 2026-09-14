@@ -1,10 +1,84 @@
 <!DOCTYPE html>
 <html lang="ko">
+<head>
     <meta charset="UTF-8">
-    <head>
-        <title>관리자 페이지</title>
-    </head>
-    <body>
-        <h1>관리자 페이지</h1>
-    </body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - 복성고 독토리</title>
+    <style>
+        body { visibility: hidden; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="./index.html">메인</a>
+        <button id="logoutButton" type="button">로그아웃</button>
+    </header>
+    <main>
+        <h1>권한 설정</h1>
+        <p id="message">사용자 목록을 불러오는 중...</p>
+        <table>
+            <thead><tr><th>이메일</th><th>권한</th><th>저장</th></tr></thead>
+            <tbody id="userRows"></tbody>
+        </table>
+    </main>
+    <script type="module">
+        import { collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { watchAccess, logout, ROLES } from "./auth.js";
+        import { db } from "./firebase.js";
+
+        const access = await watchAccess({ allowedRoles: [ROLES.ADMIN] });
+        if (!access.user) throw new Error("인증되지 않은 사용자입니다.");
+        document.body.style.visibility = "visible";
+        document.getElementById("logoutButton").addEventListener("click", logout);
+
+        const rows = document.getElementById("userRows");
+        const message = document.getElementById("message");
+        try {
+          const users = await getDocs(collection(db, "users"));
+          users.forEach((snapshot) => {
+            const user = snapshot.data();
+            const row = document.createElement("tr");
+            const email = document.createElement("td");
+            email.textContent = user.email || snapshot.id;
+            const roleCell = document.createElement("td");
+            const select = document.createElement("select");
+            Object.values(ROLES).forEach((role) => {
+                const option = new Option(role, role, false, user.role === role);
+                select.add(option);
+            });
+            const isCurrentAdmin = snapshot.id === access.user.uid;
+            if (isCurrentAdmin) {
+                select.disabled = true;
+                select.title = "현재 로그인한 관리자의 권한은 여기서 변경할 수 없습니다.";
+            }
+            roleCell.append(select);
+            const actionCell = document.createElement("td");
+            const save = document.createElement("button");
+            save.type = "button";
+            save.textContent = "저장";
+            save.disabled = isCurrentAdmin;
+            save.addEventListener("click", async () => {
+                save.disabled = true;
+                try {
+                    await updateDoc(doc(db, "users", snapshot.id), { role: select.value });
+                    message.textContent = `${email.textContent}의 권한을 저장했습니다.`;
+                } catch (error) {
+                    console.error(error);
+                    message.textContent = "권한 저장에 실패했습니다. Firestore 규칙을 확인하세요.";
+                } finally {
+                    save.disabled = false;
+                }
+            });
+            actionCell.append(save);
+            row.append(email, roleCell, actionCell);
+            rows.append(row);
+          });
+          if (users.empty) message.textContent = "등록된 사용자가 없습니다.";
+          else message.textContent = `${users.size}명의 사용자를 불러왔습니다.`;
+        } catch (error) {
+          console.error("사용자 목록을 불러오지 못했습니다.", error);
+          message.textContent = "사용자 목록을 불러오지 못했습니다. Firestore 연결과 규칙을 확인하세요.";
+        }
+    </script>
+</body>
 </html>
