@@ -47,11 +47,8 @@
             if (!user) return;
 
             try {
-                const profile = await ensureUserProfile(user);
-                const destination = profile.role === ROLES.STAFF || profile.role === ROLES.ADMIN
-                    ? "./index.html"
-                    : "./qr/QR.html";
-                window.location.replace(destination);
+                await ensureUserProfile(user);
+                window.location.replace("./index.html");
             } catch (error) {
                 console.error("Google 사용자 프로필을 확인하지 못했습니다.", error);
                 message.textContent = "사용자 권한 정보를 저장하지 못했습니다.";

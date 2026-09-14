@@ -17,8 +17,8 @@
             <a href="qr/1.html">1번 이미지</a>
             <a href="qr/2.html">2번 이미지</a>
             <a href="qr/3.html">3번 이미지</a>
-            <a href="game/roulette.html">돌림판</a>
-            <a href="game/Ladder.html">사다리</a>
+            <a class="staff-only" href="game/roulette.html" hidden>돌림판</a>
+            <a class="staff-only" href="game/Ladder.html" hidden>사다리</a>
             <a href="qr/QR.html">QR 코드 생성</a>
             <a id="adminLink" href="admin.html" hidden>관리자 페이지</a>
         </nav>
@@ -26,14 +26,16 @@
     <script type="module">
         import { watchAccess, logout, ROLES } from "./auth.js";
 
-        const access = await watchAccess({
-            allowedRoles: [ROLES.STAFF, ROLES.ADMIN]
-        });
+        const access = await watchAccess();
         if (access.user) {
             document.body.style.visibility = "visible";
             document.getElementById("userInfo").textContent =
                 `${access.user.email} (${access.role})`;
             document.getElementById("logoutButton").addEventListener("click", logout);
+            const canUseGames = access.role === ROLES.STAFF || access.role === ROLES.ADMIN;
+            document.querySelectorAll(".staff-only").forEach((link) => {
+                link.hidden = !canUseGames;
+            });
             document.getElementById("adminLink").hidden = access.role !== ROLES.ADMIN;
         }
     </script>
