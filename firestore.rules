@@ -2,8 +2,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isMasterAdmin() {
+      return isSignedIn()
+        && request.auth.token.email == "github.jwastro09@gmail.com"
+        && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isMasterAdmin()
+        || (isSignedIn()
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "participant") == "admin");
     }
 
     function isCorrectAnswer(qrId, answer) {
@@ -12,26 +29,63 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create, update: if isOwner(userId)
+      allow read: if isOwner(userId) || isAdmin();
+
+      allow create: if isOwner(userId)
         && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
         && request.resource.data.keys().hasOnly([
           "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
-          "completedQrIds", "lastActivityAt"
-        ]);
+          "completedQrIds", "lastActivityAt", "role"
+        ])
+        && request.resource.data.get("role", "participant")
+          == (isMasterAdmin() ? "admin" : "participant");
+
+      allow update: if (
+          isOwner(userId)
+          && request.resource.data.uid == userId
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.keys().hasOnly([
+            "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
+            "completedQrIds", "lastActivityAt", "role"
+          ])
+          && (
+            request.resource.data.get("role", "participant")
+              == resource.data.get("role", "participant")
+            || (isMasterAdmin() && request.resource.data.role == "admin")
+          )
+        ) || (
+          isAdmin()
+          && resource.data.get("email", "") != "github.jwastro09@gmail.com"
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["role"])
+          && request.resource.data.role in ["participant", "admin"]
+        );
       allow delete: if false;
 
       match /progress/{qrId} {
-        allow read: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId)
           && qrId in ["qr1", "qr2", "qr3"]
-          && request.resource.data.keys().hasOnly(["qrId", "found", "answer", "completedAt"])
+          && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt"])
           && request.resource.data.qrId == qrId
           && request.resource.data.found == true
-          && request.resource.data.answer is string
-          && isCorrectAnswer(qrId, request.resource.data.answer);
+          && existsAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId))
+          && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.uid == userId
+          && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.qrId == qrId;
         allow update, delete: if false;
       }
+    }
+
+    match /answerAttempts/{attemptId} {
+      allow read: if false;
+      allow create: if isSignedIn()
+        && attemptId == request.auth.uid + "_" + request.resource.data.qrId
+        && request.resource.data.keys().hasOnly(["uid", "qrId", "answer", "submittedAt"])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.qrId in ["qr1", "qr2", "qr3"]
+        && request.resource.data.answer is string
+        && isCorrectAnswer(request.resource.data.qrId, request.resource.data.answer);
+      allow update, delete: if false;
     }
 
     match /quizSecrets/{qrId} {

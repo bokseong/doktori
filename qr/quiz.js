@@ -3,7 +3,7 @@ import {
     doc,
     getDoc,
     serverTimestamp,
-    setDoc
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { requireUser } from "../auth.js";
 import { db } from "../firebase.js";
@@ -53,18 +53,26 @@ export async function initQuiz(qrId) {
         try {
             const latest = await getDoc(progressReference);
             if (!latest.exists()) {
-                await setDoc(progressReference, {
+                const batch = writeBatch(db);
+                const attemptReference = doc(db, "answerAttempts", `${user.uid}_${qrId}`);
+                batch.set(attemptReference, {
+                    uid: user.uid,
+                    qrId,
+                    answer: normalize(input.value),
+                    submittedAt: serverTimestamp()
+                });
+                batch.set(progressReference, {
                     qrId,
                     found: true,
-                    answer: normalize(input.value),
                     completedAt: serverTimestamp()
                 });
+                batch.set(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    completedQrIds: arrayUnion(qrId),
+                    lastActivityAt: serverTimestamp()
+                }, { merge: true });
+                await batch.commit();
             }
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                completedQrIds: arrayUnion(qrId),
-                lastActivityAt: serverTimestamp()
-            }, { merge: true });
             await syncProgressToSheet(user, qrId);
             message.textContent = "정답입니다! 이 QR을 찾은 것으로 기록했습니다.";
         } catch (error) {

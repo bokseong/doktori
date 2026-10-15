@@ -3,32 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#100b22">
     <title>복성고 독토리</title>
-    <style>body { visibility: hidden; }</style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { color-scheme: dark; --purple: #8b5cf6; --orange: #ff7a1a; --panel: rgba(25, 18, 48, .88); }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; color: #f8f7ff; font-family: "Nanum Gothic", sans-serif; background: radial-gradient(circle at 15% 10%, #41226d 0, transparent 30%), radial-gradient(circle at 85% 0, #67220f 0, transparent 26%), #090711; }
+        body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .15; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 28px 28px; }
+        header { width: min(1080px, 92vw); margin: 0 auto; padding: 22px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .brand { font-family: "Jua", sans-serif; font-size: 1.35rem; color: #ffb06b; letter-spacing: .05em; }
+        .account { display: flex; align-items: center; gap: 10px; }
+        #userInfo { font-size: .9rem; color: #d8d0ed; }
+        button, .button { border: 0; border-radius: 12px; padding: 12px 17px; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+        button:hover, .button:hover { transform: translateY(-2px); }
+        .primary { color: #130a02; background: linear-gradient(135deg, #ffb44c, var(--orange)); box-shadow: 0 10px 28px rgba(255, 122, 26, .28); }
+        .secondary { color: #fff; background: #332552; border: 1px solid #7256a3; }
+        .ghost { color: #dcd4ef; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16); }
+        main { width: min(1080px, 92vw); margin: 0 auto; padding: 55px 0 70px; }
+        .hero { display: grid; grid-template-columns: 1.15fr .85fr; gap: 28px; align-items: stretch; }
+        .intro, .mission-panel { border: 1px solid rgba(255,255,255,.13); border-radius: 28px; background: var(--panel); box-shadow: 0 24px 80px rgba(0,0,0,.36); backdrop-filter: blur(14px); }
+        .intro { padding: clamp(30px, 6vw, 70px); }
+        .eyebrow { display: inline-block; padding: 7px 12px; border-radius: 999px; color: #e9ddff; background: rgba(139,92,246,.2); border: 1px solid rgba(167,139,250,.35); font-size: .86rem; font-weight: 700; }
+        h1 { margin: 18px 0 14px; font: clamp(3rem, 8vw, 6.2rem)/.94 "Jua", sans-serif; letter-spacing: -.04em; }
+        h1 span { color: #ff8b32; text-shadow: 0 0 34px rgba(255,122,26,.34); }
+        .lead { max-width: 620px; margin: 0 0 28px; color: #cfc7df; font-size: clamp(1rem, 2.5vw, 1.2rem); line-height: 1.75; }
+        .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+        #statusMessage { min-height: 1.4em; margin: 16px 0 0; color: #ffbd82; font-size: .92rem; }
+        .mission-panel { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
+        .mission-panel h2 { margin: 0 0 18px; font: 2rem "Jua", sans-serif; }
+        .mission-grid { display: grid; gap: 11px; }
+        .mission { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px; border-radius: 16px; color: #f7f3ff; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.09); text-decoration: none; }
+        .mission:hover { border-color: #8b5cf6; background: rgba(139,92,246,.13); }
+        .mission strong { color: #ffac67; }
+        .note { margin: 18px 0 0; color: #9e95b3; font-size: .82rem; line-height: 1.6; }
+        [hidden] { display: none !important; }
+        @media (max-width: 760px) { header { align-items: flex-start; } .account { flex-wrap: wrap; justify-content: flex-end; } .hero { grid-template-columns: 1fr; } main { padding-top: 25px; } .intro, .mission-panel { border-radius: 22px; } }
+    </style>
 </head>
 <body>
     <header>
-        <span id="userInfo"></span>
-        <button id="logoutButton" type="button">로그아웃</button>
+        <div class="brand">BOKSEONG LIBRARY · DOKTORI</div>
+        <div class="account">
+            <span id="userInfo">로그인하지 않음</span>
+            <button id="loginButton" class="primary" type="button">Google 로그인</button>
+            <button id="logoutButton" class="ghost" type="button" hidden>로그아웃</button>
+        </div>
     </header>
-    <main>
-        <h1>복성고 독토리</h1>
-        <nav aria-label="콘텐츠 메뉴">
-            <a href="qr/1.html">1번 이미지</a><br>
-            <a href="qr/2.html">2번 이미지</a><br>
-            <a href="qr/3.html">3번 이미지</a><br>
-            <a href="game/roulette.html">돌림판</a><br>
-            <a href="game/Ladder.html">사다리</a><br>
-            <a href="qr/QR.html">QR 코드 생성</a><br>
-        </nav>
-    </main>
-    <script type="module">
-        import { requireUser, logout } from "./auth.js";
 
-        const user = await requireUser();
-        document.getElementById("userInfo").textContent = user.displayName || user.email || "사용자";
-        document.getElementById("logoutButton").addEventListener("click", logout);
-        document.body.style.visibility = "visible";
+    <main>
+        <section class="hero">
+            <div class="intro">
+                <span class="eyebrow">복성고 도서부 QR 미션</span>
+                <h1>책 속 단서를<br><span>찾아라!</span></h1>
+                <p class="lead">학교 곳곳의 QR을 찾고 문제를 해결해 보세요. 정답을 맞힌 기록은 로그인한 계정의 진행도에 안전하게 저장됩니다.</p>
+                <div class="actions">
+                    <button id="mainLoginButton" class="primary" type="button">로그인하고 시작하기</button>
+                    <button id="adminButton" class="secondary" type="button">관리자 메뉴로 바로가기</button>
+                </div>
+                <p id="statusMessage" role="status"></p>
+            </div>
+
+            <aside class="mission-panel" aria-label="콘텐츠 메뉴">
+                <h2>미션 &amp; 놀이</h2>
+                <div class="mission-grid">
+                    <a class="mission" href="qr/1.html"><span><strong>QR 01</strong> 첫 번째 단서</span><span>→</span></a>
+                    <a class="mission" href="qr/2.html"><span><strong>QR 02</strong> 두 번째 단서</span><span>→</span></a>
+                    <a class="mission" href="qr/3.html"><span><strong>QR 03</strong> 세 번째 단서</span><span>→</span></a>
+                    <a class="mission" href="game/roulette.html"><span>🎯 할로윈 돌림판</span><span>→</span></a>
+                    <a class="mission" href="game/Ladder.html"><span>🪜 사다리 게임</span><span>→</span></a>
+                    <a class="mission" href="qr/QR.html"><span>▦ QR 코드 만들기</span><span>→</span></a>
+                </div>
+                <p class="note">QR 미션과 게임 페이지는 로그인 후 이용할 수 있습니다.</p>
+            </aside>
+        </section>
+    </main>
+
+    <script type="module">
+        import { getUserAccess, logout, signInWithGoogle, waitForAuth } from "./auth.js";
+
+        const adminPath = "./zb0bl7hn6ghtak72c.html";
+        const userInfo = document.getElementById("userInfo");
+        const loginButton = document.getElementById("loginButton");
+        const mainLoginButton = document.getElementById("mainLoginButton");
+        const logoutButton = document.getElementById("logoutButton");
+        const adminButton = document.getElementById("adminButton");
+        const statusMessage = document.getElementById("statusMessage");
+        let currentUser = await waitForAuth();
+
+        function renderAccount() {
+            const loggedIn = Boolean(currentUser);
+            userInfo.textContent = loggedIn ? (currentUser.displayName || currentUser.email) : "로그인하지 않음";
+            loginButton.hidden = loggedIn;
+            mainLoginButton.hidden = loggedIn;
+            logoutButton.hidden = !loggedIn;
+        }
+
+        async function login() {
+            statusMessage.textContent = "Google 로그인 중...";
+            try {
+                currentUser = await signInWithGoogle();
+                renderAccount();
+                statusMessage.textContent = "로그인되었습니다. QR 미션을 시작할 수 있습니다.";
+            } catch (error) {
+                console.error(error);
+                statusMessage.textContent = error.code === "auth/popup-closed-by-user"
+                    ? "로그인 창이 닫혔습니다."
+                    : "로그인하지 못했습니다. 잠시 후 다시 시도하세요.";
+            }
+        }
+
+        loginButton.addEventListener("click", login);
+        mainLoginButton.addEventListener("click", login);
+        logoutButton.addEventListener("click", logout);
+        adminButton.addEventListener("click", async () => {
+            if (!currentUser) {
+                const target = new URL("./signin.html", location.href);
+                target.searchParams.set("next", new URL(adminPath, location.href).pathname);
+                location.href = target;
+                return;
+            }
+
+            statusMessage.textContent = "관리자 권한을 확인하는 중...";
+            try {
+                const access = await getUserAccess(currentUser);
+                if (access.isAdmin) location.href = adminPath;
+                else statusMessage.textContent = "관리자 권한이 없는 계정입니다.";
+            } catch (error) {
+                console.error(error);
+                statusMessage.textContent = "권한을 확인하지 못했습니다. 다시 시도하세요.";
+            }
+        });
+
+        renderAccount();
     </script>
 </body>
 </html>

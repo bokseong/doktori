@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독토리 관리자</title>
+    <style>
+        :root { color-scheme: dark; --accent: #ff852f; --purple: #8b5cf6; }
+        * { box-sizing: border-box; }
+        body { visibility: hidden; margin: 0; min-height: 100vh; font-family: Arial, "Malgun Gothic", sans-serif; color: #f7f4ff; background: #0d0917; }
+        header { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 20px max(4vw, 20px); background: #171026; border-bottom: 1px solid #34244f; }
+        header h1 { margin: 0; font-size: clamp(1.35rem, 3vw, 2rem); }
+        nav { display: flex; gap: 10px; }
+        a, button { border: 0; border-radius: 10px; padding: 10px 14px; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; }
+        a { color: #fff; background: #362953; }
+        button { color: #160b03; background: var(--accent); }
+        button:disabled, select:disabled { cursor: not-allowed; opacity: .55; }
+        main { width: min(1180px, 94vw); margin: 0 auto; padding: 34px 0 70px; }
+        .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+        .card { padding: 20px; border-radius: 16px; background: #1a122b; border: 1px solid #34234e; }
+        .card strong { display: block; margin-top: 8px; color: #ffad70; font-size: 1.8rem; }
+        .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 26px 0 12px; }
+        .toolbar h2 { margin: 0; }
+        .table-wrap { overflow-x: auto; border: 1px solid #382851; border-radius: 15px; background: #151021; }
+        table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid #2d213f; vertical-align: middle; }
+        th { color: #d9c8f6; background: #211631; font-size: .9rem; }
+        tr:last-child td { border-bottom: 0; }
+        .email { color: #a9a0b8; font-size: .86rem; }
+        .progress { min-width: 180px; }
+        .bar { height: 8px; margin-top: 7px; border-radius: 999px; background: #312641; overflow: hidden; }
+        .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent)); }
+        select { margin-right: 8px; padding: 8px; color: #fff; background: #261a38; border: 1px solid #5b417d; border-radius: 8px; }
+        .small { padding: 8px 10px; font-size: .85rem; }
+        #message { min-height: 1.4em; color: #ffc391; }
+        #denied { max-width: 520px; margin: 12vh auto; padding: 38px; text-align: center; background: #1b122b; border: 1px solid #59335d; border-radius: 20px; }
+        [hidden] { display: none !important; }
+        @media (max-width: 680px) { header { align-items: flex-start; flex-direction: column; } .summary { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>독토리 관리자 메뉴</h1>
+            <div id="adminIdentity" class="email"></div>
+        </div>
+        <nav>
+            <a href="./index.html">메인으로</a>
+            <button id="logoutButton" type="button">로그아웃</button>
+        </nav>
+    </header>
+
+    <main id="adminContent" hidden>
+        <p>로그인한 참여자의 권한과 QR 진행률을 관리합니다.</p>
+        <section class="summary" aria-label="참여 현황">
+            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div>
+            <div class="card">관리자<strong id="adminUsers">0</strong></div>
+            <div class="card">완주자<strong id="completedUsers">0</strong></div>
+        </section>
+        <div class="toolbar">
+            <h2>사용자별 현황</h2>
+            <button id="refreshButton" type="button">새로고침</button>
+        </div>
+        <p id="message" role="status"></p>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>사용자</th><th>권한</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead>
+                <tbody id="userRows"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <section id="denied" hidden>
+        <h2>접근 권한이 없습니다</h2>
+        <p>이 페이지는 관리자 계정만 이용할 수 있습니다.</p>
+        <a href="./index.html">메인으로 돌아가기</a>
+    </section>
+
+    <script type="module">
+        import { collection, doc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "./auth.js";
+        import { db } from "./firebase.js";
+
+        const QR_IDS = ["qr1", "qr2", "qr3"];
+        const currentUser = await requireUser();
+        const access = await getUserAccess(currentUser);
+        const adminContent = document.getElementById("adminContent");
+        const denied = document.getElementById("denied");
+        const message = document.getElementById("message");
+        const rows = document.getElementById("userRows");
+
+        document.getElementById("logoutButton").addEventListener("click", logout);
+        document.getElementById("adminIdentity").textContent = currentUser.email || currentUser.displayName || "관리자";
+
+        if (!access.isAdmin) {
+            denied.hidden = false;
+            document.body.style.visibility = "visible";
+        } else {
+            adminContent.hidden = false;
+            document.getElementById("refreshButton").addEventListener("click", loadUsers);
+            document.body.style.visibility = "visible";
+            await loadUsers();
+        }
+
+        function formatDate(value) {
+            const date = value?.toDate?.();
+            return date ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(date) : "-";
+        }
+
+        async function loadUsers() {
+            message.textContent = "사용자 진행률을 불러오는 중...";
+            rows.replaceChildren();
+            try {
+                const userSnapshot = await getDocs(collection(db, "users"));
+                const records = await Promise.all(userSnapshot.docs.map(async (userDocument) => {
+                    const data = userDocument.data();
+                    const progressSnapshot = await getDocs(collection(db, "users", userDocument.id, "progress"));
+                    const found = progressSnapshot.docs
+                        .filter((item) => item.data().found === true && QR_IDS.includes(item.id))
+                        .map((item) => item.id)
+                        .sort();
+                    return { id: userDocument.id, ...data, found };
+                }));
+                records.sort((a, b) => (a.displayName || a.email || "").localeCompare(b.displayName || b.email || "", "ko"));
+                records.forEach(renderUser);
+                document.getElementById("totalUsers").textContent = String(records.length);
+                document.getElementById("adminUsers").textContent = String(records.filter((item) => item.role === "admin").length);
+                document.getElementById("completedUsers").textContent = String(records.filter((item) => item.found.length === QR_IDS.length).length);
+                message.textContent = records.length ? `총 ${records.length}명의 정보를 불러왔습니다.` : "등록된 사용자가 없습니다.";
+            } catch (error) {
+                console.error(error);
+                message.textContent = "사용자 정보를 불러오지 못했습니다. 권한과 네트워크를 확인하세요.";
+            }
+        }
+
+        function renderUser(record) {
+            const row = document.createElement("tr");
+            const identityCell = document.createElement("td");
+            const name = document.createElement("strong");
+            const email = document.createElement("div");
+            name.textContent = record.displayName || "이름 없음";
+            email.className = "email";
+            email.textContent = record.email || "이메일 없음";
+            identityCell.append(name, email);
+
+            const roleCell = document.createElement("td");
+            const select = document.createElement("select");
+            select.append(new Option("참여자", "participant"), new Option("관리자", "admin"));
+            select.value = record.role || "participant";
+            const save = document.createElement("button");
+            save.type = "button";
+            save.className = "small";
+            save.textContent = "저장";
+            const master = record.email === MASTER_ADMIN_EMAIL && record.role === "admin";
+            select.disabled = master;
+            save.disabled = master;
+            if (master) save.textContent = "마스터";
+            save.addEventListener("click", async () => {
+                save.disabled = true;
+                message.textContent = `${record.email || record.displayName} 권한을 저장하는 중...`;
+                try {
+                    await updateDoc(doc(db, "users", record.id), { role: select.value });
+                    record.role = select.value;
+                    message.textContent = "권한을 변경했습니다.";
+                } catch (error) {
+                    console.error(error);
+                    message.textContent = "권한을 변경하지 못했습니다.";
+                } finally {
+                    save.disabled = false;
+                }
+            });
+            roleCell.append(select, save);
+
+            const progressCell = document.createElement("td");
+            progressCell.className = "progress";
+            progressCell.append(`${record.found.length} / ${QR_IDS.length}`);
+            const bar = document.createElement("div");
+            bar.className = "bar";
+            const fill = document.createElement("span");
+            fill.style.width = `${(record.found.length / QR_IDS.length) * 100}%`;
+            bar.append(fill);
+            progressCell.append(bar);
+
+            const qrCell = document.createElement("td");
+            qrCell.textContent = record.found.length ? record.found.map((id) => id.toUpperCase()).join(", ") : "-";
+            const activityCell = document.createElement("td");
+            activityCell.textContent = formatDate(record.lastActivityAt || record.lastLoginAt);
+            row.append(identityCell, roleCell, progressCell, qrCell, activityCell);
+            rows.append(row);
+        }
+    </script>
+</body>
+</html>
