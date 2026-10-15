@@ -30,9 +30,22 @@ export function waitForAuth() {
     });
 }
 
+export function isMemberProfileComplete(profile) {
+    return Boolean(profile?.studentNumber?.trim() && profile?.studentName?.trim());
+}
+
+export async function getMemberProfile(user = auth.currentUser) {
+    if (!user) return null;
+    const snapshot = await getDoc(doc(db, "users", user.uid));
+    return snapshot.exists() ? snapshot.data() : null;
+}
+
 export async function requireUser() {
     const user = await waitForAuth();
-    if (user) return user;
+    if (user) {
+        const profile = await getMemberProfile(user);
+        if (isMemberProfileComplete(profile)) return user;
+    }
 
     const next = `${location.pathname}${location.search}${location.hash}`;
     const signInUrl = new URL("./signin.html", import.meta.url);
@@ -43,11 +56,10 @@ export async function requireUser() {
 
 export async function signInWithGoogle() {
     const result = await signInWithPopup(auth, provider);
-    await saveUserProfile(result.user);
     return result.user;
 }
 
-export async function saveUserProfile(user) {
+export async function registerMember(user, studentNumber, studentName) {
     const reference = doc(db, "users", user.uid);
     const snapshot = await getDoc(reference);
     const profile = {
@@ -55,23 +67,45 @@ export async function saveUserProfile(user) {
         email: user.email || "",
         displayName: user.displayName || "",
         photoURL: user.photoURL || "",
+        studentNumber: studentNumber.trim(),
+        studentName: studentName.trim(),
+        registeredAt: serverTimestamp(),
         lastLoginAt: serverTimestamp()
     };
+
     if (!snapshot.exists()) {
         profile.createdAt = serverTimestamp();
         profile.role = isMasterAdmin(user) ? "admin" : "participant";
     } else if (isMasterAdmin(user) && snapshot.data().role !== "admin") {
         profile.role = "admin";
     }
+
     await setDoc(reference, profile, { merge: true });
+    return { ...(snapshot.exists() ? snapshot.data() : {}), ...profile };
+}
+
+export async function touchMemberProfile(user) {
+    const profile = await getMemberProfile(user);
+    if (!isMemberProfileComplete(profile)) return profile;
+
+    const update = {
+        uid: user.uid,
+        email: user.email || "",
+        displayName: user.displayName || "",
+        photoURL: user.photoURL || "",
+        lastLoginAt: serverTimestamp()
+    };
+    if (isMasterAdmin(user) && profile.role !== "admin") update.role = "admin";
+    await setDoc(doc(db, "users", user.uid), update, { merge: true });
+    return { ...profile, ...update };
 }
 
 export async function getUserAccess(user = auth.currentUser) {
     if (!user) return { role: null, isAdmin: false };
     if (isMasterAdmin(user)) return { role: "admin", isAdmin: true };
 
-    const snapshot = await getDoc(doc(db, "users", user.uid));
-    const role = snapshot.exists() ? (snapshot.data().role || "participant") : "participant";
+    const profile = await getMemberProfile(user);
+    const role = profile?.role || "participant";
     return { role, isAdmin: role === "admin" };
 }
 

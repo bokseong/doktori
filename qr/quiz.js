@@ -10,15 +10,16 @@ import { db } from "../firebase.js";
 import { syncProgressToSheet } from "../sheet-sync.js";
 
 const QUIZZES = Object.freeze({
-    qr1: {
-        question: "도서관에서 책을 빌린 사람이 지켜야 할 가장 기본적인 약속은 무엇일까요?"
-    },
-    qr2: {
-        question: "할로윈을 대표하는 두 가지 색은 무엇일까요?"
-    },
-    qr3: {
-        question: "도서관에서 책등에 붙어 책의 위치를 알려 주는 번호를 무엇이라고 할까요?"
-    }
+    qr1: { question: "도서관에서 책을 빌린 사람이 지켜야 할 가장 기본적인 약속은 무엇일까요?" },
+    qr2: { question: "할로윈을 대표하는 두 가지 색은 무엇일까요?" },
+    qr3: { question: "도서관에서 책등에 붙어 책의 위치를 알려 주는 번호를 무엇이라고 할까요?" },
+    qr4: { question: "도서관에서 책을 빌릴 때 본인 확인에 사용하는 것은 무엇일까요?" },
+    qr5: { question: "책의 장이나 항목이 시작되는 쪽을 차례대로 알려 주는 목록은 무엇일까요?" },
+    qr6: { question: "국제 표준 도서 번호를 뜻하는 영문 약자는 무엇일까요?" },
+    qr7: { question: "책의 가장 바깥에서 내용을 보호하는 부분을 무엇이라고 할까요?" },
+    qr8: { question: "책을 쓴 사람을 뜻하는 두 글자 낱말은 무엇일까요?" },
+    qr9: { question: "책을 만들어 세상에 내놓는 회사를 무엇이라고 할까요?" },
+    qr10: { question: "도서관에서 다른 사람을 위해 조용히 하는 마음을 두 글자로 표현하면 무엇일까요?" }
 });
 
 function normalize(value) {

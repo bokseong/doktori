@@ -1,8 +1,15 @@
 const SPREADSHEET_ID = "1Jox-90UbsjjugykoqX39t8zKm6aAbRpzpQdvZRQO-bY";
 const SHEET_NAME = "시트1";
 const FIREBASE_API_KEY = "AIzaSyBUZ1IU5exTw3gELm7criA7ECT_Z4osld4";
-const HEADERS = ["UID", "이름", "이메일", "QR 1", "QR 2", "QR 3", "완료 수", "마지막 업데이트"];
-const QR_COLUMNS = Object.freeze({ qr1: 4, qr2: 5, qr3: 6 });
+const HEADERS = [
+  "UID", "이름", "이메일", "학번",
+  "QR 1", "QR 2", "QR 3", "QR 4", "QR 5", "QR 6", "QR 7", "QR 8", "QR 9", "QR 10",
+  "완료 수", "마지막 업데이트"
+];
+const QR_COLUMNS = Object.freeze({
+  qr1: 5, qr2: 6, qr3: 7, qr4: 8, qr5: 9,
+  qr6: 10, qr7: 11, qr8: 12, qr9: 13, qr10: 14
+});
 
 function doGet() {
   return jsonResponse_({ ok: true, service: "doktori-sheet-sync" });
@@ -16,6 +23,7 @@ function doPost(event) {
     }
 
     const user = verifyFirebaseUser_(payload.idToken);
+    const profile = fetchFirestoreProfile_(payload.idToken, user.localId);
     verifyFirestoreProgress_(payload.idToken, user.localId, payload.qrId);
     const completedAt = new Date(payload.completedAt || Date.now());
     if (Number.isNaN(completedAt.getTime())) throw new Error("완료 시간이 잘못되었습니다.");
@@ -23,7 +31,7 @@ function doPost(event) {
     const lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
-      upsertProgress_(user, payload.qrId, completedAt);
+      upsertProgress_(user, profile, payload.qrId, completedAt);
     } finally {
       lock.releaseLock();
     }
@@ -32,6 +40,27 @@ function doPost(event) {
     console.error(error);
     return jsonResponse_({ ok: false, error: error.message });
   }
+}
+
+function fetchFirestoreProfile_(idToken, uid) {
+  const url = "https://firestore.googleapis.com/v1/projects/bit-code-lab-2026/databases/(default)/documents/users/"
+    + encodeURIComponent(uid);
+  const response = UrlFetchApp.fetch(url, {
+    headers: { Authorization: "Bearer " + idToken },
+    muteHttpExceptions: true
+  });
+  if (response.getResponseCode() !== 200) {
+    throw new Error("Firestore 회원 정보를 확인할 수 없습니다.");
+  }
+  const fields = JSON.parse(response.getContentText()).fields || {};
+  const profile = {
+    studentName: fields.studentName?.stringValue || "",
+    studentNumber: fields.studentNumber?.stringValue || ""
+  };
+  if (!profile.studentName || !profile.studentNumber) {
+    throw new Error("학번과 이름이 등록되지 않았습니다.");
+  }
+  return profile;
 }
 
 function verifyFirestoreProgress_(idToken, uid, qrId) {
@@ -66,7 +95,7 @@ function verifyFirebaseUser_(idToken) {
   return users[0];
 }
 
-function upsertProgress_(user, qrId, completedAt) {
+function upsertProgress_(user, profile, qrId, completedAt) {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
   if (!sheet) throw new Error("시트 '" + SHEET_NAME + "'을 찾을 수 없습니다.");
   ensureHeaders_(sheet);
@@ -79,17 +108,19 @@ function upsertProgress_(user, qrId, completedAt) {
   if (index < 0) {
     sheet.getRange(row, 1, 1, HEADERS.length).setValues([[
       user.localId,
-      user.displayName || "",
+      profile.studentName,
       user.email || "",
-      "", "", "", 0, completedAt
+      profile.studentNumber,
+      "", "", "", "", "", "", "", "", "", "",
+      0, completedAt
     ]]);
   } else {
-    sheet.getRange(row, 2, 1, 2).setValues([[user.displayName || "", user.email || ""]]);
+    sheet.getRange(row, 2, 1, 3).setValues([[profile.studentName, user.email || "", profile.studentNumber]]);
   }
 
   sheet.getRange(row, QR_COLUMNS[qrId]).setValue(completedAt);
-  const completedCount = sheet.getRange(row, 4, 1, 3).getValues()[0].filter(Boolean).length;
-  sheet.getRange(row, 7, 1, 2).setValues([[completedCount, completedAt]]);
+  const completedCount = sheet.getRange(row, 5, 1, 10).getValues()[0].filter(Boolean).length;
+  sheet.getRange(row, 15, 1, 2).setValues([[completedCount, completedAt]]);
 }
 
 function ensureHeaders_(sheet) {

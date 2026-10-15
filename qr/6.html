@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f0e6">
+    <title>QR 06 · 복성고 독토리</title>
+    <link rel="stylesheet" href="./quiz.css">
+</head>
+<body>
+    <main class="qr-shell">
+        <header class="qr-top">
+            <div class="qr-brand">DOKTORI FIELD NOTE</div>
+            <span class="qr-index">QR 06</span>
+        </header>
+        <div class="qr-grid">
+            <section class="specter" aria-label="6번 이미지 영역">
+                <div class="placeholder" role="img" aria-label="6번 귀신 이미지 준비 중">
+                    <span class="ghost">👻</span>
+                    <small>IMAGE SLOT 06</small>
+                </div>
+            </section>
+            <section class="mission panel">
+                <span class="mission-kicker">CLUE 06 / 10</span>
+                <h1>단서를<br>해독하세요</h1>
+                <p class="mission-copy">이미지는 추후 이 자리에 추가됩니다. 아래 문제의 답을 입력하면 진행도가 기록됩니다.</p>
+                <div class="quiz-card">
+                    <h2 id="quizQuestion"></h2>
+                    <form id="quizForm">
+                        <label for="answerInput">정답</label>
+                        <input id="answerInput" type="text" autocomplete="off" required>
+                        <button id="answerButton" type="submit">정답 확인</button>
+                    </form>
+                    <p id="quizMessage" class="quiz-message" role="status"></p>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script type="module">
+        import { initQuiz } from "./quiz.js";
+        await initQuiz("qr6");
+    </script>
+</body>
+</html>

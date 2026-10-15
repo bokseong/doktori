@@ -3,51 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - 복성고 독토리</title>
+    <meta name="theme-color" content="#f4f0e6">
+    <title>로그인 · 복성고 독토리</title>
+    <link rel="stylesheet" href="./theme.css">
     <style>
-        body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #0b0b0b; color: #fff; font-family: sans-serif; }
-        main { width: min(90vw, 360px); padding: 32px; border: 2px solid #ff6600; border-radius: 16px; text-align: center; background: #1a1a1a; }
-        button { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: #fff; color: #222; font-size: 1rem; cursor: pointer; }
-        #message { min-height: 1.5em; color: #ffb36b; }
+        body { display: grid; place-items: center; padding: 28px 16px; }
+        .auth-shell { width: min(920px, 100%); display: grid; grid-template-columns: .85fr 1.15fr; }
+        .auth-poster { position: relative; padding: clamp(28px, 6vw, 60px); color: var(--paper-strong); background: var(--ink); overflow: hidden; }
+        .auth-poster::after { content: "D"; position: absolute; right: -25px; bottom: -70px; color: var(--lime); font: 18rem/.8 "Black Han Sans", sans-serif; opacity: .92; }
+        .auth-poster h1 { position: relative; z-index: 1; margin: 18px 0; font: clamp(3rem, 8vw, 5.8rem)/.88 "Black Han Sans", sans-serif; }
+        .auth-poster p { position: relative; z-index: 1; max-width: 320px; line-height: 1.7; }
+        .auth-card { padding: clamp(28px, 6vw, 58px); background: var(--paper-strong); }
+        .auth-card h2 { margin: 0 0 10px; font: 2rem "Black Han Sans", sans-serif; }
+        .step { display: inline-block; margin-bottom: 18px; color: var(--blue); font-weight: 700; }
+        .full { width: 100%; }
+        form { display: grid; gap: 14px; }
+        label { display: grid; gap: 7px; font-weight: 700; }
+        input { width: 100%; padding: 13px 14px; border: 2px solid var(--ink); border-radius: 0; background: white; }
+        .helper { margin: 8px 0 22px; color: var(--muted); line-height: 1.6; }
+        #message { min-height: 1.5em; margin: 18px 0 0; color: #9b321e; font-weight: 700; }
+        @media (max-width: 700px) { .auth-shell { grid-template-columns: 1fr; } .auth-poster { min-height: 250px; } .auth-poster::after { font-size: 12rem; } }
     </style>
 </head>
 <body>
-    <main>
-        <h1>복성고 독토리</h1>
-        <p>콘텐츠를 이용하려면 Google 로그인이 필요합니다.</p>
-        <button id="googleSignInButton" type="button">Google 계정으로 로그인</button>
-        <p id="message" role="alert"></p>
-    </main>
-    <script type="module">
-        import { signInWithGoogle, waitForAuth } from "./auth.js";
+    <main class="auth-shell panel">
+        <section class="auth-poster" aria-label="독토리 소개">
+            <span class="label">BOKSEONG LIBRARY</span>
+            <h1>책 사이의<br>비밀 통로</h1>
+            <p>QR을 찾고, 단서를 풀고, 나만의 탐험 기록을 남겨 보세요.</p>
+        </section>
+        <section class="auth-card">
+            <div id="loginStep">
+                <span class="step">01 · 계정 확인</span>
+                <h2>Google로 입장하기</h2>
+                <p class="helper">진행도를 개인별로 안전하게 저장하기 위해 학교에서 사용하는 Google 계정으로 로그인합니다.</p>
+                <button id="googleSignInButton" class="full" type="button">Google 계정으로 로그인</button>
+            </div>
 
+            <div id="registerStep" hidden>
+                <span class="step">02 · 최초 1회 등록</span>
+                <h2>참여자 정보 등록</h2>
+                <p class="helper"><strong id="signedInEmail"></strong><br>학번과 이름을 등록하면 원래 열었던 QR 페이지로 바로 이동합니다.</p>
+                <form id="registerForm">
+                    <label>학번
+                        <input id="studentNumber" name="studentNumber" type="text" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="예: 20260101" required>
+                    </label>
+                    <label>이름
+                        <input id="studentName" name="studentName" type="text" autocomplete="name" maxlength="30" placeholder="예: 홍길동" required>
+                    </label>
+                    <button id="registerButton" class="button--coral" type="submit">등록하고 계속하기</button>
+                </form>
+            </div>
+            <p id="message" role="status"></p>
+        </section>
+    </main>
+
+    <script type="module">
+        import {
+            getMemberProfile,
+            isMemberProfileComplete,
+            registerMember,
+            signInWithGoogle,
+            touchMemberProfile,
+            waitForAuth
+        } from "./auth.js";
+
+        const loginStep = document.getElementById("loginStep");
+        const registerStep = document.getElementById("registerStep");
         const message = document.getElementById("message");
-        const button = document.getElementById("googleSignInButton");
+        const signInButton = document.getElementById("googleSignInButton");
+        const registerForm = document.getElementById("registerForm");
+        const registerButton = document.getElementById("registerButton");
+        let currentUser = null;
 
         function safeNext() {
             const fallback = new URL("./index.html", location.href);
             const requested = new URLSearchParams(location.search).get("next") || fallback.href;
-            const target = new URL(requested, location.origin);
+            const target = new URL(requested, location.href);
             return target.origin === location.origin
                 ? `${target.pathname}${target.search}${target.hash}`
                 : `${fallback.pathname}${fallback.search}${fallback.hash}`;
         }
 
-        const currentUser = await waitForAuth();
-        if (currentUser) location.replace(safeNext());
+        async function continueWith(user) {
+            currentUser = user;
+            const profile = await getMemberProfile(user);
+            if (isMemberProfileComplete(profile)) {
+                message.textContent = "회원 정보를 확인했습니다. 이동하는 중...";
+                await touchMemberProfile(user);
+                location.replace(safeNext());
+                return;
+            }
 
-        button.addEventListener("click", async () => {
-            button.disabled = true;
+            loginStep.hidden = true;
+            registerStep.hidden = false;
+            document.getElementById("signedInEmail").textContent = user.email || "로그인 계정";
+            document.getElementById("studentNumber").focus();
+            message.textContent = "회원 정보가 없어 최초 등록이 필요합니다.";
+        }
+
+        const existingUser = await waitForAuth();
+        if (existingUser) {
+            try {
+                await continueWith(existingUser);
+            } catch (error) {
+                console.error(error);
+                message.textContent = "회원 정보를 확인하지 못했습니다. 잠시 후 다시 시도하세요.";
+            }
+        }
+
+        signInButton.addEventListener("click", async () => {
+            signInButton.disabled = true;
             message.textContent = "Google 로그인 중...";
             try {
-                await signInWithGoogle();
-                location.replace(safeNext());
+                await continueWith(await signInWithGoogle());
             } catch (error) {
                 console.error(error);
                 message.textContent = error.code === "auth/popup-closed-by-user"
-                    ? "로그인 창이 닫혔습니다. 다시 시도하세요."
+                    ? "로그인 창이 닫혔습니다."
                     : "로그인하지 못했습니다. 잠시 후 다시 시도하세요.";
-                button.disabled = false;
+                signInButton.disabled = false;
+            }
+        });
+
+        registerForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!currentUser) return;
+            registerButton.disabled = true;
+            message.textContent = "회원 정보를 등록하는 중...";
+            try {
+                await registerMember(
+                    currentUser,
+                    document.getElementById("studentNumber").value,
+                    document.getElementById("studentName").value
+                );
+                message.textContent = "등록했습니다. 이동하는 중...";
+                location.replace(safeNext());
+            } catch (error) {
+                console.error(error);
+                message.textContent = "회원 정보를 저장하지 못했습니다. 입력값과 네트워크를 확인하세요.";
+                registerButton.disabled = false;
             }
         });
     </script>

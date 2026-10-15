@@ -36,8 +36,15 @@ service cloud.firestore {
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.keys().hasOnly([
           "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
+          "studentNumber", "studentName", "registeredAt",
           "completedQrIds", "lastActivityAt", "role"
         ])
+        && request.resource.data.studentNumber is string
+        && request.resource.data.studentNumber.size() >= 1
+        && request.resource.data.studentNumber.size() <= 20
+        && request.resource.data.studentName is string
+        && request.resource.data.studentName.size() >= 1
+        && request.resource.data.studentName.size() <= 30
         && request.resource.data.get("role", "participant")
           == (isMasterAdmin() ? "admin" : "participant");
 
@@ -47,8 +54,15 @@ service cloud.firestore {
           && request.resource.data.email == request.auth.token.email
           && request.resource.data.keys().hasOnly([
             "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
+            "studentNumber", "studentName", "registeredAt",
             "completedQrIds", "lastActivityAt", "role"
           ])
+          && request.resource.data.studentNumber is string
+          && request.resource.data.studentNumber.size() >= 1
+          && request.resource.data.studentNumber.size() <= 20
+          && request.resource.data.studentName is string
+          && request.resource.data.studentName.size() >= 1
+          && request.resource.data.studentName.size() <= 30
           && (
             request.resource.data.get("role", "participant")
               == resource.data.get("role", "participant")
@@ -65,7 +79,7 @@ service cloud.firestore {
       match /progress/{qrId} {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId)
-          && qrId in ["qr1", "qr2", "qr3"]
+          && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6", "qr7", "qr8", "qr9", "qr10"]
           && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt"])
           && request.resource.data.qrId == qrId
           && request.resource.data.found == true
@@ -82,7 +96,7 @@ service cloud.firestore {
         && attemptId == request.auth.uid + "_" + request.resource.data.qrId
         && request.resource.data.keys().hasOnly(["uid", "qrId", "answer", "submittedAt"])
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.qrId in ["qr1", "qr2", "qr3"]
+        && request.resource.data.qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6", "qr7", "qr8", "qr9", "qr10"]
         && request.resource.data.answer is string
         && isCorrectAnswer(request.resource.data.qrId, request.resource.data.answer);
       allow update, delete: if false;

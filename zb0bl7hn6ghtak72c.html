@@ -1,94 +1,71 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>독토리 관리자</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f0e6"><title>독토리 관리자</title>
+    <link rel="stylesheet" href="./theme.css">
     <style>
-        :root { color-scheme: dark; --accent: #ff852f; --purple: #8b5cf6; }
-        * { box-sizing: border-box; }
-        body { visibility: hidden; margin: 0; min-height: 100vh; font-family: Arial, "Malgun Gothic", sans-serif; color: #f7f4ff; background: #0d0917; }
-        header { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 20px max(4vw, 20px); background: #171026; border-bottom: 1px solid #34244f; }
-        header h1 { margin: 0; font-size: clamp(1.35rem, 3vw, 2rem); }
-        nav { display: flex; gap: 10px; }
-        a, button { border: 0; border-radius: 10px; padding: 10px 14px; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; }
-        a { color: #fff; background: #362953; }
-        button { color: #160b03; background: var(--accent); }
-        button:disabled, select:disabled { cursor: not-allowed; opacity: .55; }
-        main { width: min(1180px, 94vw); margin: 0 auto; padding: 34px 0 70px; }
-        .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
-        .card { padding: 20px; border-radius: 16px; background: #1a122b; border: 1px solid #34234e; }
-        .card strong { display: block; margin-top: 8px; color: #ffad70; font-size: 1.8rem; }
-        .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 26px 0 12px; }
-        .toolbar h2 { margin: 0; }
-        .table-wrap { overflow-x: auto; border: 1px solid #382851; border-radius: 15px; background: #151021; }
-        table { width: 100%; border-collapse: collapse; min-width: 860px; }
-        th, td { padding: 14px; text-align: left; border-bottom: 1px solid #2d213f; vertical-align: middle; }
-        th { color: #d9c8f6; background: #211631; font-size: .9rem; }
-        tr:last-child td { border-bottom: 0; }
-        .email { color: #a9a0b8; font-size: .86rem; }
-        .progress { min-width: 180px; }
-        .bar { height: 8px; margin-top: 7px; border-radius: 999px; background: #312641; overflow: hidden; }
-        .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--purple), var(--accent)); }
-        select { margin-right: 8px; padding: 8px; color: #fff; background: #261a38; border: 1px solid #5b417d; border-radius: 8px; }
-        .small { padding: 8px 10px; font-size: .85rem; }
-        #message { min-height: 1.4em; color: #ffc391; }
-        #denied { max-width: 520px; margin: 12vh auto; padding: 38px; text-align: center; background: #1b122b; border: 1px solid #59335d; border-radius: 20px; }
-        [hidden] { display: none !important; }
-        @media (max-width: 680px) { header { align-items: flex-start; flex-direction: column; } .summary { grid-template-columns: 1fr; } }
+        body { visibility: hidden; }
+        .admin-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
+        .admin-intro h1 { margin: 12px 0 8px; font: clamp(2.8rem, 7vw, 6rem)/.95 "Black Han Sans", sans-serif; }
+        .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 2px; background: var(--ink); box-shadow: var(--shadow); }
+        .card { padding: 22px; background: var(--paper-strong); }
+        .card strong { display: block; margin-top: 16px; color: var(--blue); font: 2.8rem "Black Han Sans", sans-serif; }
+        .shortcut-panel { margin: 32px 0; padding: 24px; }
+        .shortcut-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 16px; }
+        .qr-shortcuts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+        .qr-shortcuts .button { min-width: 0; background: var(--lime); }
+        .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 34px 0 12px; }
+        .table-wrap { overflow-x: auto; border: 2px solid var(--ink); background: var(--paper-strong); box-shadow: var(--shadow); }
+        table { width: 100%; min-width: 1020px; border-collapse: collapse; }
+        th, td { padding: 14px; text-align: left; border-bottom: 2px solid var(--ink); vertical-align: middle; }
+        th { color: white; background: var(--ink); } tr:last-child td { border-bottom: 0; }
+        .email { color: var(--muted); font-size: .84rem; } .progress { min-width: 160px; }
+        .bar { height: 10px; margin-top: 7px; border: 2px solid var(--ink); background: var(--paper); overflow: hidden; }
+        .bar span { display: block; height: 100%; background: var(--coral); }
+        select { min-width: 100px; padding: 9px; border: 2px solid var(--ink); background: white; }
+        .role-controls { display: flex; gap: 8px; } .small { min-height: 40px; padding: 7px 10px; box-shadow: 3px 3px 0 var(--ink); }
+        #denied { width: min(520px, calc(100% - 32px)); margin: 12vh auto; padding: 38px; text-align: center; }
+        @media (max-width: 760px) { .admin-intro { align-items: flex-start; flex-direction: column; } .summary { grid-template-columns: 1fr; } .qr-shortcuts { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
-    <header>
-        <div>
-            <h1>독토리 관리자 메뉴</h1>
-            <div id="adminIdentity" class="email"></div>
-        </div>
-        <nav>
-            <a href="./index.html">메인으로</a>
-            <button id="logoutButton" type="button">로그아웃</button>
-        </nav>
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">A</span><span class="brand-text">독토리 관리자 콘솔</span></div>
+        <nav class="account"><span id="adminIdentity" class="account-label"></span><a class="button button--paper" href="./index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
     </header>
-
-    <main id="adminContent" hidden>
-        <p>로그인한 참여자의 권한과 QR 진행률을 관리합니다.</p>
-        <section class="summary" aria-label="참여 현황">
-            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div>
-            <div class="card">관리자<strong id="adminUsers">0</strong></div>
-            <div class="card">완주자<strong id="completedUsers">0</strong></div>
+    <main id="adminContent" class="page-shell" hidden>
+        <section class="admin-intro">
+            <div><span class="label">ADMIN ONLY</span><h1>운영 현황판</h1><p class="lead">참여자의 권한과 10개 QR 진행률을 한곳에서 관리합니다.</p></div>
+            <button id="refreshButton" type="button">데이터 새로고침</button>
         </section>
-        <div class="toolbar">
-            <h2>사용자별 현황</h2>
-            <button id="refreshButton" type="button">새로고침</button>
-        </div>
-        <p id="message" role="status"></p>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>사용자</th><th>권한</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead>
-                <tbody id="userRows"></tbody>
-            </table>
-        </div>
+        <section class="summary" aria-label="참여 현황">
+            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div>
+        </section>
+        <section class="shortcut-panel panel" aria-labelledby="shortcutTitle">
+            <div class="shortcut-head"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
+            <div class="qr-shortcuts">
+                <a class="button" href="./qr/1.html">QR 01</a><a class="button" href="./qr/2.html">QR 02</a><a class="button" href="./qr/3.html">QR 03</a><a class="button" href="./qr/4.html">QR 04</a><a class="button" href="./qr/5.html">QR 05</a>
+                <a class="button" href="./qr/6.html">QR 06</a><a class="button" href="./qr/7.html">QR 07</a><a class="button" href="./qr/8.html">QR 08</a><a class="button" href="./qr/9.html">QR 09</a><a class="button" href="./qr/10.html">QR 10</a>
+            </div>
+        </section>
+        <div class="toolbar"><h2 class="section-title">사용자별 현황</h2></div>
+        <p id="message" class="status" role="status"></p>
+        <div class="table-wrap"><table><thead><tr><th>참여자</th><th>학번</th><th>권한</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead><tbody id="userRows"></tbody></table></div>
     </main>
-
-    <section id="denied" hidden>
-        <h2>접근 권한이 없습니다</h2>
-        <p>이 페이지는 관리자 계정만 이용할 수 있습니다.</p>
-        <a href="./index.html">메인으로 돌아가기</a>
-    </section>
-
+    <section id="denied" class="panel" hidden><h2 class="section-title">접근 권한이 없습니다</h2><p>이 페이지는 관리자 계정만 이용할 수 있습니다.</p><a class="button" href="./index.html">메인으로 돌아가기</a></section>
     <script type="module">
         import { collection, doc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "./auth.js";
         import { db } from "./firebase.js";
 
-        const QR_IDS = ["qr1", "qr2", "qr3"];
+        const QR_IDS = Array.from({ length: 10 }, (_, index) => `qr${index + 1}`);
         const currentUser = await requireUser();
         const access = await getUserAccess(currentUser);
         const adminContent = document.getElementById("adminContent");
         const denied = document.getElementById("denied");
         const message = document.getElementById("message");
         const rows = document.getElementById("userRows");
-
         document.getElementById("logoutButton").addEventListener("click", logout);
         document.getElementById("adminIdentity").textContent = currentUser.email || currentUser.displayName || "관리자";
 
@@ -115,13 +92,10 @@
                 const records = await Promise.all(userSnapshot.docs.map(async (userDocument) => {
                     const data = userDocument.data();
                     const progressSnapshot = await getDocs(collection(db, "users", userDocument.id, "progress"));
-                    const found = progressSnapshot.docs
-                        .filter((item) => item.data().found === true && QR_IDS.includes(item.id))
-                        .map((item) => item.id)
-                        .sort();
+                    const found = progressSnapshot.docs.filter((item) => item.data().found === true && QR_IDS.includes(item.id)).map((item) => item.id).sort((a, b) => Number(a.slice(2)) - Number(b.slice(2)));
                     return { id: userDocument.id, ...data, found };
                 }));
-                records.sort((a, b) => (a.displayName || a.email || "").localeCompare(b.displayName || b.email || "", "ko"));
+                records.sort((a, b) => (a.studentName || a.displayName || a.email || "").localeCompare(b.studentName || b.displayName || b.email || "", "ko"));
                 records.forEach(renderUser);
                 document.getElementById("totalUsers").textContent = String(records.length);
                 document.getElementById("adminUsers").textContent = String(records.filter((item) => item.role === "admin").length);
@@ -138,55 +112,27 @@
             const identityCell = document.createElement("td");
             const name = document.createElement("strong");
             const email = document.createElement("div");
-            name.textContent = record.displayName || "이름 없음";
-            email.className = "email";
-            email.textContent = record.email || "이메일 없음";
-            identityCell.append(name, email);
-
+            name.textContent = record.studentName || record.displayName || "이름 미등록";
+            email.className = "email"; email.textContent = record.email || "이메일 없음"; identityCell.append(name, email);
+            const numberCell = document.createElement("td"); numberCell.textContent = record.studentNumber || "미등록";
             const roleCell = document.createElement("td");
-            const select = document.createElement("select");
-            select.append(new Option("참여자", "participant"), new Option("관리자", "admin"));
-            select.value = record.role || "participant";
-            const save = document.createElement("button");
-            save.type = "button";
-            save.className = "small";
-            save.textContent = "저장";
-            const master = record.email === MASTER_ADMIN_EMAIL && record.role === "admin";
-            select.disabled = master;
-            save.disabled = master;
-            if (master) save.textContent = "마스터";
+            const controls = document.createElement("div"); controls.className = "role-controls";
+            const select = document.createElement("select"); select.append(new Option("참여자", "participant"), new Option("관리자", "admin")); select.value = record.role || "participant";
+            const save = document.createElement("button"); save.type = "button"; save.className = "small"; save.textContent = "저장";
+            const master = (record.email || "").toLowerCase() === MASTER_ADMIN_EMAIL && record.role === "admin";
+            select.disabled = master; save.disabled = master; if (master) save.textContent = "마스터";
             save.addEventListener("click", async () => {
-                save.disabled = true;
-                message.textContent = `${record.email || record.displayName} 권한을 저장하는 중...`;
-                try {
-                    await updateDoc(doc(db, "users", record.id), { role: select.value });
-                    record.role = select.value;
-                    message.textContent = "권한을 변경했습니다.";
-                } catch (error) {
-                    console.error(error);
-                    message.textContent = "권한을 변경하지 못했습니다.";
-                } finally {
-                    save.disabled = false;
-                }
+                save.disabled = true; message.textContent = `${record.email || record.studentName} 권한을 저장하는 중...`;
+                try { await updateDoc(doc(db, "users", record.id), { role: select.value }); record.role = select.value; message.textContent = "권한을 변경했습니다."; }
+                catch (error) { console.error(error); message.textContent = "권한을 변경하지 못했습니다."; }
+                finally { save.disabled = master; }
             });
-            roleCell.append(select, save);
-
-            const progressCell = document.createElement("td");
-            progressCell.className = "progress";
-            progressCell.append(`${record.found.length} / ${QR_IDS.length}`);
-            const bar = document.createElement("div");
-            bar.className = "bar";
-            const fill = document.createElement("span");
-            fill.style.width = `${(record.found.length / QR_IDS.length) * 100}%`;
-            bar.append(fill);
-            progressCell.append(bar);
-
-            const qrCell = document.createElement("td");
-            qrCell.textContent = record.found.length ? record.found.map((id) => id.toUpperCase()).join(", ") : "-";
-            const activityCell = document.createElement("td");
-            activityCell.textContent = formatDate(record.lastActivityAt || record.lastLoginAt);
-            row.append(identityCell, roleCell, progressCell, qrCell, activityCell);
-            rows.append(row);
+            controls.append(select, save); roleCell.append(controls);
+            const progressCell = document.createElement("td"); progressCell.className = "progress"; progressCell.append(`${record.found.length} / ${QR_IDS.length}`);
+            const bar = document.createElement("div"); bar.className = "bar"; const fill = document.createElement("span"); fill.style.width = `${(record.found.length / QR_IDS.length) * 100}%`; bar.append(fill); progressCell.append(bar);
+            const qrCell = document.createElement("td"); qrCell.textContent = record.found.length ? record.found.map((id) => id.toUpperCase()).join(", ") : "-";
+            const activityCell = document.createElement("td"); activityCell.textContent = formatDate(record.lastActivityAt || record.lastLoginAt);
+            row.append(identityCell, numberCell, roleCell, progressCell, qrCell, activityCell); rows.append(row);
         }
     </script>
 </body>
