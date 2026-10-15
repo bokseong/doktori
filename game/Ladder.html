@@ -11,7 +11,6 @@
             user-select: none;
         }
         body {
-            visibility: hidden;
             font-family: 'Jua', sans-serif;
             padding: 20px;
             background: linear-gradient(135deg, #0b0b0b, #1a0926);
@@ -193,12 +192,6 @@
     </div>
 
     <script type="module">
-        import { watchAccess, ROLES } from "../auth.js";
-        await watchAccess({
-            allowedRoles: [ROLES.STAFF, ROLES.ADMIN]
-        });
-        document.body.style.visibility = 'visible';
-
         const canvas = document.getElementById('ladderCanvas');
         const ctx = canvas.getContext('2d');
         const resultText = document.getElementById('resultText');

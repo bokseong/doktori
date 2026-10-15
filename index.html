@@ -4,40 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>복성고 독토리</title>
-    <style>body { visibility: hidden; }</style>
 </head>
 <body>
-    <header>
-        <span id="userInfo">로그인 확인 중...</span>
-        <button id="logoutButton" type="button">로그아웃</button>
-    </header>
     <main>
         <h1>복성고 독토리</h1>
         <nav aria-label="콘텐츠 메뉴">
             <a href="qr/1.html">1번 이미지</a><br>
             <a href="qr/2.html">2번 이미지</a><br>
             <a href="qr/3.html">3번 이미지</a><br>
-            <a class="staff-only" href="game/roulette.html" hidden>돌림판</a><br>
-            <a class="staff-only" href="game/Ladder.html" hidden>사다리</a><br>
+            <a href="game/roulette.html">돌림판</a><br>
+            <a href="game/Ladder.html">사다리</a><br>
             <a href="qr/QR.html">QR 코드 생성</a><br>
-            <a id="adminLink" href="admin.html" hidden>관리자 페이지</a><br>
         </nav>
     </main>
     <script type="module">
-        import { watchAccess, logout, ROLES } from "./auth.js";
-
-        const access = await watchAccess();
-        if (access.user) {
-            document.body.style.visibility = "visible";
-            document.getElementById("userInfo").textContent =
-                `${access.user.email} (${access.role})`;
-            document.getElementById("logoutButton").addEventListener("click", logout);
-            const canUseGames = access.role === ROLES.STAFF || access.role === ROLES.ADMIN;
-            document.querySelectorAll(".staff-only").forEach((link) => {
-                link.hidden = !canUseGames;
-            });
-            document.getElementById("adminLink").hidden = access.role !== ROLES.ADMIN;
-        }
+        import { app } from "./firebase.js";
+        void app;
     </script>
 </body>
 </html>

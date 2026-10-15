@@ -1,5 +1,4 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -9,9 +8,8 @@ const firebaseConfig = {
   storageBucket: "bit-code-lab-2026.firebasestorage.app",
   messagingSenderId: "733037971628",
   appId: "1:733037971628:web:676a495a46c127e3fdb709",
-  measurementId: "G-RERP9D8VL0"
+  measurementId: "G-2XYG7TRQ0X"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
