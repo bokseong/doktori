@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isCorrectAnswer(qrId, answer) {
+      return exists(/databases/$(database)/documents/quizSecrets/$(qrId))
+        && answer in get(/databases/$(database)/documents/quizSecrets/$(qrId)).data.answers;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.keys().hasOnly([
+          "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
+          "completedQrIds", "lastActivityAt"
+        ]);
+      allow delete: if false;
+
+      match /progress/{qrId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && qrId in ["qr1", "qr2", "qr3"]
+          && request.resource.data.keys().hasOnly(["qrId", "found", "answer", "completedAt"])
+          && request.resource.data.qrId == qrId
+          && request.resource.data.found == true
+          && request.resource.data.answer is string
+          && isCorrectAnswer(qrId, request.resource.data.answer);
+        allow update, delete: if false;
+      }
+    }
+
+    match /quizSecrets/{qrId} {
+      allow read, write: if false;
+    }
+
+    // 기존 축전 사이트의 공개 운세 읽기 규칙은 그대로 유지합니다.
+    match /festivalHoroscopes/{date} {
+      allow read: if date == "2026-10-14";
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+.quiz-card {
+    width: min(85vw, 350px);
+    margin-top: 18px;
+    padding: 18px;
+    border: 2px solid #ff6600;
+    border-radius: 16px;
+    background: #171717;
+}
+
+.quiz-card h2 { margin: 0 0 12px; color: #fff; font-size: 1.2rem; }
+.quiz-card input { width: 100%; padding: 12px; border: 1px solid #777; border-radius: 8px; font-size: 1rem; }
+.quiz-card button { width: 100%; margin-top: 10px; padding: 12px; border: 0; border-radius: 8px; background: #ff6600; color: #fff; font-weight: 700; cursor: pointer; }
+.quiz-card button:disabled { opacity: .6; cursor: default; }
+.quiz-message { min-height: 1.5em; margin: 12px 0 0; color: #ffd0a3; }

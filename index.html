@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>복성고 독토리</title>
+    <style>body { visibility: hidden; }</style>
 </head>
 <body>
+    <header>
+        <span id="userInfo"></span>
+        <button id="logoutButton" type="button">로그아웃</button>
+    </header>
     <main>
         <h1>복성고 독토리</h1>
         <nav aria-label="콘텐츠 메뉴">
@@ -18,8 +23,12 @@
         </nav>
     </main>
     <script type="module">
-        import { app } from "./firebase.js";
-        void app;
+        import { requireUser, logout } from "./auth.js";
+
+        const user = await requireUser();
+        document.getElementById("userInfo").textContent = user.displayName || user.email || "사용자";
+        document.getElementById("logoutButton").addEventListener("click", logout);
+        document.body.style.visibility = "visible";
     </script>
 </body>
 </html>

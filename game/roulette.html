@@ -11,6 +11,7 @@
             user-select: none; /* 드래그 방지 */
         }
         body {
+            visibility: hidden;
             font-family: 'Jua', sans-serif;
             background: linear-gradient(135deg, #0b0b0b, #1a0926);
             display: flex;
@@ -160,6 +161,11 @@
     </div>
 
     <script type="module">
+        import { requireUser } from "../auth.js";
+
+        await requireUser();
+        document.body.style.visibility = "visible";
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');

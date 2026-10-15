@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>복성고 독토리</title>
     <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Jua&display=swap" rel="stylesheet">
+    <link href="./quiz.css" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
         }
 
         body {
+            visibility: hidden;
             background-color: #0b0b0b;
             color: #ff6600;
             text-align: center;
@@ -95,7 +97,19 @@
         <div class="placeholder" role="img" aria-label="2번 이미지 준비 중">🎃<small>2번 이미지 준비 중</small></div>
     </div>
 
+    <section class="quiz-card" aria-labelledby="quizQuestion">
+        <h2 id="quizQuestion"></h2>
+        <form id="quizForm">
+            <label for="answerInput">정답</label>
+            <input id="answerInput" type="text" autocomplete="off" required>
+            <button id="answerButton" type="submit">정답 확인</button>
+        </form>
+        <p id="quizMessage" class="quiz-message" role="status"></p>
+    </section>
+
     <script type="module">
+        import { initQuiz } from "./quiz.js";
+        await initQuiz("qr2");
     </script>
 </body>
 </html>

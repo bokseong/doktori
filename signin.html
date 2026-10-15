@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 복성고 독토리</title>
+    <style>
+        body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #0b0b0b; color: #fff; font-family: sans-serif; }
+        main { width: min(90vw, 360px); padding: 32px; border: 2px solid #ff6600; border-radius: 16px; text-align: center; background: #1a1a1a; }
+        button { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: #fff; color: #222; font-size: 1rem; cursor: pointer; }
+        #message { min-height: 1.5em; color: #ffb36b; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>복성고 독토리</h1>
+        <p>콘텐츠를 이용하려면 Google 로그인이 필요합니다.</p>
+        <button id="googleSignInButton" type="button">Google 계정으로 로그인</button>
+        <p id="message" role="alert"></p>
+    </main>
+    <script type="module">
+        import { signInWithGoogle, waitForAuth } from "./auth.js";
+
+        const message = document.getElementById("message");
+        const button = document.getElementById("googleSignInButton");
+
+        function safeNext() {
+            const fallback = new URL("./index.html", location.href);
+            const requested = new URLSearchParams(location.search).get("next") || fallback.href;
+            const target = new URL(requested, location.origin);
+            return target.origin === location.origin
+                ? `${target.pathname}${target.search}${target.hash}`
+                : `${fallback.pathname}${fallback.search}${fallback.hash}`;
+        }
+
+        const currentUser = await waitForAuth();
+        if (currentUser) location.replace(safeNext());
+
+        button.addEventListener("click", async () => {
+            button.disabled = true;
+            message.textContent = "Google 로그인 중...";
+            try {
+                await signInWithGoogle();
+                location.replace(safeNext());
+            } catch (error) {
+                console.error(error);
+                message.textContent = error.code === "auth/popup-closed-by-user"
+                    ? "로그인 창이 닫혔습니다. 다시 시도하세요."
+                    : "로그인하지 못했습니다. 잠시 후 다시 시도하세요.";
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
