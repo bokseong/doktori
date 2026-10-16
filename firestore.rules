@@ -2,6 +2,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function currentConsentVersion() {
+      return "2026-10-16-v1";
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -28,41 +32,62 @@ service cloud.firestore {
         && answer in get(/databases/$(database)/documents/quizSecrets/$(qrId)).data.answers;
     }
 
+    function hasCurrentConsent(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsent", false) == true
+        && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsentVersion", "") == currentConsentVersion();
+    }
+
+    function isValidMemberProfile(data, userId) {
+      return data.uid == userId
+        && data.email == request.auth.token.email
+        && data.keys().hasOnly([
+          "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
+          "studentNumber", "studentName", "registeredAt",
+          "completedQrIds", "lastActivityAt", "role",
+          "privacyConsent", "privacyConsentVersion", "privacyConsentAt"
+        ])
+        && data.studentNumber is string
+        && data.studentNumber.matches('^[0-9]{4,20}$')
+        && data.studentName is string
+        && data.studentName.matches('^[가-힣A-Za-z][가-힣A-Za-z .·\\-]{0,29}$')
+        && data.privacyConsent == true
+        && data.privacyConsentVersion == currentConsentVersion()
+        && data.privacyConsentAt is timestamp;
+    }
+
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
 
       allow create: if isOwner(userId)
-        && request.resource.data.uid == userId
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.keys().hasOnly([
-          "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
-          "studentNumber", "studentName", "registeredAt",
-          "completedQrIds", "lastActivityAt", "role"
-        ])
-        && request.resource.data.studentNumber is string
-        && request.resource.data.studentNumber.size() >= 1
-        && request.resource.data.studentNumber.size() <= 20
-        && request.resource.data.studentName is string
-        && request.resource.data.studentName.size() >= 1
-        && request.resource.data.studentName.size() <= 30
+        && isValidMemberProfile(request.resource.data, userId)
+        && request.resource.data.privacyConsentAt == request.time
         && request.resource.data.get("role", "participant")
           == (isMasterAdmin() ? "admin" : "participant");
 
       allow update: if (
           isOwner(userId)
-          && request.resource.data.uid == userId
-          && request.resource.data.email == request.auth.token.email
-          && request.resource.data.keys().hasOnly([
-            "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
-            "studentNumber", "studentName", "registeredAt",
-            "completedQrIds", "lastActivityAt", "role"
+          && isValidMemberProfile(request.resource.data, userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "email", "displayName", "lastLoginAt", "studentNumber", "studentName",
+            "registeredAt", "completedQrIds", "lastActivityAt", "role",
+            "privacyConsent", "privacyConsentVersion", "privacyConsentAt"
           ])
-          && request.resource.data.studentNumber is string
-          && request.resource.data.studentNumber.size() >= 1
-          && request.resource.data.studentNumber.size() <= 20
-          && request.resource.data.studentName is string
-          && request.resource.data.studentName.size() >= 1
-          && request.resource.data.studentName.size() <= 30
+          && (
+            (
+              resource.data.get("privacyConsent", false) == true
+              && resource.data.get("privacyConsentVersion", "") == currentConsentVersion()
+              && request.resource.data.privacyConsent == resource.data.privacyConsent
+              && request.resource.data.privacyConsentVersion == resource.data.privacyConsentVersion
+              && request.resource.data.privacyConsentAt == resource.data.privacyConsentAt
+            ) || (
+              (
+                resource.data.get("privacyConsent", false) != true
+                || resource.data.get("privacyConsentVersion", "") != currentConsentVersion()
+              )
+              && request.resource.data.privacyConsentAt == request.time
+            )
+          )
           && (
             request.resource.data.get("role", "participant")
               == resource.data.get("role", "participant")
@@ -79,6 +104,7 @@ service cloud.firestore {
       match /progress/{qrId} {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId)
+          && hasCurrentConsent(userId)
           && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6", "qr7", "qr8", "qr9", "qr10"]
           && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt"])
           && request.resource.data.qrId == qrId
@@ -93,6 +119,7 @@ service cloud.firestore {
     match /answerAttempts/{attemptId} {
       allow read: if false;
       allow create: if isSignedIn()
+        && hasCurrentConsent(request.auth.uid)
         && attemptId == request.auth.uid + "_" + request.resource.data.qrId
         && request.resource.data.keys().hasOnly(["uid", "qrId", "answer", "submittedAt"])
         && request.resource.data.uid == request.auth.uid

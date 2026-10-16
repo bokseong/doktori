@@ -8,6 +8,7 @@
       "firebase.json",
       ".firebaserc",
       "firestore.rules",
+      "apps-script/**",
       "**/.*",
       "**/node_modules/**"
     ]

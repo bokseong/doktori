@@ -3,16 +3,17 @@ import {
     onAuthStateChanged,
     signInWithPopup,
     signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
     doc,
     getDoc,
     serverTimestamp,
     setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
 
 export const MASTER_ADMIN_EMAIL = "github.jwastro09@gmail.com";
+export const PRIVACY_CONSENT_VERSION = "2026-10-16-v1";
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
@@ -31,7 +32,12 @@ export function waitForAuth() {
 }
 
 export function isMemberProfileComplete(profile) {
-    return Boolean(profile?.studentNumber?.trim() && profile?.studentName?.trim());
+    return Boolean(
+        profile?.studentNumber?.trim()
+        && profile?.studentName?.trim()
+        && profile?.privacyConsent === true
+        && profile?.privacyConsentVersion === PRIVACY_CONSENT_VERSION
+    );
 }
 
 export async function getMemberProfile(user = auth.currentUser) {
@@ -59,16 +65,22 @@ export async function signInWithGoogle() {
     return result.user;
 }
 
-export async function registerMember(user, studentNumber, studentName) {
+export async function registerMember(user, studentNumber, studentName, privacyConsent) {
+    if (privacyConsent !== true) {
+        throw new Error("개인정보 수집·이용에 동의해야 참여할 수 있습니다.");
+    }
+
     const reference = doc(db, "users", user.uid);
     const snapshot = await getDoc(reference);
     const profile = {
         uid: user.uid,
         email: user.email || "",
         displayName: user.displayName || "",
-        photoURL: user.photoURL || "",
         studentNumber: studentNumber.trim(),
         studentName: studentName.trim(),
+        privacyConsent: true,
+        privacyConsentVersion: PRIVACY_CONSENT_VERSION,
+        privacyConsentAt: serverTimestamp(),
         registeredAt: serverTimestamp(),
         lastLoginAt: serverTimestamp()
     };
@@ -92,7 +104,6 @@ export async function touchMemberProfile(user) {
         uid: user.uid,
         email: user.email || "",
         displayName: user.displayName || "",
-        photoURL: user.photoURL || "",
         lastLoginAt: serverTimestamp()
     };
     if (isMasterAdmin(user) && profile.role !== "admin") update.role = "admin";

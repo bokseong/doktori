@@ -41,7 +41,7 @@
                 <div class="actions">
                     <a id="mainLoginButton" class="button button--coral" href="./signin.html?next=./index.html">로그인하고 준비하기</a>
                     <a id="adminButton" class="button button--ink" href="./zb0bl7hn6ghtak72c.html" hidden>관리자 메뉴</a>
-                    <a id="adminButton" class="button button--ink" href="./qr/QR.html" hidden>QR 제작</a>
+                    <a id="qrBuilderButton" class="button button--ink" href="./qr/QR.html" hidden>QR 제작</a>
                 </div>
                 <p id="statusMessage" class="status" role="status"></p>
             </div>
@@ -56,19 +56,21 @@
 
         <section class="guide" aria-label="참여 방법">
             <article><b>01</b><h2>QR 발견</h2><p>학교 안에 숨은 표식을 찾아 카메라로 스캔합니다.</p></article>
-            <article><b>02</b><h2>계정 확인</h2><p>Google 로그인 후 최초 1회 학번과 이름을 등록합니다.</p></article>
+            <article><b>02</b><h2>계정 확인</h2><p>Google 로그인 후 개인정보 수집·이용에 동의하고 학번과 이름을 등록합니다.</p></article>
             <article><b>03</b><h2>문제 해결</h2><p>정답을 맞히면 내 진행도가 자동으로 기록됩니다.</p></article>
         </section>
     </main>
 
     <script type="module">
         import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./auth.js";
+        import { syncMemberToSheet } from "./sheet-sync.js";
 
         const userInfo = document.getElementById("userInfo");
         const loginButton = document.getElementById("loginButton");
         const mainLoginButton = document.getElementById("mainLoginButton");
         const logoutButton = document.getElementById("logoutButton");
         const adminButton = document.getElementById("adminButton");
+        const qrBuilderButton = document.getElementById("qrBuilderButton");
         const statusMessage = document.getElementById("statusMessage");
         const currentUser = await waitForAuth();
 
@@ -85,8 +87,12 @@
                     mainLoginButton.textContent = "회원정보 등록하기";
                     statusMessage.textContent = "QR 미션을 시작하려면 최초 등록을 완료해 주세요.";
                 } else {
+                    syncMemberToSheet(currentUser).catch((error) => {
+                        console.error("Google Sheets 회원 정보 동기화 실패", error);
+                    });
                     const access = await getUserAccess(currentUser);
                     adminButton.hidden = !access.isAdmin;
+                    qrBuilderButton.hidden = !access.isAdmin;
                     statusMessage.textContent = "준비가 끝났습니다. 현장에서 QR을 찾아 스캔해 주세요.";
                 }
             } catch (error) {

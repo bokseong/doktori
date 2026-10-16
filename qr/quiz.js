@@ -4,7 +4,7 @@ import {
     getDoc,
     serverTimestamp,
     writeBatch
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { requireUser } from "../auth.js";
 import { db } from "../firebase.js";
 import { syncProgressToSheet } from "../sheet-sync.js";

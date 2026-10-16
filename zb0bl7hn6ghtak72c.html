@@ -51,11 +51,11 @@
         </section>
         <div class="toolbar"><h2 class="section-title">사용자별 현황</h2></div>
         <p id="message" class="status" role="status"></p>
-        <div class="table-wrap"><table><thead><tr><th>참여자</th><th>학번</th><th>권한</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead><tbody id="userRows"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>참여자</th><th>학번</th><th>개인정보 동의</th><th>권한</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead><tbody id="userRows"></tbody></table></div>
     </main>
     <section id="denied" class="panel" hidden><h2 class="section-title">접근 권한이 없습니다</h2><p>이 페이지는 관리자 계정만 이용할 수 있습니다.</p><a class="button" href="./index.html">메인으로 돌아가기</a></section>
     <script type="module">
-        import { collection, doc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { collection, doc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "./auth.js";
         import { db } from "./firebase.js";
 
@@ -115,6 +115,10 @@
             name.textContent = record.studentName || record.displayName || "이름 미등록";
             email.className = "email"; email.textContent = record.email || "이메일 없음"; identityCell.append(name, email);
             const numberCell = document.createElement("td"); numberCell.textContent = record.studentNumber || "미등록";
+            const consentCell = document.createElement("td");
+            consentCell.textContent = record.privacyConsent === true
+                ? `동의 · ${formatDate(record.privacyConsentAt)}`
+                : "미동의";
             const roleCell = document.createElement("td");
             const controls = document.createElement("div"); controls.className = "role-controls";
             const select = document.createElement("select"); select.append(new Option("참여자", "participant"), new Option("관리자", "admin")); select.value = record.role || "participant";
@@ -132,7 +136,7 @@
             const bar = document.createElement("div"); bar.className = "bar"; const fill = document.createElement("span"); fill.style.width = `${(record.found.length / QR_IDS.length) * 100}%`; bar.append(fill); progressCell.append(bar);
             const qrCell = document.createElement("td"); qrCell.textContent = record.found.length ? record.found.map((id) => id.toUpperCase()).join(", ") : "-";
             const activityCell = document.createElement("td"); activityCell.textContent = formatDate(record.lastActivityAt || record.lastLoginAt);
-            row.append(identityCell, numberCell, roleCell, progressCell, qrCell, activityCell); rows.append(row);
+            row.append(identityCell, numberCell, consentCell, roleCell, progressCell, qrCell, activityCell); rows.append(row);
         }
     </script>
 </body>
