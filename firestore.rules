@@ -105,7 +105,7 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId)
           && hasCurrentConsent(userId)
-          && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6", "qr7", "qr8", "qr9", "qr10"]
+          && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
           && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt"])
           && request.resource.data.qrId == qrId
           && request.resource.data.found == true
@@ -123,7 +123,7 @@ service cloud.firestore {
         && attemptId == request.auth.uid + "_" + request.resource.data.qrId
         && request.resource.data.keys().hasOnly(["uid", "qrId", "answer", "submittedAt"])
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6", "qr7", "qr8", "qr9", "qr10"]
+        && request.resource.data.qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
         && request.resource.data.answer is string
         && isCorrectAnswer(request.resource.data.qrId, request.resource.data.answer);
       allow update, delete: if false;

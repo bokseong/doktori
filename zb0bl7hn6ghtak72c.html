@@ -14,7 +14,8 @@
         .card strong { display: block; margin-top: 16px; color: var(--blue); font: 2.8rem "Black Han Sans", sans-serif; }
         .shortcut-panel { margin: 32px 0; padding: 24px; }
         .shortcut-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 16px; }
-        .qr-shortcuts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+        .shortcut-title { display: grid; gap: 5px; }
+        .qr-shortcuts { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
         .qr-shortcuts .button { min-width: 0; background: var(--lime); }
         .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 34px 0 12px; }
         .table-wrap { overflow-x: auto; border: 2px solid var(--ink); background: var(--paper-strong); box-shadow: var(--shadow); }
@@ -37,17 +38,19 @@
     </header>
     <main id="adminContent" class="page-shell" hidden>
         <section class="admin-intro">
-            <div><span class="label">ADMIN ONLY</span><h1>운영 현황판</h1><p class="lead">참여자의 권한과 10개 QR 진행률을 한곳에서 관리합니다.</p></div>
+            <div><span class="label">ADMIN ONLY</span><h1>운영 현황판</h1><p class="lead">참여자의 권한과 6개 QR 진행률을 한곳에서 관리합니다.</p></div>
             <button id="refreshButton" type="button">데이터 새로고침</button>
         </section>
         <section class="summary" aria-label="참여 현황">
             <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div>
         </section>
         <section class="shortcut-panel panel" aria-labelledby="shortcutTitle">
-            <div class="shortcut-head"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
+            <div class="shortcut-head">
+                <div class="shortcut-title"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
+                <a class="button button--coral" href="./qr/QR.html">QR 생성기 열기</a>
+            </div>
             <div class="qr-shortcuts">
-                <a class="button" href="./qr/1.html">QR 01</a><a class="button" href="./qr/2.html">QR 02</a><a class="button" href="./qr/3.html">QR 03</a><a class="button" href="./qr/4.html">QR 04</a><a class="button" href="./qr/5.html">QR 05</a>
-                <a class="button" href="./qr/6.html">QR 06</a><a class="button" href="./qr/7.html">QR 07</a><a class="button" href="./qr/8.html">QR 08</a><a class="button" href="./qr/9.html">QR 09</a><a class="button" href="./qr/10.html">QR 10</a>
+                <a class="button" href="./qr/1.html">QR 01</a><a class="button" href="./qr/2.html">QR 02</a><a class="button" href="./qr/3.html">QR 03</a><a class="button" href="./qr/4.html">QR 04</a><a class="button" href="./qr/5.html">QR 05</a><a class="button" href="./qr/6.html">QR 06</a>
             </div>
         </section>
         <div class="toolbar"><h2 class="section-title">사용자별 현황</h2></div>
@@ -65,7 +68,7 @@
         import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "./auth.js";
         import { db } from "./firebase.js";
 
-        const QR_IDS = Array.from({ length: 10 }, (_, index) => `qr${index + 1}`);
+        const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const currentUser = await requireUser();
         const access = await getUserAccess(currentUser);
         const adminContent = document.getElementById("adminContent");

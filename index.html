@@ -7,6 +7,7 @@
     <title>복성고 독토리</title>
     <link rel="stylesheet" href="./theme.css">
     <link rel="stylesheet" href="./footer.css">
+    <link rel="stylesheet" href="./qr-scanner.css">
     <style>
         .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 34px; align-items: end; }
         .hero-copy { padding: clamp(26px, 6vw, 70px) 0; }
@@ -36,10 +37,11 @@
     <main class="page-shell">
         <section class="hero">
             <div class="hero-copy">
-                <span class="label">10개의 QR · 하나의 기록</span>
+                <span class="label">6개의 QR · 하나의 기록</span>
                 <h1 class="display-title">책장 밖으로<br><span class="accent">나온 단서</span></h1>
                 <p class="lead">학교 곳곳에 숨은 QR을 발견했다면 스캔해서 입장하세요. 로그인과 최초 등록을 마치면 해당 단서 페이지로 바로 연결됩니다.</p>
                 <div class="actions">
+                    <button id="scanQrButton" class="button--coral" type="button">QR 스캔하기</button>
                     <a id="mainLoginButton" class="button button--coral" href="./signin.html?next=./index.html">로그인하고 준비하기</a>
                     <a id="adminButton" class="button button--ink" href="./zb0bl7hn6ghtak72c.html" hidden>관리자 메뉴</a>
                     <a id="qrBuilderButton" class="button button--ink" href="./qr/QR.html" hidden>QR 제작</a>
@@ -48,7 +50,7 @@
             </div>
             <aside class="hero-ticket panel" aria-label="참여 안내">
                 <span class="muted">DOKTORI FIELD PASS</span>
-                <div class="ticket-number">10</div>
+                <div class="ticket-number">06</div>
                 <strong>QR MISSION</strong>
                 <div class="rule"></div>
                 <p>이 페이지에는 문제 바로가기가 없습니다. 현장에서 발견한 QR을 직접 스캔해 주세요.</p>
@@ -62,12 +64,47 @@
         </section>
     </main>
 
+    <dialog id="qrScannerDialog" class="scanner-dialog" aria-labelledby="qrScannerTitle">
+        <section class="scanner-card panel">
+            <header class="scanner-head">
+                <div><span class="label">QR SCANNER</span><h2 id="qrScannerTitle">단서 스캔</h2></div>
+                <button id="closeScannerButton" class="scanner-close" type="button" aria-label="QR 스캐너 닫기">✕</button>
+            </header>
+
+            <div id="scannerView">
+                <div class="scanner-frame">
+                    <video id="qrScannerVideo" playsinline muted aria-label="QR 스캔 카메라 화면"></video>
+                    <div class="scanner-reticle" aria-hidden="true"></div>
+                </div>
+                <p id="scannerStatus" class="scanner-status" role="status" aria-live="polite">카메라를 준비하고 있습니다...</p>
+                <p class="scanner-help">카메라 영상은 서버로 전송되지 않으며 이 브라우저에서만 QR 인식에 사용됩니다.</p>
+                <div class="scanner-actions">
+                    <button id="startCameraButton" type="button">카메라 다시 시작</button>
+                    <label class="button button--paper scanner-upload" for="qrImageInput">QR 이미지 선택</label>
+                    <input id="qrImageInput" type="file" accept="image/*" capture="environment" hidden>
+                </div>
+            </div>
+
+            <div id="scannerResult" class="scanner-result" hidden>
+                <div class="scanner-result__mark" aria-hidden="true">✓</div>
+                <h3 id="scannerResultTitle">QR을 인식했습니다</h3>
+                <p id="scannerResultCopy"></p>
+                <div class="scanner-result__actions">
+                    <a id="openScannedQrLink" class="button button--coral" href="./index.html">문제 페이지 열기</a>
+                    <a class="button button--paper" href="./index.html">메인화면으로 돌아가기</a>
+                </div>
+            </div>
+        </section>
+    </dialog>
+
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
         <nav class="site-footer__links" aria-label="하단 메뉴"><a href="./index.html">홈으로</a></nav>
         <small>© 2026 복성고등학교 도서부</small>
     </footer>
 
+    <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
+    <script src="./qr-scanner.js"></script>
     <script type="module">
         import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./auth.js";
         import { syncMemberToSheet } from "./sheet-sync.js";

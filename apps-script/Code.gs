@@ -5,12 +5,12 @@ const FIREBASE_PROJECT_ID = "bit-code-lab-2026";
 const PRIVACY_CONSENT_VERSION = "2026-10-16-v1";
 const HEADERS = [
   "UID", "이름", "이메일", "학번", "개인정보 동의", "동의 일시",
-  "QR 1", "QR 2", "QR 3", "QR 4", "QR 5", "QR 6", "QR 7", "QR 8", "QR 9", "QR 10",
+  "QR 1", "QR 2", "QR 3", "QR 4", "QR 5", "QR 6", "미사용 1", "미사용 2", "미사용 3", "미사용 4",
   "완료 수", "마지막 업데이트"
 ];
 const QR_COLUMNS = Object.freeze({
   qr1: 7, qr2: 8, qr3: 9, qr4: 10, qr5: 11,
-  qr6: 12, qr7: 13, qr8: 14, qr9: 15, qr10: 16
+  qr6: 12
 });
 
 function doGet() {
@@ -186,7 +186,7 @@ function upsertProgress_(user, profile, qrId, completedAt) {
   if (qrCell.getValue()) return;
 
   qrCell.setValue(completedAt);
-  const completedCount = sheet.getRange(row, 7, 1, 10).getValues()[0].filter(Boolean).length;
+  const completedCount = sheet.getRange(row, 7, 1, 6).getValues()[0].filter(Boolean).length;
   sheet.getRange(row, 17, 1, 2).setValues([[completedCount, completedAt]]);
 }
 
@@ -234,6 +234,8 @@ function ensureHeaders_(sheet) {
   if (HEADERS.some((value, index) => current[index] !== value)) {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   }
+  // 기존 시트의 완료 수/마지막 업데이트 열 위치는 유지하고, 더 이상 쓰지 않는 네 열만 숨깁니다.
+  sheet.hideColumns(13, 4);
   sheet.setFrozenRows(1);
 }
 

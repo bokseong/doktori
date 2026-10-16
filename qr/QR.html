@@ -100,9 +100,14 @@
 
     <script src="./qrcode.min.js"></script>
     <script type="module">
-        import { requireUser } from "../auth.js";
+        import { getUserAccess, requireUser } from "../auth.js";
 
-        await requireUser();
+        const currentUser = await requireUser();
+        const access = await getUserAccess(currentUser);
+        if (!access.isAdmin) {
+            location.replace(new URL("../index.html", location.href));
+            await new Promise(() => {});
+        }
         document.body.style.visibility = "visible";
 
         const input = document.getElementById("textInput");
