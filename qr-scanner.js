@@ -5,6 +5,8 @@
 
     const closeButton = document.getElementById("closeScannerButton");
     const startButton = document.getElementById("startCameraButton");
+    const switchButton = document.getElementById("switchCameraButton");
+    const torchButton = document.getElementById("torchButton");
     const imageInput = document.getElementById("qrImageInput");
     const video = document.getElementById("qrScannerVideo");
     const scannerView = document.getElementById("scannerView");
@@ -18,6 +20,9 @@
     let codeReader = null;
     let scannerControls = null;
     let resultLocked = false;
+    let videoInputs = [];
+    let cameraIndex = 0;
+    let torchOn = false;
 
     function setStatus(message) {
         status.textContent = message;
@@ -33,6 +38,9 @@
         const stream = video.srcObject;
         stream?.getTracks?.().forEach((track) => track.stop());
         video.srcObject = null;
+        torchOn = false;
+        torchButton.hidden = true;
+        torchButton.textContent = "손전등 켜기";
     }
 
     function parseDoktoriQr(rawValue) {
@@ -101,7 +109,21 @@
         return codeReader;
     }
 
-    async function startCamera() {
+    async function refreshCameraControls() {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            videoInputs = devices.filter((device) => device.kind === "videoinput");
+            switchButton.hidden = videoInputs.length < 2;
+            const activeTrack = video.srcObject?.getVideoTracks?.()[0];
+            const capabilities = activeTrack?.getCapabilities?.() || {};
+            torchButton.hidden = capabilities.torch !== true;
+        } catch {
+            switchButton.hidden = true;
+            torchButton.hidden = true;
+        }
+    }
+
+    async function startCamera(deviceId = "") {
         stopCamera();
         showScannerView();
         startButton.disabled = true;
@@ -118,7 +140,7 @@
             scannerControls = await reader.decodeFromConstraints({
                 audio: false,
                 video: {
-                    facingMode: { ideal: "environment" },
+                    ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } }),
                     width: { ideal: 1280 },
                     height: { ideal: 720 }
                 }
@@ -127,6 +149,10 @@
                 scannerControls = controls;
                 handleDecoded(result.getText());
             });
+            await refreshCameraControls();
+            const activeId = video.srcObject?.getVideoTracks?.()[0]?.getSettings?.().deviceId;
+            const activeIndex = videoInputs.findIndex((device) => device.deviceId === activeId);
+            if (activeIndex >= 0) cameraIndex = activeIndex;
             setStatus("QR이 네모 안에 선명하게 보이도록 맞춰 주세요.");
         } catch (error) {
             console.error(error);
@@ -136,6 +162,26 @@
                 : "카메라를 시작하지 못했습니다. QR 이미지 선택 기능을 이용해 주세요.");
         } finally {
             startButton.disabled = false;
+        }
+    }
+
+    async function switchCamera() {
+        if (videoInputs.length < 2) return;
+        cameraIndex = (cameraIndex + 1) % videoInputs.length;
+        await startCamera(videoInputs[cameraIndex].deviceId);
+    }
+
+    async function toggleTorch() {
+        const track = video.srcObject?.getVideoTracks?.()[0];
+        if (!track?.applyConstraints) return;
+        try {
+            torchOn = !torchOn;
+            await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+            torchButton.textContent = torchOn ? "손전등 끄기" : "손전등 켜기";
+        } catch (error) {
+            torchOn = false;
+            torchButton.hidden = true;
+            setStatus("이 기기에서는 손전등을 제어할 수 없습니다.");
         }
     }
 
@@ -176,8 +222,10 @@
 
     openButton.addEventListener("click", openScanner);
     closeButton.addEventListener("click", closeScanner);
-    startButton.addEventListener("click", startCamera);
-    scanAgainButton.addEventListener("click", startCamera);
+    startButton.addEventListener("click", () => startCamera());
+    switchButton.addEventListener("click", switchCamera);
+    torchButton.addEventListener("click", toggleTorch);
+    scanAgainButton.addEventListener("click", () => startCamera());
     imageInput.addEventListener("change", () => decodeImage(imageInput.files?.[0]));
     dialog.addEventListener("cancel", (event) => {
         event.preventDefault();

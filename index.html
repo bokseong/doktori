@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f0e6">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
     <title>복성고 독토리</title>
     <link rel="stylesheet" href="./theme.css">
     <link rel="stylesheet" href="./footer.css">
@@ -32,6 +34,8 @@
         .progress-empty { color: var(--muted); }
         .progress-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; }
         .progress-footer .status { margin: 0; }
+        .event-notice { margin-top: 28px; padding: 18px 22px; border: 2px solid var(--ink); background: var(--blue); color: white; box-shadow: 5px 5px 0 var(--ink); }
+        .event-notice strong { margin-right: 8px; }
         @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .hero-ticket { transform: none; } .guide { grid-template-columns: 1fr; } }
         @media (max-width: 560px) { .progress-head, .progress-footer { align-items: stretch; flex-direction: column; } .progress-score { font-size: 2.2rem; } }
     </style>
@@ -75,6 +79,8 @@
             <article><b>03</b><h2>문제 해결</h2><p>정답을 맞히면 내 진행도가 자동으로 기록됩니다.</p></article>
         </section>
 
+        <aside class="event-notice" aria-label="행사 공지"><strong>행사 안내</strong><span id="eventNoticeText">학교 곳곳에 숨은 QR을 찾아 6개의 미션을 완료하세요.</span></aside>
+
         <section id="myProgress" class="my-progress panel" aria-labelledby="myProgressTitle" hidden>
             <div class="progress-head">
                 <div><span class="label">MY RECORD</span><h2 id="myProgressTitle" class="section-title">내 진행 상황</h2><p>완료한 QR 번호만 표시되며 문제 페이지로 연결되지는 않습니다.</p></div>
@@ -82,7 +88,7 @@
             </div>
             <div class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
             <div id="progressItems" class="progress-items" aria-live="polite"></div>
-            <div class="progress-footer"><p id="progressMessage" class="status" role="status"></p><button id="refreshProgressButton" class="button--paper" type="button">진행률 새로고침</button></div>
+            <div class="progress-footer"><p id="progressMessage" class="status" role="status"></p><div class="actions" style="margin-top:0"><a id="certificateButton" class="button button--coral" href="./certificate.html" hidden>완주 인증서</a><button id="refreshProgressButton" class="button--paper" type="button">진행률 새로고침</button></div></div>
         </section>
     </main>
 
@@ -102,6 +108,8 @@
                 <p class="scanner-help">카메라 영상은 서버로 전송되지 않으며 이 브라우저에서만 QR 인식에 사용됩니다.</p>
                 <div class="scanner-actions">
                     <button id="startCameraButton" type="button">카메라 다시 시작</button>
+                    <button id="switchCameraButton" class="button--paper" type="button" hidden>카메라 전환</button>
+                    <button id="torchButton" class="button--paper" type="button" hidden>손전등 켜기</button>
                     <label class="button button--paper scanner-upload" for="qrImageInput">QR 이미지 선택</label>
                     <input id="qrImageInput" type="file" accept="image/*" capture="environment" hidden>
                 </div>
@@ -128,11 +136,13 @@
 
     <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
     <script src="./qr-scanner.js"></script>
+    <script type="module" src="./app-ui.js"></script>
     <script type="module">
-        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./auth.js";
+        import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js";
         import { db } from "./firebase.js";
-        import { syncMemberToSheet } from "./sheet-sync.js";
+        import { retryPendingSheetSyncs, syncMemberToSheet } from "./sheet-sync.js";
 
         const userInfo = document.getElementById("userInfo");
         const loginButton = document.getElementById("loginButton");
@@ -148,16 +158,12 @@
         const progressItems = document.getElementById("progressItems");
         const progressMessage = document.getElementById("progressMessage");
         const refreshProgressButton = document.getElementById("refreshProgressButton");
+        const certificateButton = document.getElementById("certificateButton");
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const currentUser = await waitForAuth();
 
-        async function loadMyProgress() {
-            if (!currentUser) return;
-            refreshProgressButton.disabled = true;
-            progressMessage.textContent = "진행률을 확인하는 중...";
-            try {
-                const snapshot = await getDocs(collection(db, "users", currentUser.uid, "progress"));
-                const found = snapshot.docs
+        function renderMyProgress(documents) {
+                const found = documents
                     .filter((item) => item.data().found === true && QR_IDS.includes(item.id))
                     .map((item) => item.id)
                     .sort((left, right) => Number(left.slice(2)) - Number(right.slice(2)));
@@ -165,6 +171,7 @@
                 progressScore.textContent = `${count} / ${QR_IDS.length}`;
                 progressFill.style.width = `${(count / QR_IDS.length) * 100}%`;
                 progressTrack.setAttribute("aria-valuenow", String(count));
+                certificateButton.hidden = count !== QR_IDS.length;
                 progressItems.replaceChildren();
                 if (count) {
                     found.forEach((id) => {
@@ -179,7 +186,21 @@
                     empty.textContent = "아직 완료한 QR이 없습니다.";
                     progressItems.append(empty);
                 }
-                progressMessage.textContent = count === QR_IDS.length ? "모든 미션을 완료했습니다!" : `앞으로 ${QR_IDS.length - count}개의 QR이 남았습니다.`;
+                const remaining = QR_IDS.length - count;
+                progressMessage.textContent = count === QR_IDS.length
+                    ? "모든 미션을 완료했습니다! 완주 인증서를 확인해 보세요."
+                    : remaining === 1
+                        ? "마지막 QR 하나만 남았습니다!"
+                        : `앞으로 ${remaining}개의 QR이 남았습니다.`;
+        }
+
+        async function loadMyProgress() {
+            if (!currentUser) return;
+            refreshProgressButton.disabled = true;
+            progressMessage.textContent = "진행률을 확인하는 중...";
+            try {
+                const snapshot = await getDocs(collection(db, "users", currentUser.uid, "progress"));
+                renderMyProgress(snapshot.docs);
             } catch (error) {
                 console.error(error);
                 progressMessage.textContent = "진행률을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
@@ -187,6 +208,10 @@
                 refreshProgressButton.disabled = false;
             }
         }
+
+        getEventConfig().then((config) => {
+            document.getElementById("eventNoticeText").textContent = config.notice || DEFAULT_EVENT_CONFIG.notice;
+        }).catch(() => {});
 
         if (currentUser) {
             loginButton.hidden = true;
@@ -204,11 +229,15 @@
                     syncMemberToSheet(currentUser).catch((error) => {
                         console.error("Google Sheets 회원 정보 동기화 실패", error);
                     });
+                    retryPendingSheetSyncs(currentUser).then((result) => {
+                        if (result.retried) statusMessage.textContent = `대기 중이던 ${result.retried}건을 다시 동기화했습니다.`;
+                    }).catch((error) => console.warn("대기 동기화 재시도 실패", error));
                     const access = await getUserAccess(currentUser);
                     adminButton.hidden = !access.isAdmin;
                     qrBuilderButton.hidden = !access.isAdmin;
                     myProgress.hidden = false;
                     await loadMyProgress();
+                    onSnapshot(collection(db, "users", currentUser.uid, "progress"), (snapshot) => renderMyProgress(snapshot.docs), (error) => console.warn("실시간 진행률 갱신 실패", error));
                     statusMessage.textContent = "준비가 끝났습니다. 현장에서 QR을 찾아 스캔해 주세요.";
                 }
             } catch (error) {

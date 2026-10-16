@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f0e6">
+    <title>완주 인증서 · 독토리</title><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./theme.css"><link rel="stylesheet" href="./footer.css">
+    <style>
+        body { visibility: hidden; }
+        .certificate-shell { width: min(900px, calc(100% - 32px)); margin: 36px auto; }
+        .certificate { position: relative; min-height: 600px; padding: clamp(34px, 8vw, 86px); border: 8px double var(--ink); background: var(--paper-strong); text-align: center; box-shadow: var(--shadow); overflow: hidden; }
+        .certificate::before { content: "D"; position: absolute; right: -30px; bottom: -80px; color: var(--lime); font: 20rem/.8 "Black Han Sans", sans-serif; opacity: .45; }
+        .certificate > * { position: relative; z-index: 1; }
+        .certificate h1 { margin: 26px 0; font: clamp(3rem, 9vw, 7rem)/1 "Black Han Sans", sans-serif; }
+        .certificate-name { margin: 40px 0 12px; font: clamp(2rem, 6vw, 4rem) "Black Han Sans", sans-serif; color: var(--blue); }
+        .certificate-copy { max-width: 620px; margin: 0 auto; font-size: 1.2rem; line-height: 1.9; }
+        .certificate-meta { margin-top: 46px; color: var(--muted); }
+        .certificate-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+        @media print { body { background: white; } .certificate-shell { width: 100%; margin: 0; } .certificate { min-height: 95vh; box-shadow: none; } .certificate-actions, .utility-toggle, .utility-panel, .network-banner { display: none !important; } }
+    </style>
+</head>
+<body>
+    <main class="certificate-shell">
+        <section id="certificate" class="certificate" hidden><span class="label">MISSION COMPLETE</span><h1>독토리 완주 인증서</h1><div id="certificateName" class="certificate-name"></div><p class="certificate-copy">위 참여자는 복성고 도서부 독토리의 QR 미션 6개를 모두 완료했으므로 이 인증서를 수여합니다.</p><p id="certificateDate" class="certificate-meta"></p></section>
+        <section id="notComplete" class="panel" style="padding:34px;text-align:center" hidden><h1 class="section-title">아직 완주하지 않았습니다</h1><p>6개의 QR 미션을 모두 완료하면 인증서를 확인할 수 있습니다.</p></section>
+        <div class="certificate-actions"><button id="printButton" type="button" hidden>인쇄 또는 PDF 저장</button><a class="button button--paper" href="./index.html">메인화면으로</a></div>
+    </main>
+    <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><nav class="site-footer__links" aria-label="하단 메뉴"><a href="./index.html">홈으로</a></nav><small>© 2026 복성고등학교 도서부</small></footer>
+    <script type="module" src="./app-ui.js"></script>
+    <script type="module">
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getMemberProfile, requireUser } from "./auth.js";
+        import { db } from "./firebase.js";
+        const user = await requireUser();
+        const [profile, progress] = await Promise.all([getMemberProfile(user), getDocs(collection(db, "users", user.uid, "progress"))]);
+        const completed = progress.docs.filter((item) => item.data().found === true && /^qr[1-6]$/.test(item.id));
+        if (completed.length === 6) {
+            document.getElementById("certificate").hidden = false;
+            document.getElementById("certificateName").textContent = `${profile.studentName} (${profile.studentNumber})`;
+            document.getElementById("certificateDate").textContent = `${new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date())} · 복성고등학교 도서부`;
+            document.getElementById("printButton").hidden = false;
+        } else {
+            document.getElementById("notComplete").hidden = false;
+        }
+        document.body.style.visibility = "visible";
+        document.getElementById("printButton").addEventListener("click", () => window.print());
+    </script>
+</body>
+</html>

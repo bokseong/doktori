@@ -38,6 +38,21 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsentVersion", "") == currentConsentVersion();
     }
 
+    function isMissionOpen(qrId) {
+      return !exists(/databases/$(database)/documents/eventConfig/current)
+        || (
+          get(/databases/$(database)/documents/eventConfig/current).data.get("qrStatus", {})[qrId] == "active"
+          && (
+            get(/databases/$(database)/documents/eventConfig/current).data.get("startAt", null) == null
+            || request.time >= get(/databases/$(database)/documents/eventConfig/current).data.startAt
+          )
+          && (
+            get(/databases/$(database)/documents/eventConfig/current).data.get("endAt", null) == null
+            || request.time <= get(/databases/$(database)/documents/eventConfig/current).data.endAt
+          )
+        );
+    }
+
     function isValidMemberProfile(data, userId) {
       return data.uid == userId
         && data.email == request.auth.token.email
@@ -98,21 +113,40 @@ service cloud.firestore {
           && resource.data.get("email", "") != "github.jwastro09@gmail.com"
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["role"])
           && request.resource.data.role in ["participant", "admin"]
+        ) || (
+          isMasterAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "email", "displayName", "studentNumber", "studentName", "privacyConsent",
+            "privacyConsentVersion", "privacyConsentAt", "lastActivityAt"
+          ])
         );
       allow delete: if false;
 
       match /progress/{qrId} {
         allow read: if isOwner(userId) || isAdmin();
-        allow create: if isOwner(userId)
-          && hasCurrentConsent(userId)
-          && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
-          && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt"])
-          && request.resource.data.qrId == qrId
-          && request.resource.data.found == true
-          && existsAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId))
-          && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.uid == userId
-          && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.qrId == qrId;
-        allow update, delete: if false;
+        allow create: if (
+            isOwner(userId)
+            && hasCurrentConsent(userId)
+            && isMissionOpen(qrId)
+            && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
+            && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt"])
+            && request.resource.data.qrId == qrId
+            && request.resource.data.found == true
+            && request.resource.data.completedAt == request.time
+            && existsAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId))
+            && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.uid == userId
+            && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.qrId == qrId
+          ) || (
+            isAdmin()
+            && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
+            && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt", "manualBy"])
+            && request.resource.data.qrId == qrId
+            && request.resource.data.found == true
+            && request.resource.data.completedAt == request.time
+            && request.resource.data.manualBy == request.auth.uid
+          );
+        allow update: if false;
+        allow delete: if isAdmin();
       }
     }
 
@@ -124,13 +158,83 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(["uid", "qrId", "answer", "submittedAt"])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
+        && isMissionOpen(request.resource.data.qrId)
         && request.resource.data.answer is string
+        && request.resource.data.submittedAt == request.time
         && isCorrectAnswer(request.resource.data.qrId, request.resource.data.answer);
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isMasterAdmin();
     }
 
     match /quizSecrets/{qrId} {
       allow read, write: if false;
+    }
+
+    match /eventConfig/{configId} {
+      allow read: if configId == "current";
+      allow create, update: if isAdmin()
+        && configId == "current"
+        && request.resource.data.keys().hasOnly(["notice", "startAt", "endAt", "retentionAt", "qrStatus", "updatedAt", "updatedBy"])
+        && request.resource.data.notice is string
+        && request.resource.data.notice.size() <= 300
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.qrStatus.keys().hasAll(["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"])
+        && request.resource.data.qrStatus.keys().hasOnly(["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"])
+        && request.resource.data.qrStatus.qr1 in ["active", "paused", "closed"]
+        && request.resource.data.qrStatus.qr2 in ["active", "paused", "closed"]
+        && request.resource.data.qrStatus.qr3 in ["active", "paused", "closed"]
+        && request.resource.data.qrStatus.qr4 in ["active", "paused", "closed"]
+        && request.resource.data.qrStatus.qr5 in ["active", "paused", "closed"]
+        && request.resource.data.qrStatus.qr6 in ["active", "paused", "closed"];
+      allow delete: if false;
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(["actorUid", "actorEmail", "action", "targetUid", "qrId", "details", "createdAt"])
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.actorEmail == request.auth.token.email
+        && request.resource.data.action is string
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /quizTelemetry/{eventId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(["uid", "qrId", "outcome", "createdAt"])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
+        && request.resource.data.outcome in ["correct", "incorrect", "save-error"]
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isMasterAdmin();
+    }
+
+    match /clientErrors/{errorId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(["uid", "code", "context", "path", "online", "createdAt"])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.code is string
+        && request.resource.data.context is string
+        && request.resource.data.path is string
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isMasterAdmin();
+    }
+
+    match /syncQueue/{syncId} {
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create, update: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(["uid", "action", "qrId", "attempts", "lastErrorCode", "lastAttemptAt", "createdAt"])
+        && request.resource.data.action in ["profile", "progress"]
+        && request.resource.data.attempts is int
+        && request.resource.data.attempts >= 1;
+      allow delete: if isSignedIn() && (resource.data.uid == request.auth.uid || isMasterAdmin());
     }
 
     // 기존 축전 사이트의 공개 운세 읽기 규칙은 그대로 유지합니다.

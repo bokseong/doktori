@@ -1,5 +1,7 @@
 import {
+    addDoc,
     arrayUnion,
+    collection,
     doc,
     getDoc,
     serverTimestamp,
@@ -7,6 +9,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { requireUser } from "../auth.js";
 import { db } from "../firebase.js";
+import { getEventConfig, getMissionAvailability } from "../event-config.js";
 import { syncProgressToSheet } from "../sheet-sync.js";
 
 const QUIZZES = Object.freeze({
@@ -20,6 +23,19 @@ const QUIZZES = Object.freeze({
 
 function normalize(value) {
     return value.normalize("NFKC").toLowerCase().replace(/[\s.,!?·/()_-]/g, "");
+}
+
+async function recordQuizTelemetry(user, qrId, outcome) {
+    try {
+        await addDoc(collection(db, "quizTelemetry"), {
+            uid: user.uid,
+            qrId,
+            outcome,
+            createdAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.warn("문제 통계 기록 실패", error);
+    }
 }
 
 export async function initQuiz(qrId) {
@@ -58,6 +74,16 @@ export async function initQuiz(qrId) {
     message.after(navigation);
 
     document.getElementById("quizQuestion").textContent = quiz.question;
+    try {
+        const availability = getMissionAvailability(await getEventConfig(), qrId);
+        if (!availability.available) {
+            message.textContent = availability.message;
+            input.disabled = true;
+            submit.disabled = true;
+        }
+    } catch (error) {
+        console.warn("행사 설정 확인 실패", error);
+    }
     const existing = await getDoc(progressReference);
     if (existing.exists()) {
         message.textContent = "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
@@ -70,9 +96,28 @@ export async function initQuiz(qrId) {
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
+        try {
+            const availability = getMissionAvailability(await getEventConfig(), qrId);
+            if (!availability.available) {
+                message.textContent = availability.message;
+                input.disabled = true;
+                submit.disabled = true;
+                return;
+            }
+        } catch (error) {
+            console.warn("제출 전 행사 설정 확인 실패", error);
+        }
+        const throttleKey = `doktori-last-attempt-${user.uid}-${qrId}`;
+        const lastAttempt = Number(localStorage.getItem(throttleKey) || 0);
+        const waitMilliseconds = 3000 - (Date.now() - lastAttempt);
+        if (waitMilliseconds > 0) {
+            message.textContent = `너무 빠르게 제출했습니다. ${Math.ceil(waitMilliseconds / 1000)}초 후 다시 시도해 주세요.`;
+            return;
+        }
+        localStorage.setItem(throttleKey, String(Date.now()));
         submit.disabled = true;
         input.disabled = true;
-        message.textContent = "정답을 확인하는 중...";
+        message.textContent = "1/3 · 정답을 확인하는 중...";
         try {
             const latest = await getDoc(progressReference);
             if (!latest.exists()) {
@@ -96,11 +141,14 @@ export async function initQuiz(qrId) {
                 }, { merge: true });
                 await batch.commit();
             }
+            message.textContent = "2/3 · 진행도를 저장했습니다. Google Sheets에 동기화하는 중...";
             await syncProgressToSheet(user, qrId);
-            message.textContent = "정답입니다! 이 QR을 찾은 것으로 기록했습니다.";
+            await recordQuizTelemetry(user, qrId, "correct");
+            message.textContent = "3/3 · 정답입니다! 진행도와 동기화 요청을 완료했습니다.";
             navigation.hidden = false;
         } catch (error) {
             console.error(error);
+            await recordQuizTelemetry(user, qrId, error.code === "permission-denied" ? "incorrect" : "save-error");
             message.textContent = error.code === "permission-denied"
                 ? "정답이 아닙니다. 다시 생각해 보세요."
                 : "진행도를 저장하지 못했습니다. 네트워크를 확인하고 다시 시도하세요.";

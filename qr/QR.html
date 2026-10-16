@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f0e6">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
     <title>QR 제작 · 복성고 독토리</title>
     <link rel="stylesheet" href="../theme.css">
     <link rel="stylesheet" href="../footer.css">
@@ -29,6 +31,14 @@
         #qrCode { min-height: 224px; display: grid; place-items: center; }
         #qrCode canvas, #qrCode img { max-width: 100%; padding: 10px; border: 2px solid var(--ink); background: white; }
         #builderStatus { min-height: 1.5em; margin: 16px 0 0; color: #94321f; font-weight: 700; }
+        #printSheet { display: none; }
+        @media print {
+            body > :not(#printSheet) { display: none !important; }
+            #printSheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18mm; padding: 10mm; }
+            .print-qr { break-inside: avoid; text-align: center; font: 700 18pt/1.4 sans-serif; }
+            .print-qr img { display: block; width: 62mm; height: 62mm; margin: 0 auto 4mm; }
+            .print-qr small { display: block; font-size: 9pt; overflow-wrap: anywhere; }
+        }
         @media (max-width: 720px) { .builder-grid { grid-template-columns: 1fr; } .builder-shell { padding-top: 28px; } }
     </style>
 </head>
@@ -52,7 +62,7 @@
                     <input type="text" id="textInput" placeholder="URL 또는 텍스트를 입력하세요" autocomplete="off">
                     <small>인쇄 전에 주소가 올바른지 한 번 스캔해 확인하세요.</small>
                 </div>
-                <div class="builder-actions"><button id="generateButton" class="button--coral" type="button">QR 다시 만들기</button><button id="copyButton" class="button--paper" type="button">주소 복사</button></div>
+                <div class="builder-actions"><button id="generateButton" class="button--coral" type="button">QR 다시 만들기</button><button id="copyButton" class="button--paper" type="button">주소 복사</button><button id="downloadAllButton" class="button--paper" type="button">1~6 ZIP 다운로드</button><button id="printAllButton" class="button--paper" type="button">1~6 인쇄용 보기</button></div>
                 <p id="builderStatus" role="status" aria-live="polite"></p>
             </section>
 
@@ -64,6 +74,8 @@
         </div>
     </main>
 
+    <section id="printSheet" aria-label="QR 1~6 인쇄 용지"></section>
+
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
         <nav class="site-footer__links" aria-label="하단 메뉴"><a href="../index.html">홈으로</a></nav>
@@ -71,6 +83,8 @@
     </footer>
 
     <script src="./qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js"></script>
+    <script type="module" src="../app-ui.js"></script>
     <script type="module">
         import { getUserAccess, requireUser } from "../auth.js";
 
@@ -131,6 +145,69 @@
             status.textContent = "QR 이미지 다운로드를 시작했습니다.";
         }
 
+        function createQrDataUrl(number) {
+            const container = document.createElement("div");
+            new QRCode(container, {
+                text: new URL(`./${number}.html`, location.href).href,
+                width: 600,
+                height: 600,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            const canvas = container.querySelector("canvas");
+            const image = container.querySelector("img");
+            return canvas ? canvas.toDataURL("image/png") : (image?.src || "");
+        }
+
+        async function downloadAllQr() {
+            const button = document.getElementById("downloadAllButton");
+            if (!window.JSZip) {
+                status.textContent = "ZIP 모듈을 불러오지 못했습니다. 네트워크 연결을 확인해 주세요.";
+                return;
+            }
+            button.disabled = true;
+            status.textContent = "QR 6개를 ZIP 파일로 묶는 중...";
+            try {
+                const zip = new JSZip();
+                for (let number = 1; number <= 6; number += 1) {
+                    zip.file(`doktori-qr-${String(number).padStart(2, "0")}.png`, createQrDataUrl(number).split(",")[1], { base64: true });
+                }
+                const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+                const objectUrl = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = objectUrl;
+                link.download = "doktori-qr-01-06.zip";
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+                status.textContent = "QR 1~6 ZIP 다운로드를 시작했습니다.";
+            } catch (error) {
+                console.error(error);
+                status.textContent = "ZIP 파일을 만들지 못했습니다.";
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function printAllQr() {
+            const sheet = document.getElementById("printSheet");
+            sheet.replaceChildren();
+            for (let number = 1; number <= 6; number += 1) {
+                const card = document.createElement("article");
+                card.className = "print-qr";
+                const image = new Image();
+                image.src = createQrDataUrl(number);
+                image.alt = `독토리 QR ${number}`;
+                const label = document.createElement("strong");
+                label.textContent = `독토리 QR ${String(number).padStart(2, "0")}`;
+                const address = document.createElement("small");
+                address.textContent = new URL(`./${number}.html`, location.href).href;
+                card.append(image, label, address);
+                sheet.append(card);
+            }
+            window.print();
+        }
+
         async function copyValue() {
             const value = input.value.trim();
             if (!value) return;
@@ -147,6 +224,8 @@
         document.getElementById("generateButton").addEventListener("click", generateQR);
         document.getElementById("downloadButton").addEventListener("click", downloadQR);
         document.getElementById("copyButton").addEventListener("click", copyValue);
+        document.getElementById("downloadAllButton").addEventListener("click", downloadAllQr);
+        document.getElementById("printAllButton").addEventListener("click", printAllQr);
         presetButtons.forEach((button) => button.addEventListener("click", () => selectQr(Number(button.dataset.qr))));
         input.addEventListener("input", () => {
             selectedQrNumber = null;

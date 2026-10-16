@@ -1,0 +1,15 @@
+{
+  "name": "복성고 독토리",
+  "short_name": "독토리",
+  "description": "복성고 도서부 QR 미션",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f0e6",
+  "theme_color": "#f4f0e6",
+  "lang": "ko",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
+

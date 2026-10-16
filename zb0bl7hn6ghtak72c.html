@@ -2,14 +2,14 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#f4f0e6"><title>독토리 관리자</title>
+    <meta name="theme-color" content="#f4f0e6"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><title>독토리 관리자</title>
     <link rel="stylesheet" href="./theme.css">
     <link rel="stylesheet" href="./footer.css">
     <style>
         body { visibility: hidden; }
         .admin-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
         .admin-intro h1 { margin: 12px 0 8px; font: clamp(2.8rem, 7vw, 6rem)/.95 "Black Han Sans", sans-serif; }
-        .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 2px; background: var(--ink); box-shadow: var(--shadow); }
+        .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 2px; background: var(--ink); box-shadow: var(--shadow); }
         .card { padding: 22px; background: var(--paper-strong); }
         .card strong { display: block; margin-top: 16px; color: var(--blue); font: 2.8rem "Black Han Sans", sans-serif; }
         .shortcut-panel { margin: 32px 0; padding: 24px; }
@@ -17,7 +17,24 @@
         .shortcut-title { display: grid; gap: 5px; }
         .qr-shortcuts { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
         .qr-shortcuts .button { min-width: 0; background: var(--lime); }
-        .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 34px 0 12px; }
+        .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 34px 0 12px; flex-wrap: wrap; }
+        .toolbar-controls { display: flex; flex-wrap: wrap; gap: 9px; }
+        .toolbar input { min-width: 220px; padding: 10px 12px; border: 2px solid var(--ink); }
+        .admin-panel { margin-top: 30px; padding: 24px; }
+        .admin-panel h2 { margin-bottom: 18px; }
+        .config-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .config-grid label { display: grid; gap: 7px; font-weight: 700; }
+        .config-grid input, .config-grid textarea { width: 100%; padding: 11px; border: 2px solid var(--ink); background: white; }
+        .config-grid textarea { min-height: 88px; resize: vertical; }
+        .wide { grid-column: 1 / -1; }
+        .qr-state-grid, .quiz-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+        .qr-state-grid label { display: grid; gap: 6px; font-weight: 700; }
+        .stat-card { padding: 14px; border: 2px solid var(--ink); background: var(--paper); }
+        .stat-card strong { display: block; margin-bottom: 7px; font-family: "Black Han Sans", sans-serif; }
+        .manual-grid { display: grid; grid-template-columns: 2fr 1fr auto auto; gap: 9px; align-items: end; }
+        .manual-grid label { display: grid; gap: 6px; font-weight: 700; }
+        .diagnostic-list { display: grid; gap: 8px; margin-top: 14px; }
+        .diagnostic-item { padding: 10px 12px; border-left: 6px solid var(--blue); background: var(--paper); }
         .table-wrap { overflow-x: auto; border: 2px solid var(--ink); background: var(--paper-strong); box-shadow: var(--shadow); }
         table { width: 100%; min-width: 1020px; border-collapse: collapse; }
         th, td { padding: 14px; text-align: left; border-bottom: 2px solid var(--ink); vertical-align: middle; }
@@ -28,7 +45,7 @@
         select { min-width: 100px; padding: 9px; border: 2px solid var(--ink); background: white; }
         .role-controls { display: flex; gap: 8px; } .small { min-height: 40px; padding: 7px 10px; box-shadow: 3px 3px 0 var(--ink); }
         #denied { width: min(520px, calc(100% - 32px)); margin: 12vh auto; padding: 38px; text-align: center; }
-        @media (max-width: 760px) { .admin-intro { align-items: flex-start; flex-direction: column; } .summary { grid-template-columns: 1fr; } .qr-shortcuts { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 760px) { .admin-intro { align-items: flex-start; flex-direction: column; } .summary { grid-template-columns: repeat(2, 1fr); } .qr-shortcuts, .qr-state-grid, .quiz-stats { grid-template-columns: repeat(2, 1fr); } .config-grid, .manual-grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } }
     </style>
 </head>
 <body>
@@ -42,7 +59,7 @@
             <button id="refreshButton" type="button">데이터 새로고침</button>
         </section>
         <section class="summary" aria-label="참여 현황">
-            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div>
+            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div><div class="card">동기화 대기<strong id="pendingSyncs">0</strong></div>
         </section>
         <section class="shortcut-panel panel" aria-labelledby="shortcutTitle">
             <div class="shortcut-head">
@@ -53,7 +70,31 @@
                 <a class="button" href="./qr/1.html">QR 01</a><a class="button" href="./qr/2.html">QR 02</a><a class="button" href="./qr/3.html">QR 03</a><a class="button" href="./qr/4.html">QR 04</a><a class="button" href="./qr/5.html">QR 05</a><a class="button" href="./qr/6.html">QR 06</a>
             </div>
         </section>
-        <div class="toolbar"><h2 class="section-title">사용자별 현황</h2></div>
+        <section class="admin-panel panel" aria-labelledby="eventConfigTitle">
+            <h2 id="eventConfigTitle" class="section-title">행사 운영 설정</h2>
+            <div class="config-grid">
+                <label class="wide">메인 공지<textarea id="eventNotice" maxlength="300"></textarea></label>
+                <label>시작 시각<input id="eventStartAt" type="datetime-local"></label><label>종료 시각<input id="eventEndAt" type="datetime-local"></label>
+                <label>개인정보 보유 종료 시각<input id="retentionAt" type="datetime-local"></label>
+            </div>
+            <h3>QR별 상태</h3><div id="qrStateGrid" class="qr-state-grid"></div>
+            <div class="actions"><button id="saveEventConfig" class="button--coral" type="button">운영 설정 저장</button><button id="anonymizeExpired" class="button--paper" type="button">보유기간 만료 사용자 익명화</button></div>
+            <p id="configMessage" class="status" role="status"></p>
+        </section>
+
+        <section class="admin-panel panel" aria-labelledby="quizStatsTitle"><h2 id="quizStatsTitle" class="section-title">문항별 제출 통계</h2><div id="quizStats" class="quiz-stats"></div></section>
+
+        <section class="admin-panel panel" aria-labelledby="manualTitle">
+            <h2 id="manualTitle" class="section-title">진행도 수동 수정</h2>
+            <div class="manual-grid"><label>참여자<select id="manualUser"></select></label><label>QR<select id="manualQr"></select></label><button id="manualComplete" type="button">완료 처리</button><button id="manualCancel" class="button--paper" type="button">완료 취소</button></div>
+            <p id="manualMessage" class="status" role="status"></p>
+        </section>
+
+        <section class="admin-panel panel" aria-labelledby="diagnosticTitle"><h2 id="diagnosticTitle" class="section-title">시스템 진단</h2><div class="actions"><button id="runDiagnostics" type="button">App Check·연결 진단</button></div><div id="diagnosticList" class="diagnostic-list"></div></section>
+
+        <section class="admin-panel panel" aria-labelledby="auditTitle"><h2 id="auditTitle" class="section-title">최근 관리자 변경 이력</h2><div id="auditLogList" class="diagnostic-list" aria-live="polite"></div></section>
+
+        <div class="toolbar"><h2 class="section-title">사용자별 현황</h2><div class="toolbar-controls"><input id="userSearch" type="search" placeholder="이름·학번·이메일 검색"><select id="userSort"><option value="name">이름순</option><option value="progress">진행률 높은 순</option><option value="activity">최근 활동순</option></select><button id="exportCsv" class="button--paper" type="button">CSV 내보내기</button></div></div>
         <p id="message" class="status" role="status"></p>
         <div class="table-wrap"><table><thead><tr><th>참여자</th><th>학번</th><th>개인정보 동의</th><th>권한</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead><tbody id="userRows"></tbody></table></div>
     </main>
@@ -63,8 +104,10 @@
         <nav class="site-footer__links" aria-label="하단 메뉴"><a href="./index.html">홈으로</a></nav>
         <small>© 2026 복성고등학교 도서부</small>
     </footer>
+    <script type="module" src="./app-ui.js"></script>
+    <script type="module" src="./admin-tools.js"></script>
     <script type="module">
-        import { collection, doc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { collection, doc, getDocs, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "./auth.js";
         import { db } from "./firebase.js";
 
@@ -75,6 +118,9 @@
         const denied = document.getElementById("denied");
         const message = document.getElementById("message");
         const rows = document.getElementById("userRows");
+        const searchInput = document.getElementById("userSearch");
+        const sortSelect = document.getElementById("userSort");
+        let loadedRecords = [];
         document.getElementById("logoutButton").addEventListener("click", logout);
         document.getElementById("adminIdentity").textContent = currentUser.email || currentUser.displayName || "관리자";
 
@@ -85,7 +131,7 @@
             adminContent.hidden = false;
             document.getElementById("refreshButton").addEventListener("click", loadUsers);
             document.body.style.visibility = "visible";
-            await loadUsers();
+            onSnapshot(collection(db, "users"), loadUsers, (error) => { console.error(error); message.textContent = "실시간 사용자 갱신에 실패했습니다."; });
         }
 
         function formatDate(value) {
@@ -104,8 +150,8 @@
                     const found = progressSnapshot.docs.filter((item) => item.data().found === true && QR_IDS.includes(item.id)).map((item) => item.id).sort((a, b) => Number(a.slice(2)) - Number(b.slice(2)));
                     return { id: userDocument.id, ...data, found };
                 }));
-                records.sort((a, b) => (a.studentName || a.displayName || a.email || "").localeCompare(b.studentName || b.displayName || b.email || "", "ko"));
-                records.forEach(renderUser);
+                loadedRecords = records;
+                renderRecords();
                 document.getElementById("totalUsers").textContent = String(records.length);
                 document.getElementById("adminUsers").textContent = String(records.filter((item) => item.role === "admin").length);
                 document.getElementById("completedUsers").textContent = String(records.filter((item) => item.found.length === QR_IDS.length).length);
@@ -115,6 +161,27 @@
                 message.textContent = "사용자 정보를 불러오지 못했습니다. 권한과 네트워크를 확인하세요.";
             }
         }
+
+        function renderRecords() {
+            const query = searchInput.value.trim().toLowerCase();
+            const records = loadedRecords.filter((item) => [item.studentName, item.studentNumber, item.email].some((value) => String(value || "").toLowerCase().includes(query)));
+            if (sortSelect.value === "progress") records.sort((a, b) => b.found.length - a.found.length);
+            else if (sortSelect.value === "activity") records.sort((a, b) => (b.lastActivityAt?.toMillis?.() || 0) - (a.lastActivityAt?.toMillis?.() || 0));
+            else records.sort((a, b) => (a.studentName || a.displayName || a.email || "").localeCompare(b.studentName || b.displayName || b.email || "", "ko"));
+            rows.replaceChildren();
+            records.forEach(renderUser);
+        }
+
+        function exportCsv() {
+            const header = ["이름", "학번", "이메일", "권한", "완료수", "찾은QR", "개인정보동의"];
+            const values = loadedRecords.map((record) => [record.studentName || "", record.studentNumber || "", record.email || "", record.role || "participant", record.found.length, record.found.join(" "), record.privacyConsent === true ? "동의" : "미동의"]);
+            const csv = [header, ...values].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\r\n");
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" })); link.download = `doktori-users-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(link.href);
+        }
+
+        searchInput.addEventListener("input", renderRecords);
+        sortSelect.addEventListener("change", renderRecords);
+        document.getElementById("exportCsv").addEventListener("click", exportCsv);
 
         function renderUser(record) {
             const row = document.createElement("tr");
@@ -136,7 +203,15 @@
             select.disabled = master; save.disabled = master; if (master) save.textContent = "마스터";
             save.addEventListener("click", async () => {
                 save.disabled = true; message.textContent = `${record.email || record.studentName} 권한을 저장하는 중...`;
-                try { await updateDoc(doc(db, "users", record.id), { role: select.value }); record.role = select.value; message.textContent = "권한을 변경했습니다."; }
+                try {
+                    const previousRole = record.role || "participant";
+                    const batch = writeBatch(db);
+                    batch.update(doc(db, "users", record.id), { role: select.value });
+                    batch.set(doc(collection(db, "auditLogs")), { actorUid: currentUser.uid, actorEmail: currentUser.email || "", action: "role-updated", targetUid: record.id, qrId: "", details: JSON.stringify({ from: previousRole, to: select.value }), createdAt: serverTimestamp() });
+                    await batch.commit();
+                    record.role = select.value;
+                    message.textContent = "권한을 변경했습니다.";
+                }
                 catch (error) { console.error(error); message.textContent = "권한을 변경하지 못했습니다."; }
                 finally { save.disabled = master; }
             });
