@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#f4f0e6">
     <title>복성고 독토리</title>
     <link rel="stylesheet" href="./theme.css">
+    <link rel="stylesheet" href="./footer.css">
     <style>
         .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 34px; align-items: end; }
         .hero-copy { padding: clamp(26px, 6vw, 70px) 0; }
@@ -60,6 +61,12 @@
             <article><b>03</b><h2>문제 해결</h2><p>정답을 맞히면 내 진행도가 자동으로 기록됩니다.</p></article>
         </section>
     </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
+        <nav class="site-footer__links" aria-label="하단 메뉴"><a href="./index.html">홈으로</a></nav>
+        <small>© 2026 복성고등학교 도서부</small>
+    </footer>
 
     <script type="module">
         import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./auth.js";

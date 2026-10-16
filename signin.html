@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#f4f0e6">
     <title>로그인 · 복성고 독토리</title>
     <link rel="stylesheet" href="./theme.css">
+    <link rel="stylesheet" href="./footer.css">
     <style>
         body { display: grid; place-items: center; padding: 28px 16px; }
         .auth-shell { width: min(920px, 100%); display: grid; grid-template-columns: .85fr 1.15fr; }
@@ -65,7 +66,7 @@
                     <section class="consent-box terms-box" aria-labelledby="termsTitle">
                         <h3 id="termsTitle">독토리 이용약관</h3>
                         <ol>
-                            <li>본 본 프로그램은 복성고 도서부가 운영하는 QR 미션 참여와 진행도 확인을 위해 제공됩니다.</li>
+                            <li>본 프로그램은 복성고 도서부가 운영하는 QR 미션 참여와 진행도 확인을 위해 제공됩니다.</li>
                             <li>참여자는 본인의 Google 계정과 정확한 학번·이름을 사용해야 하며, 다른 사람의 계정을 대신 사용하거나 진행 기록을 조작해서는 안 됩니다.</li>
                             <li>QR 위치, 문제와 정답을 무단으로 공개하거나 자동화 도구로 정답을 반복 제출하는 등 행사 운영을 방해하는 행위를 금지합니다.</li>
                             <li>부정 참여 또는 운영 방해가 확인되면 해당 진행 기록을 무효로 처리하거나 참여를 제한할 수 있습니다.</li>
@@ -96,6 +97,12 @@
             <p id="message" role="status"></p>
         </section>
     </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
+        <nav class="site-footer__links" aria-label="하단 메뉴"><a href="./index.html">홈으로</a></nav>
+        <small>© 2026 복성고등학교 도서부</small>
+    </footer>
 
     <script type="module">
         import {

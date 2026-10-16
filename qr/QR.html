@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>복성고 독토리</title>
+    <link rel="stylesheet" href="../footer.css">
     <style>
         body {
             visibility: hidden;
@@ -14,7 +15,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            flex-direction: column;
         }
         .container {
             background-color: #ffffff;
@@ -89,6 +91,12 @@
             <button id="downloadButton" class="download-btn" type="button">QR코드 다운로드</button>
         </div>
     </div>
+
+    <footer class="site-footer">
+        <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
+        <nav class="site-footer__links" aria-label="하단 메뉴"><a href="../index.html">홈으로</a></nav>
+        <small>© 2026 복성고등학교 도서부</small>
+    </footer>
 
     <script src="./qrcode.min.js"></script>
     <script type="module">
