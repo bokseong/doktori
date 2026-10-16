@@ -21,7 +21,19 @@
         .guide b { display: block; margin-bottom: 30px; color: var(--coral); font: 2rem "Black Han Sans", sans-serif; }
         .guide h2 { margin: 0 0 10px; font: 1.35rem "Black Han Sans", sans-serif; }
         .guide p { margin: 0; color: var(--muted); line-height: 1.65; }
+        .my-progress { margin-top: 34px; padding: clamp(22px, 4vw, 34px); }
+        .progress-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+        .progress-head p { margin: 8px 0 0; color: var(--muted); }
+        .progress-score { flex: 0 0 auto; font: 2.7rem/1 "Black Han Sans", sans-serif; color: var(--blue); }
+        .progress-track { height: 18px; margin: 22px 0 16px; border: 2px solid var(--ink); background: var(--paper); overflow: hidden; }
+        .progress-track span { display: block; width: 0; height: 100%; background: var(--coral); transition: width .25s ease; }
+        .progress-items { display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px; }
+        .progress-chip { padding: 6px 10px; border: 2px solid var(--ink); background: var(--lime); font-weight: 700; }
+        .progress-empty { color: var(--muted); }
+        .progress-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; }
+        .progress-footer .status { margin: 0; }
         @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .hero-ticket { transform: none; } .guide { grid-template-columns: 1fr; } }
+        @media (max-width: 560px) { .progress-head, .progress-footer { align-items: stretch; flex-direction: column; } .progress-score { font-size: 2.2rem; } }
     </style>
 </head>
 <body>
@@ -62,6 +74,16 @@
             <article><b>02</b><h2>계정 확인</h2><p>Google 로그인 후 개인정보 수집·이용에 동의하고 학번과 이름을 등록합니다.</p></article>
             <article><b>03</b><h2>문제 해결</h2><p>정답을 맞히면 내 진행도가 자동으로 기록됩니다.</p></article>
         </section>
+
+        <section id="myProgress" class="my-progress panel" aria-labelledby="myProgressTitle" hidden>
+            <div class="progress-head">
+                <div><span class="label">MY RECORD</span><h2 id="myProgressTitle" class="section-title">내 진행 상황</h2><p>완료한 QR 번호만 표시되며 문제 페이지로 연결되지는 않습니다.</p></div>
+                <strong id="progressScore" class="progress-score">0 / 6</strong>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
+            <div id="progressItems" class="progress-items" aria-live="polite"></div>
+            <div class="progress-footer"><p id="progressMessage" class="status" role="status"></p><button id="refreshProgressButton" class="button--paper" type="button">진행률 새로고침</button></div>
+        </section>
     </main>
 
     <dialog id="qrScannerDialog" class="scanner-dialog" aria-labelledby="qrScannerTitle">
@@ -91,6 +113,7 @@
                 <p id="scannerResultCopy"></p>
                 <div class="scanner-result__actions">
                     <a id="openScannedQrLink" class="button button--coral" href="./index.html">문제 페이지 열기</a>
+                    <button id="scanAgainButton" class="button--paper" type="button">다시 스캔하기</button>
                     <a class="button button--paper" href="./index.html">메인화면으로 돌아가기</a>
                 </div>
             </div>
@@ -106,7 +129,9 @@
     <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
     <script src="./qr-scanner.js"></script>
     <script type="module">
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./auth.js";
+        import { db } from "./firebase.js";
         import { syncMemberToSheet } from "./sheet-sync.js";
 
         const userInfo = document.getElementById("userInfo");
@@ -116,7 +141,52 @@
         const adminButton = document.getElementById("adminButton");
         const qrBuilderButton = document.getElementById("qrBuilderButton");
         const statusMessage = document.getElementById("statusMessage");
+        const myProgress = document.getElementById("myProgress");
+        const progressScore = document.getElementById("progressScore");
+        const progressFill = document.getElementById("progressFill");
+        const progressTrack = document.querySelector(".progress-track");
+        const progressItems = document.getElementById("progressItems");
+        const progressMessage = document.getElementById("progressMessage");
+        const refreshProgressButton = document.getElementById("refreshProgressButton");
+        const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const currentUser = await waitForAuth();
+
+        async function loadMyProgress() {
+            if (!currentUser) return;
+            refreshProgressButton.disabled = true;
+            progressMessage.textContent = "진행률을 확인하는 중...";
+            try {
+                const snapshot = await getDocs(collection(db, "users", currentUser.uid, "progress"));
+                const found = snapshot.docs
+                    .filter((item) => item.data().found === true && QR_IDS.includes(item.id))
+                    .map((item) => item.id)
+                    .sort((left, right) => Number(left.slice(2)) - Number(right.slice(2)));
+                const count = found.length;
+                progressScore.textContent = `${count} / ${QR_IDS.length}`;
+                progressFill.style.width = `${(count / QR_IDS.length) * 100}%`;
+                progressTrack.setAttribute("aria-valuenow", String(count));
+                progressItems.replaceChildren();
+                if (count) {
+                    found.forEach((id) => {
+                        const chip = document.createElement("span");
+                        chip.className = "progress-chip";
+                        chip.textContent = `QR ${String(Number(id.slice(2))).padStart(2, "0")} 완료`;
+                        progressItems.append(chip);
+                    });
+                } else {
+                    const empty = document.createElement("span");
+                    empty.className = "progress-empty";
+                    empty.textContent = "아직 완료한 QR이 없습니다.";
+                    progressItems.append(empty);
+                }
+                progressMessage.textContent = count === QR_IDS.length ? "모든 미션을 완료했습니다!" : `앞으로 ${QR_IDS.length - count}개의 QR이 남았습니다.`;
+            } catch (error) {
+                console.error(error);
+                progressMessage.textContent = "진행률을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            } finally {
+                refreshProgressButton.disabled = false;
+            }
+        }
 
         if (currentUser) {
             loginButton.hidden = true;
@@ -137,6 +207,8 @@
                     const access = await getUserAccess(currentUser);
                     adminButton.hidden = !access.isAdmin;
                     qrBuilderButton.hidden = !access.isAdmin;
+                    myProgress.hidden = false;
+                    await loadMyProgress();
                     statusMessage.textContent = "준비가 끝났습니다. 현장에서 QR을 찾아 스캔해 주세요.";
                 }
             } catch (error) {
@@ -146,6 +218,7 @@
         }
 
         logoutButton.addEventListener("click", logout);
+        refreshProgressButton.addEventListener("click", loadMyProgress);
     </script>
 </body>
 </html>

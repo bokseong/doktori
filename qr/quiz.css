@@ -31,6 +31,9 @@ body { visibility: hidden; }
 .quiz-card form { display: grid; gap: 10px; }
 .quiz-card label { font-weight: 700; }
 .quiz-card input { width: 100%; padding: 14px; border: 2px solid var(--ink); border-radius: 0; background: white; }
+.answer-help { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.55; }
 .quiz-card button { margin-top: 6px; background: var(--coral); }
 .quiz-message { min-height: 1.5em; margin: 18px 0 0; color: #94321f; font-weight: 700; line-height: 1.5; }
+.quiz-navigation { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.quiz-navigation .button { flex: 1 1 160px; }
 @media (max-width: 720px) { .qr-grid { grid-template-columns: 1fr; } .specter { min-height: 360px; } .qr-shell { padding-top: 18px; } }

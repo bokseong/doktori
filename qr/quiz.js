@@ -33,14 +33,40 @@ export async function initQuiz(qrId) {
     const submit = document.getElementById("answerButton");
     const progressReference = doc(db, "users", user.uid, "progress", qrId);
 
+    input.placeholder = "정답을 입력하세요";
+    input.autocapitalize = "none";
+    input.spellcheck = false;
+    input.setAttribute("aria-describedby", "answerHelp");
+    const answerHelp = document.createElement("p");
+    answerHelp.id = "answerHelp";
+    answerHelp.className = "answer-help";
+    answerHelp.textContent = "띄어쓰기, 영문 대소문자와 일반적인 문장부호는 구분하지 않습니다.";
+    input.after(answerHelp);
+
+    const navigation = document.createElement("div");
+    navigation.className = "quiz-navigation";
+    navigation.hidden = true;
+    const scanAnother = document.createElement("a");
+    scanAnother.className = "button button--coral";
+    scanAnother.href = "../index.html#scan";
+    scanAnother.textContent = "다른 QR 스캔하기";
+    const goHome = document.createElement("a");
+    goHome.className = "button button--paper";
+    goHome.href = "../index.html";
+    goHome.textContent = "메인화면으로 돌아가기";
+    navigation.append(scanAnother, goHome);
+    message.after(navigation);
+
     document.getElementById("quizQuestion").textContent = quiz.question;
     const existing = await getDoc(progressReference);
     if (existing.exists()) {
         message.textContent = "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
         input.disabled = true;
         submit.disabled = true;
+        navigation.hidden = false;
     }
     document.body.style.visibility = "visible";
+    if (!existing.exists()) input.focus();
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -72,6 +98,7 @@ export async function initQuiz(qrId) {
             }
             await syncProgressToSheet(user, qrId);
             message.textContent = "정답입니다! 이 QR을 찾은 것으로 기록했습니다.";
+            navigation.hidden = false;
         } catch (error) {
             console.error(error);
             message.textContent = error.code === "permission-denied"

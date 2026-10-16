@@ -13,6 +13,7 @@
     const resultTitle = document.getElementById("scannerResultTitle");
     const resultCopy = document.getElementById("scannerResultCopy");
     const openQrLink = document.getElementById("openScannedQrLink");
+    const scanAgainButton = document.getElementById("scanAgainButton");
 
     let codeReader = null;
     let scannerControls = null;
@@ -166,14 +167,17 @@
         openButton.focus();
     }
 
-    openButton.addEventListener("click", () => {
+    function openScanner() {
         showScannerView();
         document.body.classList.add("scanner-open");
         dialog.showModal();
         startCamera();
-    });
+    }
+
+    openButton.addEventListener("click", openScanner);
     closeButton.addEventListener("click", closeScanner);
     startButton.addEventListener("click", startCamera);
+    scanAgainButton.addEventListener("click", startCamera);
     imageInput.addEventListener("change", () => decodeImage(imageInput.files?.[0]));
     dialog.addEventListener("cancel", (event) => {
         event.preventDefault();
@@ -183,4 +187,9 @@
         if (event.target === dialog) closeScanner();
     });
     window.addEventListener("pagehide", stopCamera);
+
+    if (location.hash === "#scan") {
+        history.replaceState(null, "", `${location.pathname}${location.search}`);
+        requestAnimationFrame(openScanner);
+    }
 })();

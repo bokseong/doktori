@@ -3,94 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>복성고 독토리</title>
+    <meta name="theme-color" content="#f4f0e6">
+    <title>QR 제작 · 복성고 독토리</title>
+    <link rel="stylesheet" href="../theme.css">
     <link rel="stylesheet" href="../footer.css">
     <style>
-        body {
-            visibility: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 350px;
-        }
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 15px;
-            outline: none;
-        }
-        input[type="text"]:focus {
-            border-color: #007bff;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            font-size: 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .qr-box {
-            margin-top: 20px;
-            display: none;
-        }
-        .qr-box canvas,
-        .qr-box img {
-            max-width: 100%;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 6px;
-            background: #fff;
-        }
-        .download-btn {
-            background-color: #28a745;
-            margin-top: 10px;
-        }
-        .download-btn:hover {
-            background-color: #218838;
-        }
+        body { visibility: hidden; }
+        .builder-shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 80px; }
+        .builder-intro { margin-bottom: 26px; }
+        .builder-intro h1 { margin: 16px 0 8px; font: clamp(2.8rem, 8vw, 6rem)/.95 "Black Han Sans", sans-serif; }
+        .builder-intro p { max-width: 680px; margin: 0; color: var(--muted); line-height: 1.7; }
+        .builder-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 24px; align-items: start; }
+        .builder-controls, .qr-box { padding: clamp(22px, 4vw, 34px); }
+        .builder-controls h2, .qr-box h2 { margin: 0 0 16px; font: 1.65rem "Black Han Sans", sans-serif; }
+        .preset-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-bottom: 24px; }
+        .preset-grid button { min-width: 0; background: var(--paper-strong); }
+        .preset-grid button[aria-pressed="true"] { background: var(--lime); transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+        .field { display: grid; gap: 8px; }
+        .field label { font-weight: 700; }
+        .field input { width: 100%; padding: 13px; border: 2px solid var(--ink); background: white; }
+        .field small { color: var(--muted); line-height: 1.5; }
+        .builder-actions, .qr-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .builder-actions > *, .qr-actions > * { flex: 1 1 150px; }
+        .qr-box { text-align: center; }
+        #qrCode { min-height: 224px; display: grid; place-items: center; }
+        #qrCode canvas, #qrCode img { max-width: 100%; padding: 10px; border: 2px solid var(--ink); background: white; }
+        #builderStatus { min-height: 1.5em; margin: 16px 0 0; color: #94321f; font-weight: 700; }
+        @media (max-width: 720px) { .builder-grid { grid-template-columns: 1fr; } .builder-shell { padding-top: 28px; } }
     </style>
 </head>
 <body>
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Q</span><span class="brand-text">독토리 QR 제작소</span></div>
+        <nav class="account"><a class="button button--paper" href="../zb0bl7hn6ghtak72c.html">관리자 메뉴</a><a class="button button--paper" href="../index.html">메인으로</a></nav>
+    </header>
 
-    <div class="container">
-        <h2>QR코드 생성기</h2>
-        <input type="text" id="textInput" placeholder="URL 또는 텍스트를 입력하세요">
-        <button id="generateButton" type="button">QR코드 생성</button>
+    <main class="builder-shell">
+        <section class="builder-intro"><span class="label">ADMIN TOOL</span><h1>QR 코드 제작</h1><p>QR 번호를 선택하면 현재 사이트의 정확한 문제 주소가 자동으로 입력됩니다. 직접 입력한 주소나 텍스트로도 만들 수 있습니다.</p></section>
+        <div class="builder-grid">
+            <section class="builder-controls panel" aria-labelledby="presetTitle">
+                <h2 id="presetTitle">문제 QR 선택</h2>
+                <div id="presetGrid" class="preset-grid" aria-label="QR 번호 선택">
+                    <button type="button" data-qr="1">QR 01</button><button type="button" data-qr="2">QR 02</button><button type="button" data-qr="3">QR 03</button>
+                    <button type="button" data-qr="4">QR 04</button><button type="button" data-qr="5">QR 05</button><button type="button" data-qr="6">QR 06</button>
+                </div>
+                <div class="field">
+                    <label for="textInput">QR에 넣을 주소 또는 텍스트</label>
+                    <input type="text" id="textInput" placeholder="URL 또는 텍스트를 입력하세요" autocomplete="off">
+                    <small>인쇄 전에 주소가 올바른지 한 번 스캔해 확인하세요.</small>
+                </div>
+                <div class="builder-actions"><button id="generateButton" class="button--coral" type="button">QR 다시 만들기</button><button id="copyButton" class="button--paper" type="button">주소 복사</button></div>
+                <p id="builderStatus" role="status" aria-live="polite"></p>
+            </section>
 
-        <div class="qr-box" id="qrBox">
-            <div id="qrCode" aria-label="생성된 QR 코드"></div>
-            <br>
-            <button id="downloadButton" class="download-btn" type="button">QR코드 다운로드</button>
+            <section class="qr-box panel" id="qrBox" aria-labelledby="previewTitle">
+                <h2 id="previewTitle">미리보기</h2>
+                <div id="qrCode" aria-label="생성된 QR 코드"></div>
+                <div class="qr-actions"><button id="downloadButton" class="button--coral" type="button">PNG 다운로드</button></div>
+            </section>
         </div>
-    </div>
+    </main>
 
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
@@ -113,13 +85,17 @@
         const input = document.getElementById("textInput");
         const qrBox = document.getElementById("qrBox");
         const qrCode = document.getElementById("qrCode");
+        const status = document.getElementById("builderStatus");
+        const presetButtons = [...document.querySelectorAll("[data-qr]")];
         let currentQRDataUrl = "";
+        let selectedQrNumber = null;
 
         function generateQR() {
             const textInput = input.value.trim();
 
             if (!textInput) {
-                alert("텍스트나 URL을 입력해주세요!");
+                status.textContent = "주소나 텍스트를 입력해 주세요.";
+                input.focus();
                 return;
             }
 
@@ -134,23 +110,52 @@
             });
 
             const canvas = qrCode.querySelector("canvas");
-            currentQRDataUrl = canvas ? canvas.toDataURL("image/png") : "";
-            qrBox.style.display = "block";
+            const image = qrCode.querySelector("img");
+            currentQRDataUrl = canvas ? canvas.toDataURL("image/png") : (image?.src || "");
+            status.textContent = selectedQrNumber ? `QR ${String(selectedQrNumber).padStart(2, "0")} 코드를 만들었습니다.` : "QR 코드를 만들었습니다.";
+        }
+
+        function selectQr(number) {
+            selectedQrNumber = number;
+            input.value = new URL(`./${number}.html`, location.href).href;
+            presetButtons.forEach((button) => button.setAttribute("aria-pressed", String(Number(button.dataset.qr) === number)));
+            generateQR();
         }
 
         function downloadQR() {
             if (!currentQRDataUrl) return;
             const link = document.createElement("a");
             link.href = currentQRDataUrl;
-            link.download = "qrcode.png";
+            link.download = selectedQrNumber ? `doktori-qr-${String(selectedQrNumber).padStart(2, "0")}.png` : "doktori-qrcode.png";
             link.click();
+            status.textContent = "QR 이미지 다운로드를 시작했습니다.";
+        }
+
+        async function copyValue() {
+            const value = input.value.trim();
+            if (!value) return;
+            try {
+                await navigator.clipboard.writeText(value);
+                status.textContent = "주소를 클립보드에 복사했습니다.";
+            } catch (error) {
+                console.error(error);
+                status.textContent = "자동 복사에 실패했습니다. 입력칸의 주소를 직접 복사해 주세요.";
+                input.select();
+            }
         }
 
         document.getElementById("generateButton").addEventListener("click", generateQR);
         document.getElementById("downloadButton").addEventListener("click", downloadQR);
+        document.getElementById("copyButton").addEventListener("click", copyValue);
+        presetButtons.forEach((button) => button.addEventListener("click", () => selectQr(Number(button.dataset.qr))));
+        input.addEventListener("input", () => {
+            selectedQrNumber = null;
+            presetButtons.forEach((button) => button.setAttribute("aria-pressed", "false"));
+        });
         input.addEventListener("keydown", (event) => {
             if (event.key === "Enter") generateQR();
         });
+        selectQr(1);
     </script>
 
 </body>
