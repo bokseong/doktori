@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f0e6">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <title>회원 등록 · 복성고 독토리</title>
+    <link rel="stylesheet" href="./theme.css">
+    <link rel="stylesheet" href="./footer.css">
+    <style>
+        body { display: grid; place-items: center; padding: 28px 16px; }
+        .auth-shell { width: min(980px, 100%); display: grid; grid-template-columns: .72fr 1.28fr; }
+        .auth-poster { position: relative; padding: clamp(28px, 6vw, 60px); color: var(--paper-strong); background: var(--ink); overflow: hidden; }
+        .auth-poster::after { content: "02"; position: absolute; right: -24px; bottom: -48px; color: var(--coral); font: 10rem/.8 "Black Han Sans", sans-serif; opacity: .95; }
+        .auth-poster h1 { position: relative; z-index: 1; margin: 18px 0; font: clamp(2.8rem, 7vw, 5.4rem)/.9 "Black Han Sans", sans-serif; }
+        .auth-poster p { position: relative; z-index: 1; max-width: 320px; line-height: 1.7; }
+        .auth-card { padding: clamp(26px, 5vw, 52px); background: var(--paper-strong); }
+        .auth-card h2 { margin: 0 0 10px; font: 2rem "Black Han Sans", sans-serif; }
+        .step { display: inline-block; margin-bottom: 18px; color: var(--blue); font-weight: 700; }
+        .helper { margin: 8px 0 22px; color: var(--muted); line-height: 1.6; }
+        form { display: grid; gap: 14px; }
+        label { display: grid; gap: 7px; font-weight: 700; }
+        input { width: 100%; padding: 13px 14px; border: 2px solid var(--ink); border-radius: 0; background: white; }
+        .consent-box { padding: 16px; border: 2px solid var(--ink); background: var(--paper); }
+        .consent-box h3 { margin: 0 0 10px; font: 1.15rem "Black Han Sans", sans-serif; }
+        .consent-box dl { display: grid; grid-template-columns: 92px 1fr; gap: 7px 10px; margin: 0 0 14px; font-size: .9rem; line-height: 1.55; }
+        .consent-box dt { font-weight: 800; }
+        .consent-box dd { margin: 0; color: var(--muted); }
+        .terms-box ol { margin: 0; padding-left: 20px; color: var(--muted); font-size: .9rem; line-height: 1.6; }
+        .terms-box li + li { margin-top: 7px; }
+        .terms-date { margin: 12px 0 0; color: var(--muted); font-size: .82rem; }
+        .consent-check { display: flex; grid-template-columns: none; gap: 10px; align-items: flex-start; font-weight: 700; }
+        .consent-check input { width: 20px; height: 20px; margin-top: 2px; flex: 0 0 auto; }
+        .required-note { margin: 10px 0 0; color: #9b321e; font-size: .88rem; font-weight: 800; }
+        .account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; padding: 12px 14px; border: 2px solid var(--ink); background: var(--lime); }
+        .account-row strong { overflow-wrap: anywhere; }
+        .account-row button { min-height: 38px; padding: 7px 10px; white-space: nowrap; }
+        #message { min-height: 1.5em; margin: 18px 0 0; color: #9b321e; font-weight: 700; }
+        @media (max-width: 760px) { .auth-shell { grid-template-columns: 1fr; } .auth-poster { min-height: 240px; } .auth-poster::after { font-size: 8rem; } }
+        @media (max-width: 520px) { .account-row { align-items: stretch; flex-direction: column; } .consent-box dl { grid-template-columns: 1fr; gap: 3px; } .consent-box dd + dt { margin-top: 8px; } }
+    </style>
+</head>
+<body>
+    <main class="auth-shell panel">
+        <section class="auth-poster" aria-label="회원 등록 안내">
+            <span class="label">MEMBER REGISTRATION</span>
+            <h1>탐험 기록<br>시작하기</h1>
+            <p>로그인한 Google 계정에 학번과 이름을 연결하고 개인정보 수집·이용에 동의합니다.</p>
+        </section>
+        <section class="auth-card">
+            <span class="step">02 · 최초 1회 등록</span>
+            <h2>참여자 정보 등록</h2>
+            <p class="helper">아래 정보는 참여자 확인과 QR 미션 진행도 저장을 위해 사용됩니다.</p>
+            <div id="accountRow" class="account-row" hidden>
+                <strong id="signedInEmail"></strong>
+                <button id="changeAccountButton" class="button--paper" type="button">다른 계정 사용</button>
+            </div>
+
+            <form id="registerForm" hidden>
+                <label>학번
+                    <input id="studentNumber" name="studentNumber" type="text" inputmode="numeric" autocomplete="off" minlength="4" maxlength="20" pattern="[0-9]{4,20}" placeholder="예: 2학년 9반 1번 → 2901" required>
+                </label>
+                <label>이름
+                    <input id="studentName" name="studentName" type="text" autocomplete="name" minlength="1" maxlength="30" pattern="[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}" placeholder="예: 홍길동" required>
+                </label>
+                <section class="consent-box terms-box" aria-labelledby="termsTitle">
+                    <h3 id="termsTitle">독토리 이용약관</h3>
+                    <ol>
+                        <li>본 프로그램은 복성고 도서부가 운영하는 QR 미션 참여와 진행도 확인을 위해 제공됩니다.</li>
+                        <li>참여자는 본인의 Google 계정과 정확한 학번·이름을 사용해야 하며, 다른 사람의 계정을 대신 사용하거나 진행 기록을 조작해서는 안 됩니다.</li>
+                        <li>QR 위치, 문제와 정답을 무단으로 공개하거나 자동화 도구로 정답을 반복 제출하는 등 행사 운영을 방해하는 행위를 금지합니다.</li>
+                        <li>부정 참여 또는 운영 방해가 확인되면 해당 진행 기록을 무효로 처리하거나 참여를 제한할 수 있습니다.</li>
+                        <li>QR 미션 진행률이 100%에 도달한 참여자는 행사 운영자의 확인을 거쳐 안내된 상품을 받을 수 있습니다.</li>
+                        <li>점검, 장애 또는 행사 운영상 필요한 경우 서비스 내용이나 이용 시간이 변경될 수 있으며, 중요한 변경 사항은 행사 안내를 통해 알립니다.</li>
+                        <li>개인정보 처리에 관한 사항은 아래 개인정보 수집·이용 동의 내용에 따릅니다.</li>
+                    </ol>
+                    <p class="terms-date">시행일: 2026년 10월 28일</p>
+                </section>
+                <section class="consent-box" aria-labelledby="consentTitle">
+                    <h3 id="consentTitle">개인정보 수집·이용 동의 (필수)</h3>
+                    <dl>
+                        <dt>수집 목적</dt><dd>참여자 본인 확인, 중복 참여 방지, QR 미션 진행도 저장, 상품 지급 확인 및 행사 운영</dd>
+                        <dt>수집 항목</dt><dd>Firebase UID, Google 이메일, 이름, 학번, QR 진행 기록, 로그인·활동·동의 시각</dd>
+                        <dt>보유 기간</dt><dd>행사 운영을 위해 필요한 기간 동안 보유하며, 관리자 설정 보유기간이 끝난 뒤 익명화·삭제 처리합니다.</dd>
+                        <dt>보안 검증</dt><dd>부정 접속 방지를 위해 Firebase App Check와 reCAPTCHA가 접속 환경 정보를 처리할 수 있습니다. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google 개인정보처리방침</a></dd>
+                        <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 개인별 진행도 확인에 필요한 필수 정보이므로 미동의 시 행사에 참여할 수 없습니다.</dd>
+                    </dl>
+                    <label class="consent-check">
+                        <input id="privacyConsent" name="privacyConsent" type="checkbox" required>
+                        <span>위 개인정보 수집·이용 내용을 확인했으며 이에 동의합니다.</span>
+                    </label>
+                    <p class="required-note">동의하지 않으면 등록 및 QR 미션 참여가 불가능합니다.</p>
+                </section>
+                <button id="registerButton" class="button--coral" type="submit">등록하고 계속하기</button>
+            </form>
+            <p id="message" role="status">로그인 정보를 확인하는 중...</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
+        <small>© 2026 복성고등학교 도서부</small>
+    </footer>
+
+    <script type="module" src="./app-ui.js"></script>
+    <script type="module">
+        import { signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import {
+            getMemberProfile,
+            getSafeNext,
+            isMemberProfileComplete,
+            registerMember,
+            waitForAuth
+        } from "./auth.js";
+        import { auth } from "./firebase.js";
+        import { syncMemberToSheet } from "./sheet-sync.js";
+
+        const accountRow = document.getElementById("accountRow");
+        const registerForm = document.getElementById("registerForm");
+        const registerButton = document.getElementById("registerButton");
+        const message = document.getElementById("message");
+        const next = getSafeNext();
+        let currentUser = null;
+
+        function goToSignIn() {
+            const signInUrl = new URL("./signin.html", location.href);
+            signInUrl.searchParams.set("next", next);
+            location.replace(signInUrl);
+        }
+
+        try {
+            currentUser = await waitForAuth();
+            if (!currentUser) {
+                goToSignIn();
+                await new Promise(() => {});
+            }
+
+            const profile = await getMemberProfile(currentUser);
+            if (isMemberProfileComplete(profile)) {
+                message.textContent = "이미 회원 등록이 완료되어 있습니다. 이동하는 중...";
+                location.replace(next);
+                await new Promise(() => {});
+            }
+
+            document.getElementById("signedInEmail").textContent = currentUser.email || "로그인 계정";
+            document.getElementById("studentNumber").value = profile?.studentNumber || "";
+            document.getElementById("studentName").value = profile?.studentName || "";
+            accountRow.hidden = false;
+            registerForm.hidden = false;
+            message.textContent = profile
+                ? "회원 정보와 최신 개인정보 수집·이용 동의를 확인해 주세요."
+                : "학번과 이름을 입력하고 필수 동의 내용을 확인해 주세요.";
+            document.getElementById("studentNumber").focus();
+        } catch (error) {
+            console.error(error);
+            message.textContent = "로그인 또는 회원 정보를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+        }
+
+        document.getElementById("changeAccountButton").addEventListener("click", async () => {
+            message.textContent = "로그아웃하는 중...";
+            try {
+                await signOut(auth);
+                goToSignIn();
+            } catch (error) {
+                console.error(error);
+                message.textContent = "계정을 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            }
+        });
+
+        registerForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!currentUser || !registerForm.reportValidity()) return;
+
+            registerButton.disabled = true;
+            message.textContent = "회원 정보를 등록하는 중...";
+            try {
+                await registerMember(
+                    currentUser,
+                    document.getElementById("studentNumber").value,
+                    document.getElementById("studentName").value,
+                    document.getElementById("privacyConsent").checked
+                );
+                const syncResult = await syncMemberToSheet(currentUser);
+                message.textContent = syncResult.queued
+                    ? "회원 등록을 완료했습니다. 시트 동기화는 네트워크 연결 후 다시 시도됩니다."
+                    : "회원 등록을 완료했습니다. 이동하는 중...";
+                location.replace(next);
+            } catch (error) {
+                console.error(error);
+                message.textContent = error?.code
+                    ? "회원 정보를 저장하지 못했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요."
+                    : (error?.message || "입력값을 확인해 주세요.");
+                registerButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

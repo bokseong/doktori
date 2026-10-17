@@ -40,7 +40,7 @@
         @media (max-width: 560px) { .progress-head, .progress-footer { align-items: stretch; flex-direction: column; } .progress-score { font-size: 2.2rem; } }
     </style>
 </head>
-<body data-hide-utility>
+<body>
     <header class="site-header">
         <div class="brand"><span class="brand-mark">D</span><span class="brand-text">복성고 도서부 · 독토리</span></div>
         <div class="account">
@@ -225,6 +225,7 @@
                 if (!complete) {
                     mainLoginButton.hidden = false;
                     mainLoginButton.textContent = "회원정보 등록하기";
+                    mainLoginButton.href = "./register.html?next=./index.html";
                     statusMessage.textContent = "QR 미션을 시작하려면 최초 등록을 완료해 주세요.";
                 } else {
                     myPageButton.hidden = false;

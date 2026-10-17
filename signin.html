@@ -20,21 +20,8 @@
         .auth-card h2 { margin: 0 0 10px; font: 2rem "Black Han Sans", sans-serif; }
         .step { display: inline-block; margin-bottom: 18px; color: var(--blue); font-weight: 700; }
         .full { width: 100%; }
-        form { display: grid; gap: 14px; }
-        label { display: grid; gap: 7px; font-weight: 700; }
-        input { width: 100%; padding: 13px 14px; border: 2px solid var(--ink); border-radius: 0; background: white; }
         .helper { margin: 8px 0 22px; color: var(--muted); line-height: 1.6; }
-        .consent-box { padding: 16px; border: 2px solid var(--ink); background: var(--paper); }
-        .consent-box h3 { margin: 0 0 10px; font: 1.15rem "Black Han Sans", sans-serif; }
-        .consent-box dl { display: grid; grid-template-columns: 92px 1fr; gap: 7px 10px; margin: 0 0 14px; font-size: .9rem; line-height: 1.55; }
-        .consent-box dt { font-weight: 800; }
-        .consent-box dd { margin: 0; color: var(--muted); }
-        .terms-box ol { margin: 0; padding-left: 20px; color: var(--muted); font-size: .9rem; line-height: 1.6; }
-        .terms-box li + li { margin-top: 7px; }
-        .terms-date { margin: 12px 0 0; color: var(--muted); font-size: .82rem; }
-        .consent-check { display: flex; grid-template-columns: none; gap: 10px; align-items: flex-start; font-weight: 700; }
-        .consent-check input { width: 20px; height: 20px; margin-top: 2px; flex: 0 0 auto; }
-        .required-note { margin: 10px 0 0; color: #9b321e; font-size: .88rem; font-weight: 800; }
+        .auth-note { margin: 22px 0 0; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper); color: var(--muted); line-height: 1.6; }
         #message { min-height: 1.5em; margin: 18px 0 0; color: #9b321e; font-weight: 700; }
         @media (max-width: 700px) { .auth-shell { grid-template-columns: 1fr; } .auth-poster { min-height: 250px; } .auth-poster::after { font-size: 12rem; } }
     </style>
@@ -47,123 +34,61 @@
             <p>QR을 찾고, 단서를 풀고, 나만의 탐험 기록을 남겨 보세요.</p>
         </section>
         <section class="auth-card">
-            <div id="loginStep">
-                <span class="step">01 · 계정 확인</span>
-                <h2>Google로 입장하기</h2>
-                <p class="helper">진행도를 개인별로 안전하게 저장하기 위해 학교에서 사용하는 Google 계정으로 로그인합니다.</p>
-                <button id="googleSignInButton" class="full" type="button">Google 계정으로 로그인</button>
-            </div>
-
-            <div id="registerStep" hidden>
-                <span class="step">02 · 최초 1회 등록</span>
-                <h2>참여자 정보 등록</h2>
-                <p class="helper"><strong id="signedInEmail"></strong><br>학번과 이름을 등록하면 원래 열었던 QR 페이지로 바로 이동합니다.</p>
-                <form id="registerForm">
-                    <label>학번
-                        <input id="studentNumber" name="studentNumber" type="text" inputmode="numeric" autocomplete="off" minlength="4" maxlength="20" pattern="[0-9]{4,20}" placeholder="예: 2학년 9반 1번 → 2901" required>
-                    </label>
-                    <label>이름
-                        <input id="studentName" name="studentName" type="text" autocomplete="name" minlength="1" maxlength="30" pattern="[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}" placeholder="예: 홍길동" required>
-                    </label>
-                    <section class="consent-box terms-box" aria-labelledby="termsTitle">
-                        <h3 id="termsTitle">독토리 이용약관</h3>
-                        <ol>
-                            <li>본 프로그램은 복성고 도서부가 운영하는 QR 미션 참여와 진행도 확인을 위해 제공됩니다.</li>
-                            <li>참여자는 본인의 Google 계정과 정확한 학번·이름을 사용해야 하며, 다른 사람의 계정을 대신 사용하거나 진행 기록을 조작해서는 안 됩니다.</li>
-                            <li>QR 위치, 문제와 정답을 무단으로 공개하거나 자동화 도구로 정답을 반복 제출하는 등 행사 운영을 방해하는 행위를 금지합니다.</li>
-                            <li>부정 참여 또는 운영 방해가 확인되면 해당 진행 기록을 무효로 처리하거나 참여를 제한할 수 있습니다.</li>
-                            <li>QR 미션 진행률이 100%에 도달한 참여자는 행사 운영자의 확인을 거쳐 안내된 상품을 받을 수 있습니다.</li>
-                            <li>점검, 장애 또는 행사 운영상 필요한 경우 서비스 내용이나 이용 시간이 변경될 수 있으며, 중요한 변경 사항은 행사 안내를 통해 알립니다.</li>
-                            <li>개인정보 처리에 관한 사항은 아래 개인정보 수집·이용 동의 내용에 따릅니다.</li>
-                        </ol>
-                        <p class="terms-date">시행일: 2026년 10월 28일</p>
-                    </section>
-                    <section class="consent-box" aria-labelledby="consentTitle">
-                        <h3 id="consentTitle">개인정보 수집·이용 동의 (필수)</h3>
-                        <dl>
-                            <dt>수집 목적</dt><dd>참여자 본인 확인, 중복 참여 방지, QR 미션 진행도 저장, 상품 지급 확인 및 행사 운영</dd>
-                            <dt>수집 항목</dt><dd>Firebase UID, Google 이메일, 이름, 학번, QR 진행 기록, 로그인·활동·동의 시각</dd>
-                            <dt>보유 기간</dt><dd>행사 운영을 위해 필요한 기간 동안 보유하며, 관리자 설정 보유기간이 끝난 뒤 익명화·삭제 처리합니다.</dd>
-                            <dt>보안 검증</dt><dd>부정 접속 방지를 위해 Firebase App Check와 reCAPTCHA가 접속 환경 정보를 처리할 수 있습니다. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google 개인정보처리방침</a></dd>
-                            <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 개인별 진행도 확인에 필요한 필수 정보이므로 미동의 시 행사에 참여할 수 없습니다.</dd>
-                        </dl>
-                        <label class="consent-check">
-                            <input id="privacyConsent" name="privacyConsent" type="checkbox" required>
-                            <span>위 개인정보 수집·이용 내용을 확인했으며 이에 동의합니다.</span>
-                        </label>
-                        <p class="required-note">동의하지 않으면 등록 및 QR 미션 참여가 불가능합니다.</p>
-                    </section>
-                    <button id="registerButton" class="button--coral" type="submit">등록하고 계속하기</button>
-                </form>
-            </div>
+            <span class="step">01 · 계정 확인</span>
+            <h2>Google로 로그인</h2>
+            <p class="helper">진행도를 개인별로 안전하게 저장하기 위해 학교에서 사용하는 Google 계정으로 로그인합니다.</p>
+            <button id="googleSignInButton" class="full" type="button">Google 계정으로 로그인</button>
+            <p class="auth-note">처음 참여하는 계정은 로그인 후 별도의 회원 등록 페이지에서 학번·이름 입력과 개인정보 수집·이용 동의를 진행합니다.</p>
             <p id="message" role="status"></p>
         </section>
     </main>
 
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
-        <nav class="site-footer__links" aria-label="하단 메뉴"><a href="./index.html">홈으로</a></nav>
         <small>© 2026 복성고등학교 도서부</small>
     </footer>
 
     <script type="module" src="./app-ui.js"></script>
     <script type="module">
         import {
+            getSafeNext,
             getMemberProfile,
             isMemberProfileComplete,
-            registerMember,
             signInWithGoogle,
             touchMemberProfile,
             waitForAuth
         } from "./auth.js";
-        import { syncMemberToSheet } from "./sheet-sync.js";
 
-        const loginStep = document.getElementById("loginStep");
-        const registerStep = document.getElementById("registerStep");
         const message = document.getElementById("message");
         const signInButton = document.getElementById("googleSignInButton");
-        const registerForm = document.getElementById("registerForm");
-        const registerButton = document.getElementById("registerButton");
-        let currentUser = null;
-
-        function safeNext() {
-            const fallback = new URL("./index.html", location.href);
-            const requested = new URLSearchParams(location.search).get("next") || fallback.href;
-            const target = new URL(requested, location.href);
-            return target.origin === location.origin
-                ? `${target.pathname}${target.search}${target.hash}`
-                : `${fallback.pathname}${fallback.search}${fallback.hash}`;
-        }
 
         async function continueWith(user) {
-            currentUser = user;
             const profile = await getMemberProfile(user);
             if (isMemberProfileComplete(profile)) {
                 message.textContent = "회원 정보를 확인했습니다. 이동하는 중...";
                 await touchMemberProfile(user);
-                location.replace(safeNext());
+                location.replace(getSafeNext());
                 return;
             }
 
-            loginStep.hidden = true;
-            registerStep.hidden = false;
-            document.getElementById("signedInEmail").textContent = user.email || "로그인 계정";
-            document.getElementById("studentNumber").value = profile?.studentNumber || "";
-            document.getElementById("studentName").value = profile?.studentName || "";
-            document.getElementById("studentNumber").focus();
-            message.textContent = profile
-                ? "최신 개인정보 수집·이용 동의가 필요합니다."
-                : "회원 정보가 없어 최초 등록이 필요합니다.";
+            message.textContent = "회원 등록 페이지로 이동하는 중...";
+            const registerUrl = new URL("./register.html", location.href);
+            registerUrl.searchParams.set("next", getSafeNext());
+            location.replace(registerUrl);
         }
 
-        const existingUser = await waitForAuth();
-        if (existingUser) {
-            try {
+        signInButton.disabled = true;
+        try {
+            const existingUser = await waitForAuth();
+            if (existingUser) {
                 await continueWith(existingUser);
-            } catch (error) {
-                console.error(error);
-                message.textContent = "회원 정보를 확인하지 못했습니다. 잠시 후 다시 시도하세요.";
+            } else {
+                signInButton.disabled = false;
             }
+        } catch (error) {
+            console.error(error);
+            message.textContent = "로그인 상태를 확인하지 못했습니다. 잠시 후 다시 시도하세요.";
+            signInButton.disabled = false;
         }
 
         signInButton.addEventListener("click", async () => {
@@ -180,31 +105,6 @@
             }
         });
 
-        registerForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            if (!currentUser) return;
-            registerButton.disabled = true;
-            message.textContent = "회원 정보를 등록하는 중...";
-            try {
-                await registerMember(
-                    currentUser,
-                    document.getElementById("studentNumber").value,
-                    document.getElementById("studentName").value,
-                    document.getElementById("privacyConsent").checked
-                );
-                try {
-                    await syncMemberToSheet(currentUser);
-                } catch (syncError) {
-                    console.error("Google Sheets 회원 정보 동기화 실패", syncError);
-                }
-                message.textContent = "등록했습니다. 이동하는 중...";
-                location.replace(safeNext());
-            } catch (error) {
-                console.error(error);
-                message.textContent = "회원 정보를 저장하지 못했습니다. 입력값과 네트워크를 확인하세요.";
-                registerButton.disabled = false;
-            }
-        });
     </script>
 </body>
 </html>

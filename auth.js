@@ -15,6 +15,9 @@ import { auth, db } from "./firebase.js";
 export const MASTER_ADMIN_EMAIL = "github.jwastro09@gmail.com";
 export const PRIVACY_CONSENT_VERSION = "2026-10-16-v1";
 
+const STUDENT_NUMBER_PATTERN = /^[0-9]{4,20}$/;
+const STUDENT_NAME_PATTERN = /^[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}$/u;
+
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
@@ -33,8 +36,8 @@ export function waitForAuth() {
 
 export function isMemberProfileComplete(profile) {
     return Boolean(
-        profile?.studentNumber?.trim()
-        && profile?.studentName?.trim()
+        STUDENT_NUMBER_PATTERN.test(profile?.studentNumber || "")
+        && STUDENT_NAME_PATTERN.test(profile?.studentName || "")
         && profile?.privacyConsent === true
         && profile?.privacyConsentVersion === PRIVACY_CONSENT_VERSION
     );
@@ -46,17 +49,44 @@ export async function getMemberProfile(user = auth.currentUser) {
     return snapshot.exists() ? snapshot.data() : null;
 }
 
-export async function requireUser() {
-    const user = await waitForAuth();
-    if (user) {
-        const profile = await getMemberProfile(user);
-        if (isMemberProfileComplete(profile)) return user;
+export function getSafeNext(fallback = "./index.html") {
+    const fallbackUrl = new URL(fallback, location.href);
+    const requested = new URLSearchParams(location.search).get("next");
+
+    if (!requested) {
+        return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
     }
 
+    try {
+        const target = new URL(requested, location.href);
+        const isAuthPage = /\/(?:signin|register)\.html$/i.test(target.pathname);
+        return target.origin === location.origin && !isAuthPage
+            ? `${target.pathname}${target.search}${target.hash}`
+            : `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
+    } catch {
+        return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
+    }
+}
+
+function redirectTo(page, next) {
+    const url = new URL(page, import.meta.url);
+    url.searchParams.set("next", next);
+    location.replace(url);
+}
+
+export async function requireUser() {
+    const user = await waitForAuth();
     const next = `${location.pathname}${location.search}${location.hash}`;
-    const signInUrl = new URL("./signin.html", import.meta.url);
-    signInUrl.searchParams.set("next", next);
-    location.replace(signInUrl);
+
+    if (!user) {
+        redirectTo("./signin.html", next);
+        return new Promise(() => {});
+    }
+
+    const profile = await getMemberProfile(user);
+    if (isMemberProfileComplete(profile)) return user;
+
+    redirectTo("./register.html", next);
     return new Promise(() => {});
 }
 
@@ -66,8 +96,20 @@ export async function signInWithGoogle() {
 }
 
 export async function registerMember(user, studentNumber, studentName, privacyConsent) {
+    if (!user) {
+        throw new Error("로그인한 사용자만 회원 정보를 등록할 수 있습니다.");
+    }
     if (privacyConsent !== true) {
         throw new Error("개인정보 수집·이용에 동의해야 참여할 수 있습니다.");
+    }
+
+    const normalizedStudentNumber = String(studentNumber || "").trim();
+    const normalizedStudentName = String(studentName || "").trim();
+    if (!STUDENT_NUMBER_PATTERN.test(normalizedStudentNumber)) {
+        throw new Error("학번은 숫자 4~20자리로 입력해 주세요.");
+    }
+    if (!STUDENT_NAME_PATTERN.test(normalizedStudentName)) {
+        throw new Error("이름 형식을 확인해 주세요.");
     }
 
     const reference = doc(db, "users", user.uid);
@@ -76,17 +118,17 @@ export async function registerMember(user, studentNumber, studentName, privacyCo
         uid: user.uid,
         email: user.email || "",
         displayName: user.displayName || "",
-        studentNumber: studentNumber.trim(),
-        studentName: studentName.trim(),
+        studentNumber: normalizedStudentNumber,
+        studentName: normalizedStudentName,
         privacyConsent: true,
         privacyConsentVersion: PRIVACY_CONSENT_VERSION,
         privacyConsentAt: serverTimestamp(),
-        registeredAt: serverTimestamp(),
         lastLoginAt: serverTimestamp()
     };
 
     if (!snapshot.exists()) {
         profile.createdAt = serverTimestamp();
+        profile.registeredAt = serverTimestamp();
         profile.role = isMasterAdmin(user) ? "admin" : "participant";
     } else if (isMasterAdmin(user) && snapshot.data().role !== "admin") {
         profile.role = "admin";
