@@ -40,12 +40,13 @@
         @media (max-width: 560px) { .progress-head, .progress-footer { align-items: stretch; flex-direction: column; } .progress-score { font-size: 2.2rem; } }
     </style>
 </head>
-<body>
+<body data-hide-utility>
     <header class="site-header">
         <div class="brand"><span class="brand-mark">D</span><span class="brand-text">복성고 도서부 · 독토리</span></div>
         <div class="account">
             <span id="userInfo" class="account-label">로그인하지 않음</span>
             <a id="loginButton" class="button" href="./signin.html?next=./index.html">Google 로그인</a>
+            <a id="myPageButton" class="button button--paper" href="./mypage.html" hidden>내 정보</a>
             <button id="logoutButton" class="button--paper" type="button" hidden>로그아웃</button>
         </div>
     </header>
@@ -130,7 +131,6 @@
 
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
-        <nav class="site-footer__links" aria-label="하단 메뉴"><a href="./index.html">홈으로</a></nav>
         <small>© 2026 복성고등학교 도서부</small>
     </footer>
 
@@ -148,6 +148,7 @@
         const loginButton = document.getElementById("loginButton");
         const mainLoginButton = document.getElementById("mainLoginButton");
         const logoutButton = document.getElementById("logoutButton");
+        const myPageButton = document.getElementById("myPageButton");
         const adminButton = document.getElementById("adminButton");
         const qrBuilderButton = document.getElementById("qrBuilderButton");
         const statusMessage = document.getElementById("statusMessage");
@@ -226,6 +227,7 @@
                     mainLoginButton.textContent = "회원정보 등록하기";
                     statusMessage.textContent = "QR 미션을 시작하려면 최초 등록을 완료해 주세요.";
                 } else {
+                    myPageButton.hidden = false;
                     syncMemberToSheet(currentUser).catch((error) => {
                         console.error("Google Sheets 회원 정보 동기화 실패", error);
                     });

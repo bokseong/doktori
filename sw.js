@@ -1,7 +1,7 @@
-const CACHE_NAME = "doktori-static-v3";
+const CACHE_NAME = "doktori-static-v4";
 const STATIC_FILES = [
     "./", "./index.html", "./signin.html", "./theme.css", "./footer.css", "./qr-scanner.css", "./qr-scanner.js",
-    "./auth.js", "./firebase.js", "./sheet-sync.js", "./app-ui.js", "./event-config.js", "./offline.html", "./icon.svg"
+    "./auth.js", "./firebase.js", "./sheet-sync.js", "./app-ui.js", "./event-config.js", "./mypage.html", "./offline.html", "./icon.svg"
 ];
 
 self.addEventListener("install", (event) => {

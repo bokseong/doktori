@@ -142,7 +142,7 @@ window.addEventListener("error", (event) => reportError(event.error || { name: "
 window.addEventListener("unhandledrejection", (event) => reportError(event.reason || { name: "unhandled-rejection" }, "unhandled-rejection"));
 
 installUtilityStyles();
-createUtilityPanel();
+if (!document.body.hasAttribute("data-hide-utility")) createUtilityPanel();
 createNetworkBanner();
 
 if ("serviceWorker" in navigator && location.protocol === "https:") {
