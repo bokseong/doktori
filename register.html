@@ -103,6 +103,7 @@
                 <button id="registerButton" class="button--coral" type="submit">계속하기</button>
             </form>
             <p id="message" role="status">로그인 정보를 확인하는 중...</p>
+            <button id="reloadButton" class="button--paper" type="button" onclick="location.reload()">페이지 다시 불러오기</button>
         </section>
     </main>
 
@@ -116,20 +117,49 @@
         import { signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import {
             getMemberProfile,
-            getSafeNext,
             isMemberProfileComplete,
             registerMember,
             waitForAuth
         } from "./auth.js";
         import { auth } from "./firebase.js";
-        import { queueMemberSheetSync, syncMemberToSheet } from "./sheet-sync.js";
+        import { syncMemberToSheet } from "./sheet-sync.js";
 
         const accountRow = document.getElementById("accountRow");
         const registerForm = document.getElementById("registerForm");
         const registerButton = document.getElementById("registerButton");
+        const reloadButton = document.getElementById("reloadButton");
         const message = document.getElementById("message");
-        const next = getSafeNext();
         let currentUser = null;
+        reloadButton.hidden = true;
+
+        function safeNext() {
+            const fallback = new URL("./index.html", location.href);
+            const requested = new URLSearchParams(location.search).get("next");
+            try {
+                const target = new URL(requested || fallback.href, location.href);
+                const isAuthPage = /\/(?:signin|register)\.html$/i.test(target.pathname);
+                return target.origin === location.origin && !isAuthPage
+                    ? `${target.pathname}${target.search}${target.hash}`
+                    : `${fallback.pathname}${fallback.search}${fallback.hash}`;
+            } catch {
+                return `${fallback.pathname}${fallback.search}${fallback.hash}`;
+            }
+        }
+
+        function waitForAuthState() {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error("로그인 상태 확인 시간이 초과되었습니다.")), 10000);
+                waitForAuth().then((user) => {
+                    clearTimeout(timeout);
+                    resolve(user);
+                }, (error) => {
+                    clearTimeout(timeout);
+                    reject(error);
+                });
+            });
+        }
+
+        const next = safeNext();
 
         function continueToPreviousPage() {
             const destination = new URL(next, location.href);
@@ -143,7 +173,7 @@
         }
 
         try {
-            currentUser = await waitForAuth();
+            currentUser = await waitForAuthState();
             if (!currentUser) {
                 goToSignIn();
                 await new Promise(() => {});
@@ -168,6 +198,7 @@
         } catch (error) {
             console.error(error);
             message.textContent = "로그인 또는 회원 정보를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            reloadButton.hidden = false;
         }
 
         document.getElementById("changeAccountButton").addEventListener("click", async () => {
@@ -199,14 +230,6 @@
                     document.getElementById("privacyConsent").checked
                 );
                 message.textContent = "회원 등록을 완료했습니다. 이전 페이지로 이동합니다...";
-                try {
-                    await Promise.race([
-                        queueMemberSheetSync(currentUser),
-                        new Promise((resolve) => setTimeout(resolve, 800))
-                    ]);
-                } catch (syncQueueError) {
-                    console.warn("Google Sheets 동기화 대기열 저장 실패", syncQueueError);
-                }
                 syncMemberToSheet(currentUser).catch((syncError) => {
                     console.error("Google Sheets 회원 정보 동기화 실패", syncError);
                 });

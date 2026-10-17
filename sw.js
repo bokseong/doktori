@@ -1,4 +1,4 @@
-const CACHE_NAME = "doktori-static-v6";
+const CACHE_NAME = "doktori-static-v7";
 const STATIC_FILES = [
     "./", "./index.html", "./signin.html", "./register.html", "./theme.css", "./footer.css", "./qr-scanner.css", "./qr-scanner.js",
     "./auth.js", "./firebase.js", "./sheet-sync.js", "./app-ui.js", "./event-config.js", "./mypage.html", "./offline.html", "./icon.svg"
@@ -20,8 +20,8 @@ self.addEventListener("fetch", (event) => {
         event.respondWith(fetch(event.request).catch(() => caches.match("./offline.html")));
         return;
     }
-    event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+    event.respondWith(fetch(event.request).then((response) => {
         if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
         return response;
-    })));
+    }).catch(() => caches.match(event.request)));
 });

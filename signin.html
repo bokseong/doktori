@@ -51,7 +51,6 @@
     <script type="module" src="./app-ui.js"></script>
     <script type="module">
         import {
-            getSafeNext,
             getMemberProfile,
             isMemberProfileComplete,
             signInWithGoogle,
@@ -62,24 +61,51 @@
         const message = document.getElementById("message");
         const signInButton = document.getElementById("googleSignInButton");
 
+        function safeNext() {
+            const fallback = new URL("./index.html", location.href);
+            const requested = new URLSearchParams(location.search).get("next");
+            try {
+                const target = new URL(requested || fallback.href, location.href);
+                const isAuthPage = /\/(?:signin|register)\.html$/i.test(target.pathname);
+                return target.origin === location.origin && !isAuthPage
+                    ? `${target.pathname}${target.search}${target.hash}`
+                    : `${fallback.pathname}${fallback.search}${fallback.hash}`;
+            } catch {
+                return `${fallback.pathname}${fallback.search}${fallback.hash}`;
+            }
+        }
+
+        function waitForAuthState() {
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error("로그인 상태 확인 시간이 초과되었습니다.")), 10000);
+                waitForAuth().then((user) => {
+                    clearTimeout(timeout);
+                    resolve(user);
+                }, (error) => {
+                    clearTimeout(timeout);
+                    reject(error);
+                });
+            });
+        }
+
         async function continueWith(user) {
             const profile = await getMemberProfile(user);
             if (isMemberProfileComplete(profile)) {
                 message.textContent = "회원 정보를 확인했습니다. 이동하는 중...";
                 await touchMemberProfile(user);
-                location.replace(getSafeNext());
+                location.replace(safeNext());
                 return;
             }
 
             message.textContent = "회원 등록 페이지로 이동하는 중...";
             const registerUrl = new URL("./register.html", location.href);
-            registerUrl.searchParams.set("next", getSafeNext());
+            registerUrl.searchParams.set("next", safeNext());
             location.replace(registerUrl);
         }
 
         signInButton.disabled = true;
         try {
-            const existingUser = await waitForAuth();
+            const existingUser = await waitForAuthState();
             if (existingUser) {
                 await continueWith(existingUser);
             } else {

@@ -25,12 +25,25 @@ export function isMasterAdmin(user) {
     return (user?.email || "").toLowerCase() === MASTER_ADMIN_EMAIL;
 }
 
-export function waitForAuth() {
+export function waitForAuth(timeoutMilliseconds = 10000) {
     return new Promise((resolve, reject) => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        let unsubscribe = () => {};
+        const timeout = setTimeout(() => {
+            unsubscribe();
+            const error = new Error("로그인 상태 확인 시간이 초과되었습니다.");
+            error.code = "auth/state-timeout";
+            reject(error);
+        }, timeoutMilliseconds);
+
+        unsubscribe = onAuthStateChanged(auth, (user) => {
+            clearTimeout(timeout);
             unsubscribe();
             resolve(user);
-        }, reject);
+        }, (error) => {
+            clearTimeout(timeout);
+            unsubscribe();
+            reject(error);
+        });
     });
 }
 

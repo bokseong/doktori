@@ -65,10 +65,6 @@ export function syncMemberToSheet(user) {
     return syncWithQueue(user, { action: "profile" });
 }
 
-export function queueMemberSheetSync(user) {
-    return queueFailedSync(user, { action: "profile" }, { code: "pending-navigation" });
-}
-
 export function syncProgressToSheet(user, qrId) {
     return syncWithQueue(user, { action: "progress", qrId });
 }
