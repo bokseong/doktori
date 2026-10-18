@@ -21,7 +21,7 @@ import {
 import { auth, db } from "./firebase.js";
 
 export const MASTER_ADMIN_EMAIL = "github.jwastro09@gmail.com";
-export const PRIVACY_CONSENT_VERSION = "2026-10-16-v1";
+export const PRIVACY_CONSENT_VERSION = "2026-10-19-v2";
 
 const STUDENT_NUMBER_PATTERN = /^[0-9]{4,20}$/;
 const STUDENT_NAME_PATTERN = /^[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}$/u;
@@ -205,22 +205,21 @@ async function deleteOwnedDocuments(collectionName, uid) {
     }
 }
 
-export async function deleteMemberAccount(user = auth.currentUser, beforeDelete) {
+export async function deleteMemberAccount(user = auth.currentUser) {
     if (!user) throw new Error("로그인한 사용자만 회원 탈퇴를 진행할 수 있습니다.");
     if (isMasterAdmin(user)) throw new Error("마스터 관리자 계정은 사이트에서 탈퇴할 수 없습니다.");
 
     await reauthenticateWithPopup(user, provider);
-    if (typeof beforeDelete === "function") await beforeDelete(user);
-
     await deleteOwnedDocuments("quizTelemetry", user.uid);
     await deleteOwnedDocuments("clientErrors", user.uid);
-    await deleteOwnedDocuments("syncQueue", user.uid);
+    await deleteOwnedDocuments("chatMessages", user.uid);
 
     const profileBatch = writeBatch(db);
     QR_IDS.forEach((qrId) => {
         profileBatch.delete(doc(db, "users", user.uid, "progress", qrId));
         profileBatch.delete(doc(db, "answerAttempts", `${user.uid}_${qrId}`));
     });
+    profileBatch.delete(doc(db, "chatRateLimits", user.uid));
     profileBatch.set(doc(db, "users", user.uid), {
         uid: user.uid,
         email: "",

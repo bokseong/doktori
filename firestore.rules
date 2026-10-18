@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function currentConsentVersion() {
-      return "2026-10-16-v1";
+      return "2026-10-19-v2";
     }
 
     function isSignedIn() {
@@ -30,6 +30,15 @@ service cloud.firestore {
     function isCorrectAnswer(qrId, answer) {
       return exists(/databases/$(database)/documents/quizSecrets/$(qrId))
         && answer in get(/databases/$(database)/documents/quizSecrets/$(qrId)).data.answers;
+    }
+
+    function hasCompletedAllMissions(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)/progress/qr1)
+        && exists(/databases/$(database)/documents/users/$(userId)/progress/qr2)
+        && exists(/databases/$(database)/documents/users/$(userId)/progress/qr3)
+        && exists(/databases/$(database)/documents/users/$(userId)/progress/qr4)
+        && exists(/databases/$(database)/documents/users/$(userId)/progress/qr5)
+        && exists(/databases/$(database)/documents/users/$(userId)/progress/qr6);
     }
 
     function hasCurrentConsent(userId) {
@@ -257,15 +266,77 @@ service cloud.firestore {
       allow delete: if isMasterAdmin() || (isSignedIn() && !isMasterAdmin() && resource.data.uid == request.auth.uid);
     }
 
-    match /syncQueue/{syncId} {
-      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
-      allow create, update: if isSignedIn()
+    match /announcements/{announcementId} {
+      allow read: if announcementId == "current";
+      allow create, update: if isAdmin()
+        && announcementId == "current"
+        && request.resource.data.keys().hasOnly(["title", "message", "active", "severity", "updatedAt", "updatedBy"])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1
+        && request.resource.data.title.size() <= 80
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 500
+        && request.resource.data.active is bool
+        && request.resource.data.severity in ["info", "warning", "urgent"]
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /prizeClaims/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(["uid", "received", "receivedAt", "receivedBy", "updatedAt"])
+        && request.resource.data.uid == userId
+        && request.resource.data.received is bool
+        && request.resource.data.receivedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time
+        && (
+          (request.resource.data.received == true
+            && request.resource.data.receivedAt == request.time
+            && hasCompletedAllMissions(userId))
+          || (request.resource.data.received == false
+            && request.resource.data.receivedAt == null)
+        );
+      allow delete: if false;
+    }
+
+    match /chatMessages/{messageId} {
+      allow read: if isSignedIn() && hasCurrentConsent(request.auth.uid);
+      allow create: if isSignedIn()
+        && hasCurrentConsent(request.auth.uid)
+        && request.resource.data.keys().hasOnly(["uid", "studentName", "text", "authorRole", "createdAt"])
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.keys().hasOnly(["uid", "action", "qrId", "attempts", "lastErrorCode", "lastAttemptAt", "createdAt"])
-        && request.resource.data.action in ["profile", "progress"]
-        && request.resource.data.attempts is int
-        && request.resource.data.attempts >= 1;
-      allow delete: if isSignedIn() && (resource.data.uid == request.auth.uid || isMasterAdmin());
+        && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 300
+        && request.resource.data.authorRole == (isAdmin() ? "admin" : "participant")
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.lastMessageId == messageId
+        && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.lastSentAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /chatRateLimits/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
+        && request.resource.data.uid == userId
+        && request.resource.data.lastMessageId is string
+        && request.resource.data.lastSentAt == request.time
+        && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId));
+      allow update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
+        && request.resource.data.uid == userId
+        && request.resource.data.lastMessageId is string
+        && request.resource.data.lastSentAt == request.time
+        && request.time >= resource.data.lastSentAt + duration.value(3, "s")
+        && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId));
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // 기존 축전 사이트의 공개 운세 읽기 규칙은 그대로 유지합니다.

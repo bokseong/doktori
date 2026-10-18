@@ -102,6 +102,14 @@
         const presetButtons = [...document.querySelectorAll("[data-qr]")];
         let currentQRDataUrl = "";
         let selectedQrNumber = null;
+        const QR_ROUTES = Object.freeze([
+            "299az81a68c", "hq1bq8pg1c", "iq1bz5iutx",
+            "qrxc7ij88f", "eq4bunq5v", "jk1ba63db"
+        ]);
+
+        function missionUrl(number) {
+            return new URL(`./${QR_ROUTES[number - 1]}.html`, location.href).href;
+        }
 
         function generateQR() {
             const textInput = input.value.trim();
@@ -130,7 +138,7 @@
 
         function selectQr(number) {
             selectedQrNumber = number;
-            input.value = new URL(`./${number}.html`, location.href).href;
+            input.value = missionUrl(number);
             presetButtons.forEach((button) => button.setAttribute("aria-pressed", String(Number(button.dataset.qr) === number)));
             generateQR();
         }
@@ -147,7 +155,7 @@
         function createQrDataUrl(number) {
             const container = document.createElement("div");
             new QRCode(container, {
-                text: new URL(`./${number}.html`, location.href).href,
+                text: missionUrl(number),
                 width: 600,
                 height: 600,
                 colorDark: "#000000",
@@ -200,7 +208,7 @@
                 const label = document.createElement("strong");
                 label.textContent = `독토리 QR ${String(number).padStart(2, "0")}`;
                 const address = document.createElement("small");
-                address.textContent = new URL(`./${number}.html`, location.href).href;
+                address.textContent = missionUrl(number);
                 card.append(image, label, address);
                 sheet.append(card);
             }

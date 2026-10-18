@@ -23,6 +23,14 @@
     let videoInputs = [];
     let cameraIndex = 0;
     let torchOn = false;
+    const QR_ROUTES = Object.freeze({
+        "299az81a68c": 1,
+        "hq1bq8pg1c": 2,
+        "iq1bz5iutx": 3,
+        "qrxc7ij88f": 4,
+        "eq4bunq5v": 5,
+        "jk1ba63db": 6
+    });
 
     function setStatus(message) {
         status.textContent = message;
@@ -57,14 +65,15 @@
         const trustedOrigins = new Set([location.origin, "https://bokseong.github.io"]);
         if (!trustedOrigins.has(parsed.origin)) return null;
 
-        const match = parsed.pathname.match(/^\/(?:doktori\/)?qr\/([1-6])\.html\/?$/i);
+        const match = parsed.pathname.match(/^\/(?:doktori\/)?qr\/([a-z0-9]+)\.html\/?$/i);
         if (!match) return null;
-
-        const number = Number(match[1]);
+        const route = match[1].toLowerCase();
+        const number = QR_ROUTES[route];
+        if (!number) return null;
         return {
             number,
             label: `QR ${String(number).padStart(2, "0")}`,
-            target: new URL(`./qr/${number}.html`, location.href).href
+            target: new URL(`./qr/${route}.html`, location.href).href
         };
     }
 

@@ -87,7 +87,8 @@
                     <li>QR 위치, 문제와 정답을 무단으로 공개하거나 자동화 도구로 정답을 반복 제출하는 등 행사 운영을 방해하는 행위를 금지합니다.</li>
                     <li>부정 참여 또는 운영 방해가 확인되면 해당 진행 기록을 무효로 처리하거나 참여를 제한할 수 있습니다.</li>
                     <li>QR 미션 진행률이 100%에 도달한 참여자는 행사 운영자의 확인을 거쳐 안내된 상품을 받을 수 있습니다.</li>
-                    <li>점검, 장애 또는 행사 운영상 필요한 경우 서비스 내용이나 이용 시간이 변경될 수 있으며, 중요한 변경 사항은 행사 안내를 통해 알립니다.</li>
+                    <li>전체 채팅방에는 전화번호, 주소, 비밀번호 등 민감한 개인정보를 게시해서는 안 되며 운영 방해 메시지는 관리자가 삭제할 수 있습니다.</li>
+                    <li>점검, 장애 또는 행사 운영상 필요한 경우 서비스 내용이나 이용 시간이 변경될 수 있으며, 중요한 변경 사항은 실시간 공지로 알릴 수 있습니다.</li>
                     <li>개인정보 처리에 관한 사항은 아래 개인정보 수집·이용 안내에 따릅니다.</li>
                 </ol>
                 <p class="muted">시행일: 2026년 10월 28일</p>
@@ -96,8 +97,8 @@
             <section class="info-panel panel" aria-labelledby="privacyTitle">
                 <span class="label">PRIVACY</span><h2 id="privacyTitle" class="section-title">개인정보 수집·이용 안내</h2>
                 <dl class="privacy-grid">
-                    <dt>수집 목적</dt><dd>참여자 본인 확인, 중복 참여 방지, QR 미션 진행도 저장, 상품 지급 확인 및 행사 운영</dd>
-                    <dt>수집 항목</dt><dd>Firebase UID, Google 이메일, 이름, 학번, QR 진행 기록, 로그인·활동·동의 시각</dd>
+                    <dt>수집 목적</dt><dd>참여자 본인 확인, 중복 참여 방지, QR 미션 진행도 저장, 문의 지원, 상품 지급 확인 및 행사 운영</dd>
+                    <dt>수집 항목</dt><dd>Firebase UID, Google 이메일, 이름, 학번, QR 진행 기록, 채팅 내용, 상품 수령 여부, 로그인·활동·동의 시각</dd>
                     <dt>보유 기간</dt><dd id="retentionText">행사 운영을 위해 필요한 기간 동안 보유하며, 관리자가 설정한 보유 종료 시각 이후 익명화·삭제 처리합니다.</dd>
                     <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 개인별 진행도 확인에 필요한 필수 정보이므로 미동의 시 행사에 참여할 수 없습니다.</dd>
                     <dt>회원 탈퇴</dt><dd>아래 회원 탈퇴 기능으로 개인정보와 진행 기록의 삭제 또는 익명화를 요청할 수 있습니다.</dd>
@@ -107,7 +108,7 @@
 
             <section class="info-panel panel danger-zone" aria-labelledby="withdrawTitle">
                 <span class="label">ACCOUNT</span><h2 id="withdrawTitle" class="section-title">회원 탈퇴</h2>
-                <p class="danger-copy">탈퇴하면 Google Sheets의 회원 행과 Firestore의 개인정보·진행 기록이 삭제 또는 익명화되고 Firebase 로그인 계정도 삭제됩니다. 완료한 QR과 인증서는 복구할 수 없습니다.</p>
+                <p class="danger-copy">탈퇴하면 Firestore의 개인정보·진행 기록·본인이 작성한 채팅이 삭제 또는 익명화되고 Firebase 로그인 계정도 삭제됩니다. 완료한 QR과 인증서는 복구할 수 없습니다. 이미 지급된 상품 수령 기록은 중복 지급 방지를 위해 최소 정보로 보관될 수 있습니다.</p>
                 <label class="withdraw-check"><input id="withdrawConsent" type="checkbox"><span>삭제되는 정보와 복구할 수 없다는 점을 확인했습니다.</span></label>
                 <div class="withdraw-actions"><button id="withdrawButton" type="button" disabled>회원 탈퇴</button><p id="withdrawMessage" class="status" role="status"></p></div>
             </section>
@@ -121,7 +122,6 @@
         import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { deleteMemberAccount, getMemberProfile, isMasterAdmin, logout, requireUser } from "./auth.js";
         import { getEventConfig } from "./event-config.js";
-        import { deleteMemberFromSheet } from "./sheet-sync.js";
         import { db } from "./firebase.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
@@ -188,7 +188,7 @@
                 withdrawMessage.textContent = "Google 계정을 다시 확인한 뒤 회원정보를 삭제합니다...";
                 window.__DOKTORI_ACCOUNT_DELETING__ = true;
                 try {
-                    await deleteMemberAccount(user, deleteMemberFromSheet);
+                    await deleteMemberAccount(user);
                     stopProgressListener();
                     for (let index = localStorage.length - 1; index >= 0; index -= 1) {
                         const key = localStorage.key(index);

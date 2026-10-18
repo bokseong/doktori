@@ -59,16 +59,28 @@
             <button id="refreshButton" type="button">데이터 새로고침</button>
         </section>
         <section class="summary" aria-label="참여 현황">
-            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div><div class="card">동기화 대기<strong id="pendingSyncs">0</strong></div>
+            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div><div class="card">참여자<strong id="participantUsers">0</strong></div>
         </section>
         <section class="shortcut-panel panel" aria-labelledby="shortcutTitle">
             <div class="shortcut-head">
                 <div class="shortcut-title"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
-                <a class="button button--coral" href="./qr/QR.html">QR 생성기 열기</a>
+                <div class="actions" style="margin-top:0"><a class="button" href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" href="./chat.html">채팅방</a><a class="button button--coral" href="./qr/QR.html">QR 생성기</a></div>
             </div>
             <div class="qr-shortcuts">
-                <a class="button" href="./qr/1.html">QR 01</a><a class="button" href="./qr/2.html">QR 02</a><a class="button" href="./qr/3.html">QR 03</a><a class="button" href="./qr/4.html">QR 04</a><a class="button" href="./qr/5.html">QR 05</a><a class="button" href="./qr/6.html">QR 06</a>
+                <a class="button" href="./qr/299az81a68c.html">QR 01</a><a class="button" href="./qr/hq1bq8pg1c.html">QR 02</a><a class="button" href="./qr/iq1bz5iutx.html">QR 03</a><a class="button" href="./qr/qrxc7ij88f.html">QR 04</a><a class="button" href="./qr/eq4bunq5v.html">QR 05</a><a class="button" href="./qr/jk1ba63db.html">QR 06</a>
             </div>
+        </section>
+
+        <section class="admin-panel panel" aria-labelledby="announcementTitle">
+            <h2 id="announcementTitle" class="section-title">실시간 긴급 공지</h2>
+            <p class="muted">게시하면 현재 사이트에 접속 중인 사용자에게 새로고침 없이 팝업으로 표시됩니다.</p>
+            <div class="config-grid">
+                <label>공지 제목<input id="announcementHeading" type="text" maxlength="80" placeholder="예: 행사 운영 안내"></label>
+                <label>중요도<select id="announcementSeverity"><option value="info">안내</option><option value="warning">주의</option><option value="urgent">긴급</option></select></label>
+                <label class="wide">공지 내용<textarea id="announcementBody" maxlength="500" placeholder="사용자에게 즉시 알릴 내용을 입력하세요."></textarea></label>
+            </div>
+            <div class="actions"><button id="publishAnnouncement" class="button--coral" type="button">공지 게시</button><button id="disableAnnouncement" class="button--paper" type="button">현재 공지 내리기</button></div>
+            <p id="announcementMessage" class="status" role="status"></p>
         </section>
         <section class="admin-panel panel" aria-labelledby="eventConfigTitle">
             <h2 id="eventConfigTitle" class="section-title">행사 운영 설정</h2>
@@ -90,7 +102,7 @@
             <p id="manualMessage" class="status" role="status"></p>
         </section>
 
-        <section class="admin-panel panel" aria-labelledby="diagnosticTitle"><h2 id="diagnosticTitle" class="section-title">시스템 진단</h2><div class="actions"><button id="runDiagnostics" type="button">App Check·연결 진단</button></div><div id="diagnosticList" class="diagnostic-list"></div></section>
+        <section class="admin-panel panel" aria-labelledby="diagnosticTitle"><h2 id="diagnosticTitle" class="section-title">시스템 진단</h2><div class="actions"><button id="runDiagnostics" type="button">App Check·Firestore 진단</button></div><div id="diagnosticList" class="diagnostic-list"></div></section>
 
         <section class="admin-panel panel" aria-labelledby="auditTitle"><h2 id="auditTitle" class="section-title">최근 관리자 변경 이력</h2><div id="auditLogList" class="diagnostic-list" aria-live="polite"></div></section>
 
@@ -155,6 +167,7 @@
                 document.getElementById("totalUsers").textContent = String(records.length);
                 document.getElementById("adminUsers").textContent = String(records.filter((item) => item.role === "admin").length);
                 document.getElementById("completedUsers").textContent = String(records.filter((item) => item.found.length === QR_IDS.length).length);
+                document.getElementById("participantUsers").textContent = String(records.filter((item) => item.role === "participant").length);
                 message.textContent = records.length ? `총 ${records.length}명의 정보를 불러왔습니다.` : "등록된 사용자가 없습니다.";
             } catch (error) {
                 console.error(error);

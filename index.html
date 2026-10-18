@@ -142,7 +142,6 @@
         import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./auth.js";
         import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js";
         import { db } from "./firebase.js";
-        import { retryPendingSheetSyncs, syncMemberToSheet } from "./sheet-sync.js";
 
         const userInfo = document.getElementById("userInfo");
         const loginButton = document.getElementById("loginButton");
@@ -233,12 +232,6 @@
                     statusMessage.textContent = "QR 미션을 시작하려면 최초 등록을 완료해 주세요.";
                 } else {
                     myPageButton.hidden = false;
-                    syncMemberToSheet(currentUser).catch((error) => {
-                        console.error("Google Sheets 회원 정보 동기화 실패", error);
-                    });
-                    retryPendingSheetSyncs(currentUser).then((result) => {
-                        if (result.retried) statusMessage.textContent = `대기 중이던 ${result.retried}건을 다시 동기화했습니다.`;
-                    }).catch((error) => console.warn("대기 동기화 재시도 실패", error));
                     const access = await getUserAccess(currentUser);
                     adminButton.hidden = !access.isAdmin;
                     qrBuilderButton.hidden = !access.isAdmin;

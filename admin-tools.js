@@ -17,7 +17,6 @@ import {
 import { getUserAccess, MASTER_ADMIN_EMAIL, requireUser } from "./auth.js";
 import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js";
 import { appCheck, db } from "./firebase.js";
-import { SHEET_SYNC_URL } from "./sheet-sync.js";
 
 const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
 const user = await requireUser();
@@ -188,11 +187,6 @@ function renderAuditLogs(documents) {
     });
 }
 
-async function refreshPendingSyncCount() {
-    const snapshot = await getDocs(collection(db, "syncQueue"));
-    document.getElementById("pendingSyncs").textContent = String(snapshot.size);
-}
-
 function addDiagnostic(label, ok, detail) {
     const item = document.createElement("div");
     item.className = "diagnostic-item";
@@ -209,9 +203,42 @@ async function runDiagnostics() {
     catch (error) { addDiagnostic("Firebase App Check", false, String(error.code || error.name)); }
     try { await getDoc(doc(db, "eventConfig", "current")); addDiagnostic("Firestore", true, "읽기 성공"); }
     catch (error) { addDiagnostic("Firestore", false, String(error.code || error.name)); }
-    try { await fetch(SHEET_SYNC_URL, { mode: "no-cors" }); addDiagnostic("Google Sheets 웹앱", true, "전송 경로 연결됨(응답 본문 검증 불가)"); }
-    catch (error) { addDiagnostic("Google Sheets 웹앱", false, String(error.name)); }
-    await refreshPendingSyncCount().catch(() => {});
+}
+
+async function saveAnnouncement(active) {
+    const message = document.getElementById("announcementMessage");
+    const title = document.getElementById("announcementHeading").value.trim();
+    const body = document.getElementById("announcementBody").value.trim();
+    const severity = document.getElementById("announcementSeverity").value;
+    if (active && (!title || !body)) {
+        message.textContent = "공지 제목과 내용을 모두 입력해 주세요.";
+        return;
+    }
+    message.textContent = active ? "공지를 게시하는 중..." : "현재 공지를 내리는 중...";
+    try {
+        await setDoc(doc(db, "announcements", "current"), {
+            title: title || "공지",
+            message: body || "",
+            active,
+            severity,
+            updatedAt: serverTimestamp(),
+            updatedBy: user.uid
+        });
+        await audit(active ? "announcement-published" : "announcement-disabled", { severity });
+        message.textContent = active ? "실시간 공지를 게시했습니다." : "현재 공지를 내렸습니다.";
+    } catch (error) {
+        console.error(error);
+        message.textContent = "공지를 저장하지 못했습니다. 권한과 배포된 규칙을 확인하세요.";
+    }
+}
+
+function loadAnnouncement(snapshot) {
+    if (!snapshot.exists()) return;
+    const data = snapshot.data();
+    document.getElementById("announcementHeading").value = data.title || "";
+    document.getElementById("announcementBody").value = data.message || "";
+    document.getElementById("announcementSeverity").value = data.severity || "info";
+    document.getElementById("announcementMessage").textContent = data.active ? "현재 공지가 게시 중입니다." : "게시 중인 공지가 없습니다.";
 }
 
 async function anonymizeExpiredUsers() {
@@ -251,12 +278,14 @@ document.getElementById("saveEventConfig").addEventListener("click", saveConfig)
 document.getElementById("manualComplete").addEventListener("click", () => setManualProgress(true));
 document.getElementById("manualCancel").addEventListener("click", () => setManualProgress(false));
 document.getElementById("runDiagnostics").addEventListener("click", runDiagnostics);
+document.getElementById("publishAnnouncement").addEventListener("click", () => saveAnnouncement(true));
+document.getElementById("disableAnnouncement").addEventListener("click", () => saveAnnouncement(false));
 document.getElementById("anonymizeExpired").addEventListener("click", anonymizeExpiredUsers);
 if ((user.email || "").toLowerCase() !== MASTER_ADMIN_EMAIL) document.getElementById("anonymizeExpired").hidden = true;
 
-await Promise.all([loadConfig(), loadUserOptions(), refreshPendingSyncCount()]);
+await Promise.all([loadConfig(), loadUserOptions()]);
 onSnapshot(collection(db, "quizTelemetry"), (snapshot) => renderStats(snapshot.docs), (error) => console.warn("문항 통계 실시간 갱신 실패", error));
 onSnapshot(collection(db, "users"), loadUserOptions, () => {});
-onSnapshot(collection(db, "syncQueue"), (snapshot) => { document.getElementById("pendingSyncs").textContent = String(snapshot.size); }, () => {});
+onSnapshot(doc(db, "announcements", "current"), loadAnnouncement, (error) => console.warn("공지 상태 갱신 실패", error));
 onSnapshot(query(collection(db, "auditLogs"), orderBy("createdAt", "desc"), limit(20)), (snapshot) => renderAuditLogs(snapshot.docs), (error) => console.warn("감사 로그 갱신 실패", error));
 

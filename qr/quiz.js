@@ -10,7 +10,6 @@ import {
 import { requireUser } from "../auth.js";
 import { db } from "../firebase.js";
 import { getEventConfig, getMissionAvailability } from "../event-config.js";
-import { syncProgressToSheet } from "../sheet-sync.js";
 
 const QUIZZES = Object.freeze({
     qr1: { question: "우리 학교 도서관에서는 1인당 책을 최대 ( )권, ( )주간 빌릴 수 있습니다. 빈칸에 들어갈 말은 무엇일까요?" },
@@ -141,10 +140,9 @@ export async function initQuiz(qrId) {
                 }, { merge: true });
                 await batch.commit();
             }
-            message.textContent = "2/3 · 진행도를 저장했습니다. Google Sheets에 동기화하는 중...";
-            await syncProgressToSheet(user, qrId);
+            message.textContent = "2/3 · 진행도를 저장했습니다. 완료 기록을 확인하는 중...";
             await recordQuizTelemetry(user, qrId, "correct");
-            message.textContent = "3/3 · 정답입니다! 진행도와 동기화 요청을 완료했습니다.";
+            message.textContent = "3/3 · 정답입니다! 진행도 저장을 완료했습니다.";
             navigation.hidden = false;
         } catch (error) {
             console.error(error);
