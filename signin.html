@@ -20,6 +20,7 @@
         .auth-card h2 { margin: 0 0 10px; font-size: 1.85rem; font-weight: 800; line-height: 1.3; letter-spacing: -.02em; }
         .step { display: inline-block; margin-bottom: 18px; color: var(--blue); font-weight: 700; }
         .full { width: 100%; }
+        .auth-actions { display: grid; gap: 12px; }
         .helper { margin: 8px 0 22px; color: var(--muted); line-height: 1.6; }
         .auth-note { margin: 22px 0 0; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper); color: var(--muted); line-height: 1.6; }
         #message { min-height: 1.5em; margin: 18px 0 0; color: #9b321e; font-weight: 700; }
@@ -37,7 +38,10 @@
             <span class="step">01 · 계정 확인</span>
             <h2>Google로 로그인</h2>
             <p class="helper">진행도를 개인별로 안전하게 저장하기 위해 학교에서 사용하는 Google 계정으로 로그인합니다.</p>
-            <button id="googleSignInButton" class="full" type="button">Google 계정으로 로그인</button>
+            <div class="auth-actions">
+                <button id="googleSignInButton" class="full" type="button">Google 계정으로 로그인</button>
+                <a class="button button--paper full" href="./index.html">홈으로 이동</a>
+            </div>
             <p class="auth-note">처음 참여하는 계정은 로그인 후 별도의 회원 등록 페이지에서 학번·이름 입력과 개인정보 수집·이용 동의를 진행합니다.</p>
             <p id="message" role="status"></p>
         </section>
