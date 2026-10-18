@@ -94,12 +94,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 }
 .display-title {
     margin: 22px 0 18px;
-    font-family: "Black Han Sans", sans-serif;
-    font-size: clamp(3rem, 9vw, 7.2rem);
-    line-height: 1.03;
-    letter-spacing: -.035em;
+    font-family: "Gowun Dodum", "Malgun Gothic", sans-serif;
+    font-size: clamp(2.8rem, 7vw, 5.8rem);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -.015em;
 }
-.display-title .accent { color: var(--coral); -webkit-text-stroke: 1px var(--ink); text-shadow: 4px 4px 0 var(--ink); }
+.display-title .accent { color: var(--coral); text-shadow: 3px 3px 0 var(--ink); }
 .lead { max-width: 680px; margin: 0; color: #393934; font-size: clamp(1rem, 2vw, 1.2rem); line-height: 1.75; }
 .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 28px; }
 .status { min-height: 1.5em; color: #94321f; font-weight: 700; }
@@ -113,5 +114,5 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     .site-header { align-items: flex-start; }
     .brand-text { display: none; }
     .page-shell { padding-top: 34px; }
-    .display-title .accent { -webkit-text-stroke-width: 1px; text-shadow: 3px 3px 0 var(--ink); }
+    .display-title .accent { text-shadow: 2px 2px 0 var(--ink); }
 }
