@@ -31,24 +31,45 @@
         .terms-box ol { margin: 0; padding-left: 20px; color: var(--muted); font-size: .9rem; line-height: 1.6; }
         .terms-box li + li { margin-top: 7px; }
         .terms-date { margin: 12px 0 0; color: var(--muted); font-size: .82rem; }
-        .consent-check { display: flex; grid-template-columns: none; gap: 10px; align-items: flex-start; font-weight: 700; }
-        .consent-check input {
-            width: 22px;
-            height: 22px;
-            margin-top: 1px;
-            flex: 0 0 auto;
+        .consent-check {
+            position: relative;
             display: grid;
+            grid-template-columns: 24px minmax(0, 1fr);
+            gap: 12px;
+            align-items: start;
+            font-weight: 700;
+        }
+        .consent-check input[type="checkbox"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: 0;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .consent-control {
+            box-sizing: border-box;
+            display: grid;
+            width: 24px;
+            height: 24px;
+            margin-top: 1px;
             place-content: center;
-            appearance: none;
             border: 2px solid var(--ink);
             background: white;
-            cursor: pointer;
         }
-        .consent-check input::before { content: "✓"; color: white; font-weight: 900; line-height: 1; transform: scale(0); transition: transform .1s ease; }
-        .consent-check input:checked { background: var(--blue); }
-        .consent-check input:checked::before { transform: scale(1); }
-        .consent-check input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
-        .consent-copy { display: grid; gap: 2px; line-height: 1.5; }
+        .consent-control::before {
+            content: "✓";
+            color: white;
+            font-weight: 900;
+            line-height: 1;
+            transform: scale(0);
+            transition: transform .1s ease;
+        }
+        .consent-check input:checked + .consent-control { background: var(--blue); }
+        .consent-check input:checked + .consent-control::before { transform: scale(1); }
+        .consent-check input:focus-visible + .consent-control { outline: 3px solid var(--blue); outline-offset: 3px; }
+        .consent-copy { display: grid; min-width: 0; gap: 2px; line-height: 1.5; }
         .consent-copy strong { color: var(--blue); font-size: .82rem; }
         .consent-action { margin-top: 14px; padding: 12px; border: 2px solid var(--ink); background: var(--paper-strong); cursor: pointer; }
         .consent-action:has(input:checked) { background: var(--lime); }
@@ -99,6 +120,7 @@
                     <p class="terms-date">시행일: 2026년 10월 28일</p>
                     <label class="consent-check consent-action">
                         <input id="termsConsent" name="termsConsent" type="checkbox" required>
+                        <span class="consent-control" aria-hidden="true"></span>
                         <span class="consent-copy"><strong>필수 동의</strong><span>독토리 이용약관을 확인했으며 이에 동의합니다.</span></span>
                     </label>
                     <p class="required-note">이용약관에 동의해야 다음 단계로 진행할 수 있습니다.</p>
@@ -115,6 +137,7 @@
                     </dl>
                     <label class="consent-check consent-action">
                         <input id="privacyConsent" name="privacyConsent" type="checkbox" required>
+                        <span class="consent-control" aria-hidden="true"></span>
                         <span class="consent-copy"><strong>필수 동의</strong><span>위 개인정보 수집·이용 내용을 확인했으며 이에 동의합니다.</span></span>
                     </label>
                     <p class="required-note">동의하지 않으면 등록 및 QR 미션 참여가 불가능합니다.</p>
