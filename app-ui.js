@@ -1,5 +1,10 @@
-import { addDoc, collection, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { addDoc, collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { getUserAccess } from "./auth.js";
 import { auth, db } from "./firebase.js";
+
+let chatShortcut = null;
+let stopChatAlerts = () => {};
 
 function createNetworkBanner() {
     const banner = document.createElement("div");
@@ -27,6 +32,56 @@ function createChatShortcut() {
     link.textContent = "도움 채팅";
     link.setAttribute("aria-label", "독토리 전체 도움 채팅방 열기");
     document.body.append(link);
+    chatShortcut = link;
+}
+
+function showAdminChatAlert(message) {
+    if (!chatShortcut) return;
+    const identity = [message.studentNumber, message.studentName].filter(Boolean).join(" · ") || "참여자";
+    chatShortcut.classList.add("has-new-message");
+    chatShortcut.textContent = "도움 채팅 · 새 메시지";
+    chatShortcut.setAttribute("aria-label", `${identity}님의 새 도움 메시지 확인하기`);
+
+    document.querySelector(".admin-chat-alert")?.remove();
+    const alert = document.createElement("a");
+    alert.className = "admin-chat-alert";
+    alert.href = chatShortcut.href;
+    alert.setAttribute("role", "status");
+    const title = document.createElement("strong");
+    title.textContent = `새 도움 메시지 · ${identity}`;
+    const preview = document.createElement("span");
+    preview.textContent = String(message.text || "메시지를 확인해 주세요.").slice(0, 80);
+    alert.append(title, preview);
+    document.body.append(alert);
+    setTimeout(() => alert.remove(), 8000);
+}
+
+function startAdminChatAlerts() {
+    onAuthStateChanged(auth, async (user) => {
+        stopChatAlerts();
+        stopChatAlerts = () => {};
+        if (!user || /\/chat\.html$/i.test(location.pathname)) return;
+        try {
+            const access = await getUserAccess(user);
+            if (!access.isAdmin) return;
+            let initialSnapshotReceived = false;
+            const latestMessage = query(collection(db, "chatMessages"), orderBy("createdAt", "desc"), limit(1));
+            stopChatAlerts = onSnapshot(latestMessage, (snapshot) => {
+                if (!initialSnapshotReceived) {
+                    initialSnapshotReceived = true;
+                    return;
+                }
+                snapshot.docChanges().forEach((change) => {
+                    const message = change.doc.data();
+                    if (change.type === "added" && !change.doc.metadata.hasPendingWrites && message.uid !== user.uid) {
+                        showAdminChatAlert(message);
+                    }
+                });
+            }, (error) => console.warn("관리자 채팅 알림을 불러오지 못했습니다.", error));
+        } catch (error) {
+            console.warn("관리자 권한을 확인하지 못해 채팅 알림을 시작하지 않았습니다.", error);
+        }
+    });
 }
 
 function createAnnouncementPopup() {
@@ -86,6 +141,7 @@ window.addEventListener("unhandledrejection", (event) => reportError(event.reaso
 
 createNetworkBanner();
 createChatShortcut();
+startAdminChatAlerts();
 createAnnouncementPopup();
 
 if ("serviceWorker" in navigator && location.protocol === "https:") {

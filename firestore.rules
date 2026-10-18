@@ -305,8 +305,9 @@ service cloud.firestore {
       allow read: if isSignedIn() && hasCurrentConsent(request.auth.uid);
       allow create: if isSignedIn()
         && hasCurrentConsent(request.auth.uid)
-        && request.resource.data.keys().hasOnly(["uid", "studentName", "text", "authorRole", "createdAt"])
+        && request.resource.data.keys().hasOnly(["uid", "studentNumber", "studentName", "text", "authorRole", "createdAt"])
         && request.resource.data.uid == request.auth.uid
+        && request.resource.data.studentNumber == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentNumber
         && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName
         && request.resource.data.text is string
         && request.resource.data.text.size() >= 1

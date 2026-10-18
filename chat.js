@@ -20,7 +20,7 @@ const input = document.getElementById("chatInput");
 const sendButton = document.getElementById("sendButton");
 const status = document.getElementById("chatStatus");
 
-document.getElementById("chatIdentity").textContent = `${profile.studentName} · ${access.isAdmin ? "관리자" : "참여자"}`;
+document.getElementById("chatIdentity").textContent = `${profile.studentNumber} · ${profile.studentName} · ${access.isAdmin ? "관리자" : "참여자"}`;
 document.getElementById("adminLink").hidden = !access.isAdmin;
 
 function formatTime(timestamp) {
@@ -43,7 +43,10 @@ function renderMessages(documents) {
         row.className = `message-row${data.uid === user.uid ? " mine" : ""}${data.authorRole === "admin" ? " admin" : ""}`;
         const meta = document.createElement("span");
         meta.className = "message-meta";
-        meta.textContent = `${data.studentName || "참여자"}${data.authorRole === "admin" ? " · 관리자" : ""} · ${formatTime(data.createdAt)}`;
+        const authorIdentity = data.studentNumber
+            ? `${data.studentNumber} · ${data.studentName || "이름 미등록"}`
+            : `학번 미기록 · ${data.studentName || "참여자"}`;
+        meta.textContent = `${authorIdentity}${data.authorRole === "admin" ? " · 관리자" : ""} · ${formatTime(data.createdAt)}`;
         const bubble = document.createElement("div");
         bubble.className = "message-bubble";
         bubble.textContent = data.text || "";
@@ -79,6 +82,7 @@ form.addEventListener("submit", async (event) => {
         const batch = writeBatch(db);
         batch.set(messageReference, {
             uid: user.uid,
+            studentNumber: profile.studentNumber,
             studentName: profile.studentName,
             text,
             authorRole: access.isAdmin ? "admin" : "participant",
