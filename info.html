@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f0e6">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <title>사이트 안내 및 이용약관 · 복성고 독토리</title>
+    <link rel="stylesheet" href="./theme.css">
+    <link rel="stylesheet" href="./footer.css">
+    <style>
+        .info-hero { max-width: 820px; margin-bottom: 32px; }
+        .info-hero h1 { margin: 16px 0 10px; font-size: clamp(2.5rem, 7vw, 4.8rem); font-weight: 700; line-height: 1.18; letter-spacing: -.015em; }
+        .content-grid { display: grid; gap: 24px; }
+        .info-panel { padding: clamp(22px, 4vw, 36px); }
+        .site-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; margin-top: 22px; padding: 2px; background: var(--ink); }
+        .site-facts article { padding: 22px; background: var(--paper-strong); }
+        .site-facts b { display: block; margin-bottom: 12px; color: var(--coral); font: 1.8rem/1 "Black Han Sans", sans-serif; }
+        .site-facts h3 { margin: 0 0 8px; font-size: 1.15rem; line-height: 1.4; }
+        .site-facts p, .terms-list, .privacy-grid { color: var(--muted); line-height: 1.75; }
+        .site-facts p { margin: 0; }
+        .terms-list { padding-left: 22px; }
+        .terms-list li + li { margin-top: 10px; }
+        .privacy-grid { display: grid; grid-template-columns: 140px 1fr; gap: 10px 16px; margin: 20px 0 0; }
+        .privacy-grid dt { color: var(--ink); font-weight: 800; }
+        .privacy-grid dd { margin: 0; }
+        .public-note { margin: 0 0 24px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--lime); font-weight: 700; }
+        @media (max-width: 760px) { .site-facts { grid-template-columns: 1fr; } }
+        @media (max-width: 520px) { .privacy-grid { grid-template-columns: 1fr; gap: 4px; } .privacy-grid dd + dt { margin-top: 9px; } }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">I</span><span class="brand-text">독토리 · 사이트 안내</span></div>
+        <nav class="account" aria-label="페이지 메뉴"><a class="button button--paper" href="./index.html">메인으로</a></nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="info-hero">
+            <span class="label">INFORMATION</span>
+            <h1>사이트 안내 및 이용약관</h1>
+            <p class="lead">복성고 도서부 독토리의 운영 목적, 이용 기준과 개인정보 수집·이용 내용을 안내합니다.</p>
+        </section>
+
+        <p class="public-note">이 페이지는 로그인이나 관리자 권한 없이 누구나 확인할 수 있습니다.</p>
+
+        <div class="content-grid">
+            <section class="info-panel panel" aria-labelledby="aboutTitle">
+                <span class="label">ABOUT</span>
+                <h2 id="aboutTitle" class="section-title">이 사이트에 대하여</h2>
+                <div class="site-facts">
+                    <article><b>01</b><h3>운영 목적</h3><p>복성고 도서부가 진행하는 교내 QR 미션의 참여자 확인과 진행 기록 관리를 위해 운영됩니다.</p></article>
+                    <article><b>02</b><h3>진행 방법</h3><p>현장에서 QR을 스캔하고 문제의 정답을 맞히면 해당 미션이 완료 기록에 추가됩니다.</p></article>
+                    <article><b>03</b><h3>기록 보호</h3><p>로그인 사용자는 본인의 진행 기록만 확인할 수 있으며, 문제 정답은 공개 화면 코드에 포함하지 않습니다.</p></article>
+                </div>
+            </section>
+
+            <section class="info-panel panel" aria-labelledby="termsTitle">
+                <span class="label">TERMS</span>
+                <h2 id="termsTitle" class="section-title">독토리 이용약관</h2>
+                <ol class="terms-list">
+                    <li>본 프로그램은 복성고 도서부가 운영하는 QR 미션 참여와 진행도 확인을 위해 제공됩니다.</li>
+                    <li>참여자는 본인의 Google 계정과 정확한 학번·이름을 사용해야 하며, 다른 사람의 계정을 대신 사용하거나 진행 기록을 조작해서는 안 됩니다.</li>
+                    <li>QR 위치, 문제와 정답을 무단으로 공개하거나 자동화 도구로 정답을 반복 제출하는 등 행사 운영을 방해하는 행위를 금지합니다.</li>
+                    <li>부정 참여 또는 운영 방해가 확인되면 해당 진행 기록을 무효로 처리하거나 참여를 제한할 수 있습니다.</li>
+                    <li>QR 미션 진행률이 100%에 도달한 참여자는 행사 운영자의 확인을 거쳐 안내된 상품을 받을 수 있습니다.</li>
+                    <li>점검, 장애 또는 행사 운영상 필요한 경우 서비스 내용이나 이용 시간이 변경될 수 있으며, 중요한 변경 사항은 행사 안내를 통해 알립니다.</li>
+                    <li>개인정보 처리에 관한 사항은 아래 개인정보 수집·이용 안내에 따릅니다.</li>
+                </ol>
+                <p class="muted">시행일: 2026년 10월 28일</p>
+            </section>
+
+            <section class="info-panel panel" aria-labelledby="privacyTitle">
+                <span class="label">PRIVACY</span>
+                <h2 id="privacyTitle" class="section-title">개인정보 수집·이용 안내</h2>
+                <dl class="privacy-grid">
+                    <dt>수집 목적</dt><dd>참여자 본인 확인, 중복 참여 방지, QR 미션 진행도 저장, 상품 지급 확인 및 행사 운영</dd>
+                    <dt>수집 항목</dt><dd>Firebase UID, Google 이메일, 이름, 학번, QR 진행 기록, 로그인·활동·동의 시각</dd>
+                    <dt>보유 기간</dt><dd>행사 운영을 위해 필요한 기간 동안 보유하며, 관리자가 설정한 보유 종료 시각 이후 익명화·삭제 처리합니다.</dd>
+                    <dt>보안 처리</dt><dd>부정 접속 방지를 위해 Firebase App Check와 reCAPTCHA가 접속 환경 정보를 처리할 수 있습니다. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google 개인정보처리방침</a></dd>
+                    <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 개인별 진행도 확인에 필요한 필수 정보이므로 미동의 시 행사에 참여할 수 없습니다.</dd>
+                </dl>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
+        <div class="site-footer__meta"><a class="site-footer__link" href="./info.html" aria-current="page">사이트 안내 · 이용약관</a><small>© 2026 복성고등학교 도서부</small></div>
+    </footer>
+    <script type="module" src="./app-ui.js"></script>
+</body>
+</html>

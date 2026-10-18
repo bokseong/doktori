@@ -21,8 +21,28 @@
 .site-footer__identity strong { font-size: 1rem; }
 .site-footer__identity span,
 .site-footer small { color: #626258; font-size: .82rem; line-height: 1.5; }
+.site-footer__meta { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.site-footer__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 7px 10px;
+    border: 2px solid #191916;
+    color: #191916;
+    background: #c8f24a;
+    box-shadow: 3px 3px 0 #191916;
+    font-size: .86rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+    text-decoration: none;
+}
+.site-footer__link:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #191916; }
+.site-footer__link:focus-visible { outline: 3px solid #2868ff; outline-offset: 3px; }
 .site-footer small { text-align: right; white-space: nowrap; }
 @media (max-width: 620px) {
     .site-footer { grid-template-columns: 1fr; text-align: center; }
+    .site-footer__meta { justify-content: center; }
     .site-footer small { text-align: center; white-space: normal; }
 }
