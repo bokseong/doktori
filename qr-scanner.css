@@ -32,7 +32,10 @@
 .scanner-head h2,
 .scanner-result h3 {
     margin: 5px 0 0;
-    font: clamp(1.7rem, 5vw, 2.7rem)/1.05 "Black Han Sans", sans-serif;
+    font-size: clamp(1.55rem, 5vw, 2.35rem);
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -.02em;
 }
 
 .scanner-close {

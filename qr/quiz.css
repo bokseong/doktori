@@ -3,7 +3,7 @@
 body { visibility: hidden; }
 .qr-shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }
 .qr-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 28px; }
-.qr-brand { font-family: "Black Han Sans", sans-serif; }
+.qr-brand { font-weight: 800; line-height: 1.3; letter-spacing: -.015em; }
 .qr-index { display: inline-grid; place-items: center; min-width: 70px; height: 42px; border: 2px solid var(--ink); background: var(--coral); font-weight: 700; }
 .qr-grid { display: grid; grid-template-columns: minmax(260px, .85fr) minmax(300px, 1.15fr); gap: 28px; align-items: stretch; }
 .specter {
@@ -24,10 +24,10 @@ body { visibility: hidden; }
 .placeholder small { display: inline-block; margin-top: 20px; padding: 6px 10px; color: var(--ink); background: var(--lime); border: 2px solid var(--ink); font-weight: 700; }
 .mission { padding: clamp(26px, 6vw, 58px); }
 .mission-kicker { color: var(--blue); font-weight: 700; }
-.mission h1 { margin: 18px 0 8px; font: clamp(2.8rem, 8vw, 5.5rem)/.92 "Black Han Sans", sans-serif; }
+.mission h1 { margin: 18px 0 8px; font: clamp(2.8rem, 7vw, 4.6rem)/1.08 "Black Han Sans", sans-serif; letter-spacing: -.025em; }
 .mission-copy { margin: 0 0 28px; color: var(--muted); line-height: 1.7; }
 .quiz-card { border-top: 2px solid var(--ink); padding-top: 28px; }
-.quiz-card h2 { margin: 0 0 18px; font: clamp(1.3rem, 3vw, 1.8rem)/1.35 "Black Han Sans", sans-serif; }
+.quiz-card h2 { margin: 0 0 18px; font-size: clamp(1.25rem, 3vw, 1.65rem); font-weight: 800; line-height: 1.55; letter-spacing: -.015em; }
 .quiz-card form { display: grid; gap: 10px; }
 .quiz-card label { font-weight: 700; }
 .quiz-card input { width: 100%; padding: 14px; border: 2px solid var(--ink); border-radius: 0; background: white; }

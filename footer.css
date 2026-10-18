@@ -13,12 +13,16 @@
     box-shadow: 4px 4px 0 #191916;
     font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
     text-align: left;
+    word-break: keep-all;
+    overflow-wrap: break-word;
 }
 
 .site-footer__identity { display: grid; gap: 3px; }
 .site-footer__identity strong { font-size: 1rem; }
 .site-footer__identity span,
 .site-footer small { color: #626258; font-size: .82rem; line-height: 1.5; }
+.site-footer small { text-align: right; white-space: nowrap; }
 @media (max-width: 620px) {
     .site-footer { grid-template-columns: 1fr; text-align: center; }
+    .site-footer small { text-align: center; white-space: normal; }
 }
