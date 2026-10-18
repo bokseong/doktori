@@ -37,6 +37,15 @@
         .privacy-grid dt { color: var(--ink); font-weight: 800; }
         .privacy-grid dd { margin: 0; }
         .consent-state { margin-top: 20px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper); font-weight: 800; }
+        .danger-zone { border-color: #9b321e; }
+        .danger-zone .label { background: #9b321e; }
+        .danger-copy { color: var(--muted); line-height: 1.75; }
+        .withdraw-check { display: flex; gap: 10px; align-items: flex-start; margin: 20px 0 14px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper); font-weight: 700; cursor: pointer; }
+        .withdraw-check:has(input:checked) { background: #ffd8cf; }
+        .withdraw-check input { width: 21px; height: 21px; margin-top: 2px; flex: 0 0 auto; }
+        .withdraw-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        #withdrawButton { color: white; background: #9b321e; }
+        #withdrawMessage { margin: 0; }
         @media (max-width: 760px) { .mypage-hero, .site-facts { grid-template-columns: 1fr; } .progress-items { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 520px) { .panel-head { flex-direction: column; } .privacy-grid { grid-template-columns: 1fr; gap: 4px; } .privacy-grid dd + dt { margin-top: 9px; } }
     </style>
@@ -91,8 +100,16 @@
                     <dt>수집 항목</dt><dd>Firebase UID, Google 이메일, 이름, 학번, QR 진행 기록, 로그인·활동·동의 시각</dd>
                     <dt>보유 기간</dt><dd id="retentionText">행사 운영을 위해 필요한 기간 동안 보유하며, 관리자가 설정한 보유 종료 시각 이후 익명화·삭제 처리합니다.</dd>
                     <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 개인별 진행도 확인에 필요한 필수 정보이므로 미동의 시 행사에 참여할 수 없습니다.</dd>
+                    <dt>회원 탈퇴</dt><dd>아래 회원 탈퇴 기능으로 개인정보와 진행 기록의 삭제 또는 익명화를 요청할 수 있습니다.</dd>
                 </dl>
                 <p id="consentState" class="consent-state">동의 상태 확인 중...</p>
+            </section>
+
+            <section class="info-panel panel danger-zone" aria-labelledby="withdrawTitle">
+                <span class="label">ACCOUNT</span><h2 id="withdrawTitle" class="section-title">회원 탈퇴</h2>
+                <p class="danger-copy">탈퇴하면 Google Sheets의 회원 행과 Firestore의 개인정보·진행 기록이 삭제 또는 익명화되고 Firebase 로그인 계정도 삭제됩니다. 완료한 QR과 인증서는 복구할 수 없습니다.</p>
+                <label class="withdraw-check"><input id="withdrawConsent" type="checkbox"><span>삭제되는 정보와 복구할 수 없다는 점을 확인했습니다.</span></label>
+                <div class="withdraw-actions"><button id="withdrawButton" type="button" disabled>회원 탈퇴</button><p id="withdrawMessage" class="status" role="status"></p></div>
             </section>
         </div>
     </main>
@@ -102,8 +119,9 @@
     <script type="module" src="./app-ui.js"></script>
     <script type="module">
         import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { getMemberProfile, logout, requireUser } from "./auth.js";
+        import { deleteMemberAccount, getMemberProfile, isMasterAdmin, logout, requireUser } from "./auth.js";
         import { getEventConfig } from "./event-config.js";
+        import { deleteMemberFromSheet } from "./sheet-sync.js";
         import { db } from "./firebase.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
@@ -112,6 +130,10 @@
         const progressItems = document.getElementById("progressItems");
         const progressMessage = document.getElementById("progressMessage");
         const certificateButton = document.getElementById("certificateButton");
+        const withdrawConsent = document.getElementById("withdrawConsent");
+        const withdrawButton = document.getElementById("withdrawButton");
+        const withdrawMessage = document.getElementById("withdrawMessage");
+        let stopProgressListener = () => {};
 
         function formatDate(value) {
             const date = value?.toDate?.();
@@ -146,7 +168,51 @@
             if (retentionDate) document.getElementById("retentionText").textContent = `${new Intl.DateTimeFormat("ko-KR", { dateStyle: "long", timeStyle: "short" }).format(retentionDate)}까지 보유한 뒤 관리자가 익명화·삭제 처리합니다.`;
         }).catch(() => {});
         document.getElementById("logoutButton").addEventListener("click", logout);
-        onSnapshot(collection(db, "users", user.uid, "progress"), (snapshot) => renderProgress(snapshot.docs), (error) => {
+        withdrawConsent.addEventListener("change", () => { withdrawButton.disabled = !withdrawConsent.checked; });
+        if (isMasterAdmin(user)) {
+            withdrawConsent.disabled = true;
+            withdrawButton.disabled = true;
+            withdrawMessage.textContent = "마스터 관리자 계정은 사이트에서 탈퇴할 수 없습니다.";
+        } else {
+            withdrawButton.addEventListener("click", async () => {
+                if (!withdrawConsent.checked) return;
+                const confirmation = window.prompt("회원 탈퇴를 계속하려면 '회원탈퇴'를 입력해 주세요.", "");
+                if (confirmation !== "회원탈퇴") {
+                    withdrawMessage.textContent = "확인 문구가 일치하지 않아 탈퇴를 취소했습니다.";
+                    return;
+                }
+                if (!window.confirm("회원정보와 진행 기록을 삭제하며 복구할 수 없습니다. 정말 탈퇴할까요?")) return;
+
+                withdrawButton.disabled = true;
+                withdrawConsent.disabled = true;
+                withdrawMessage.textContent = "Google 계정을 다시 확인한 뒤 회원정보를 삭제합니다...";
+                window.__DOKTORI_ACCOUNT_DELETING__ = true;
+                try {
+                    await deleteMemberAccount(user, deleteMemberFromSheet);
+                    stopProgressListener();
+                    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+                        const key = localStorage.key(index);
+                        if (key?.startsWith("doktori-")) localStorage.removeItem(key);
+                    }
+                    location.replace(new URL("./index.html?withdrawn=1", import.meta.url));
+                } catch (error) {
+                    console.error(error);
+                    window.__DOKTORI_ACCOUNT_DELETING__ = false;
+                    withdrawConsent.disabled = false;
+                    withdrawButton.disabled = !withdrawConsent.checked;
+                    if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
+                        withdrawMessage.textContent = "Google 계정 확인이 취소되어 탈퇴하지 않았습니다.";
+                    } else if (error.code === "auth/user-mismatch") {
+                        withdrawMessage.textContent = "현재 로그인한 계정과 같은 Google 계정을 선택해 주세요.";
+                    } else if (error.code === "permission-denied") {
+                        withdrawMessage.textContent = "탈퇴 권한을 확인하지 못했습니다. 관리자에게 문의해 주세요.";
+                    } else {
+                        withdrawMessage.textContent = error.message || "회원 탈퇴를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+                    }
+                }
+            });
+        }
+        stopProgressListener = onSnapshot(collection(db, "users", user.uid, "progress"), (snapshot) => renderProgress(snapshot.docs), (error) => {
             console.error(error);
             progressMessage.textContent = "진행률을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
         });

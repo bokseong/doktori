@@ -71,6 +71,25 @@ service cloud.firestore {
         && data.privacyConsentAt is timestamp;
     }
 
+    function isValidWithdrawalProfile(data, userId) {
+      return data.keys().hasOnly([
+          "uid", "email", "displayName", "studentNumber", "studentName", "role",
+          "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
+          "withdrawnAt", "lastActivityAt"
+        ])
+        && data.uid == userId
+        && data.email == ""
+        && data.displayName == ""
+        && data.studentNumber == "0000"
+        && data.studentName == "탈퇴회원"
+        && data.role == "withdrawn"
+        && data.privacyConsent == false
+        && data.privacyConsentVersion == "withdrawn"
+        && data.privacyConsentAt == request.time
+        && data.withdrawnAt == request.time
+        && data.lastActivityAt == request.time;
+    }
+
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
 
@@ -119,6 +138,11 @@ service cloud.firestore {
             "email", "displayName", "studentNumber", "studentName", "privacyConsent",
             "privacyConsentVersion", "privacyConsentAt", "lastActivityAt"
           ])
+        ) || (
+          isOwner(userId)
+          && !isMasterAdmin()
+          && resource.data.get("role", "participant") in ["participant", "admin", "withdrawn"]
+          && isValidWithdrawalProfile(request.resource.data, userId)
         );
       allow delete: if false;
 
@@ -146,7 +170,7 @@ service cloud.firestore {
             && request.resource.data.manualBy == request.auth.uid
           );
         allow update: if false;
-        allow delete: if isAdmin();
+        allow delete: if isAdmin() || (isOwner(userId) && !isMasterAdmin());
       }
     }
 
@@ -163,7 +187,14 @@ service cloud.firestore {
         && request.resource.data.submittedAt == request.time
         && isCorrectAnswer(request.resource.data.qrId, request.resource.data.answer);
       allow update: if false;
-      allow delete: if isMasterAdmin();
+      allow delete: if isMasterAdmin() || (
+        isSignedIn()
+        && !isMasterAdmin()
+        && attemptId in [
+          request.auth.uid + "_qr1", request.auth.uid + "_qr2", request.auth.uid + "_qr3",
+          request.auth.uid + "_qr4", request.auth.uid + "_qr5", request.auth.uid + "_qr6"
+        ]
+      );
     }
 
     match /quizSecrets/{qrId} {
@@ -202,7 +233,7 @@ service cloud.firestore {
     }
 
     match /quizTelemetry/{eventId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn()
         && request.resource.data.keys().hasOnly(["uid", "qrId", "outcome", "createdAt"])
         && request.resource.data.uid == request.auth.uid
@@ -210,11 +241,11 @@ service cloud.firestore {
         && request.resource.data.outcome in ["correct", "incorrect", "save-error"]
         && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if isMasterAdmin();
+      allow delete: if isMasterAdmin() || (isSignedIn() && !isMasterAdmin() && resource.data.uid == request.auth.uid);
     }
 
     match /clientErrors/{errorId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn()
         && request.resource.data.keys().hasOnly(["uid", "code", "context", "path", "online", "createdAt"])
         && request.resource.data.uid == request.auth.uid
@@ -223,7 +254,7 @@ service cloud.firestore {
         && request.resource.data.path is string
         && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if isMasterAdmin();
+      allow delete: if isMasterAdmin() || (isSignedIn() && !isMasterAdmin() && resource.data.uid == request.auth.uid);
     }
 
     match /syncQueue/{syncId} {

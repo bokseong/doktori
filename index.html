@@ -162,6 +162,10 @@
         const certificateButton = document.getElementById("certificateButton");
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const currentUser = await waitForAuth();
+        if (!currentUser && new URLSearchParams(location.search).get("withdrawn") === "1") {
+            statusMessage.textContent = "회원 탈퇴가 완료되었습니다. 개인정보와 진행 기록은 복구할 수 없습니다.";
+            history.replaceState(null, "", new URL("./index.html", location.href));
+        }
 
         function renderMyProgress(documents) {
                 const found = documents

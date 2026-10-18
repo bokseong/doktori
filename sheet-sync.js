@@ -69,6 +69,64 @@ export function syncProgressToSheet(user, qrId) {
     return syncWithQueue(user, { action: "progress", qrId });
 }
 
+export async function deleteMemberFromSheet(user) {
+    const idToken = await user.getIdToken();
+    const appCheckToken = await getLimitedUseToken(appCheck);
+    const responseNonce = crypto.randomUUID().replaceAll("-", "");
+    const frameName = `doktori-withdraw-${responseNonce}`;
+    const iframe = document.createElement("iframe");
+    const form = document.createElement("form");
+    iframe.name = frameName;
+    iframe.hidden = true;
+    iframe.setAttribute("aria-hidden", "true");
+    form.method = "POST";
+    form.action = SHEET_SYNC_URL;
+    form.target = frameName;
+    form.hidden = true;
+
+    const fields = {
+        responseMode: "postMessage",
+        responseNonce,
+        payload: JSON.stringify({
+            action: "withdraw",
+            idToken,
+            appCheckToken: appCheckToken.token
+        })
+    };
+    Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.append(input);
+    });
+
+    document.body.append(iframe, form);
+    try {
+        await new Promise((resolve, reject) => {
+            const timeoutId = window.setTimeout(() => {
+                window.removeEventListener("message", handleMessage);
+                reject(new Error("Google Sheets 탈퇴 처리 결과를 확인하지 못했습니다. 다시 시도해 주세요."));
+            }, 20000);
+            function handleMessage(event) {
+                const data = event.data;
+                if (event.source !== iframe.contentWindow
+                    || data?.source !== "doktori-sheet-sync"
+                    || data.responseNonce !== responseNonce) return;
+                window.clearTimeout(timeoutId);
+                window.removeEventListener("message", handleMessage);
+                if (data.ok === true) resolve();
+                else reject(new Error(data.error || "Google Sheets 회원정보 삭제에 실패했습니다."));
+            }
+            window.addEventListener("message", handleMessage);
+            form.submit();
+        });
+    } finally {
+        form.remove();
+        iframe.remove();
+    }
+}
+
 export async function retryPendingSheetSyncs(user) {
     if (!user || !navigator.onLine) return { retried: 0, remaining: 0 };
     const snapshot = await getDocs(query(

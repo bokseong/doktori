@@ -143,7 +143,8 @@
             rows.replaceChildren();
             try {
                 const userSnapshot = await getDocs(collection(db, "users"));
-                const records = await Promise.all(userSnapshot.docs.map(async (userDocument) => {
+                const activeUserDocuments = userSnapshot.docs.filter((userDocument) => userDocument.data().role !== "withdrawn");
+                const records = await Promise.all(activeUserDocuments.map(async (userDocument) => {
                     const data = userDocument.data();
                     const progressSnapshot = await getDocs(collection(db, "users", userDocument.id, "progress"));
                     const found = progressSnapshot.docs.filter((item) => item.data().found === true && QR_IDS.includes(item.id)).map((item) => item.id).sort((a, b) => Number(a.slice(2)) - Number(b.slice(2)));

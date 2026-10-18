@@ -18,10 +18,15 @@ function doGet() {
 }
 
 function doPost(event) {
+  const responseNonce = String(event.parameter && event.parameter.responseNonce || "");
+  const postMessageMode = event.parameter && event.parameter.responseMode === "postMessage"
+    && /^[A-Za-z0-9_-]{16,100}$/.test(responseNonce);
   try {
-    const payload = JSON.parse(event.postData.contents || "{}");
+    const payload = postMessageMode
+      ? JSON.parse(event.parameter.payload || "{}")
+      : JSON.parse(event.postData.contents || "{}");
     const action = payload.action || "progress";
-    if (!payload.idToken || !payload.appCheckToken || !["profile", "progress"].includes(action)) {
+    if (!payload.idToken || !payload.appCheckToken || !["profile", "progress", "withdraw"].includes(action)) {
       throw new Error("잘못된 요청입니다.");
     }
     if (action === "progress" && !QR_COLUMNS[payload.qrId]) {
@@ -30,7 +35,9 @@ function doPost(event) {
 
     verifyAppCheckToken_(payload.appCheckToken);
     const user = verifyFirebaseUser_(payload.idToken, payload.appCheckToken);
-    const profile = fetchFirestoreProfile_(payload.idToken, payload.appCheckToken, user.localId);
+    const profile = action === "withdraw"
+      ? null
+      : fetchFirestoreProfile_(payload.idToken, payload.appCheckToken, user.localId);
     const completedAt = action === "progress"
       ? fetchFirestoreProgressTime_(payload.idToken, payload.appCheckToken, user.localId, payload.qrId)
       : null;
@@ -38,7 +45,9 @@ function doPost(event) {
     const lock = LockService.getScriptLock();
     if (!lock.tryLock(3000)) throw new Error("동기화 요청이 많습니다. 잠시 후 다시 시도하세요.");
     try {
-      if (action === "profile") {
+      if (action === "withdraw") {
+        deleteProfile_(user.localId);
+      } else if (action === "profile") {
         upsertProfile_(user, profile);
       } else {
         upsertProgress_(user, profile, payload.qrId, completedAt);
@@ -46,10 +55,10 @@ function doPost(event) {
     } finally {
       lock.releaseLock();
     }
-    return jsonResponse_({ ok: true });
+    return postResponse_({ ok: true }, postMessageMode, responseNonce);
   } catch (error) {
     console.error(error);
-    return jsonResponse_({ ok: false, error: error.message });
+    return postResponse_({ ok: false, error: error.message }, postMessageMode, responseNonce);
   }
 }
 
@@ -190,6 +199,12 @@ function upsertProgress_(user, profile, qrId, completedAt) {
   sheet.getRange(row, 17, 1, 2).setValues([[completedCount, completedAt]]);
 }
 
+function deleteProfile_(uid) {
+  const sheet = getSheet_();
+  const row = findUserRow_(sheet, uid);
+  if (row) sheet.deleteRow(row);
+}
+
 function getSheet_() {
   const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
   if (!sheet) throw new Error("시트 '" + SHEET_NAME + "'을 찾을 수 없습니다.");
@@ -242,4 +257,18 @@ function ensureHeaders_(sheet) {
 function jsonResponse_(value) {
   return ContentService.createTextOutput(JSON.stringify(value))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function postResponse_(value, postMessageMode, responseNonce) {
+  if (!postMessageMode) return jsonResponse_(value);
+  const message = JSON.stringify({
+    source: "doktori-sheet-sync",
+    responseNonce,
+    ok: value.ok === true,
+    error: value.error || ""
+  }).replace(/</g, "\\u003c");
+  return HtmlService.createHtmlOutput(
+    "<!doctype html><meta charset=\"utf-8\"><script>window.parent.postMessage(" + message
+      + ",\"https://bokseong.github.io\");<\/script>"
+  ).setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }

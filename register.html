@@ -32,7 +32,24 @@
         .terms-box li + li { margin-top: 7px; }
         .terms-date { margin: 12px 0 0; color: var(--muted); font-size: .82rem; }
         .consent-check { display: flex; grid-template-columns: none; gap: 10px; align-items: flex-start; font-weight: 700; }
-        .consent-check input { width: 20px; height: 20px; margin-top: 2px; flex: 0 0 auto; }
+        .consent-check input {
+            width: 22px;
+            height: 22px;
+            margin-top: 1px;
+            flex: 0 0 auto;
+            display: grid;
+            place-content: center;
+            appearance: none;
+            border: 2px solid var(--ink);
+            background: white;
+            cursor: pointer;
+        }
+        .consent-check input::before { content: "✓"; color: white; font-weight: 900; line-height: 1; transform: scale(0); transition: transform .1s ease; }
+        .consent-check input:checked { background: var(--blue); }
+        .consent-check input:checked::before { transform: scale(1); }
+        .consent-check input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+        .consent-copy { display: grid; gap: 2px; line-height: 1.5; }
+        .consent-copy strong { color: var(--blue); font-size: .82rem; }
         .consent-action { margin-top: 14px; padding: 12px; border: 2px solid var(--ink); background: var(--paper-strong); cursor: pointer; }
         .consent-action:has(input:checked) { background: var(--lime); }
         .required-note { margin: 10px 0 0; color: #9b321e; font-size: .88rem; font-weight: 800; }
@@ -81,7 +98,7 @@
                     <p class="terms-date">시행일: 2026년 10월 28일</p>
                     <label class="consent-check consent-action">
                         <input id="termsConsent" name="termsConsent" type="checkbox" required>
-                        <span>독토리 이용약관을 확인했으며 이에 동의합니다.</span>
+                        <span class="consent-copy"><strong>필수 동의</strong><span>독토리 이용약관을 확인했으며 이에 동의합니다.</span></span>
                     </label>
                     <p class="required-note">이용약관에 동의해야 다음 단계로 진행할 수 있습니다.</p>
                 </section>
@@ -93,10 +110,11 @@
                         <dt>보유 기간</dt><dd>행사 운영을 위해 필요한 기간 동안 보유하며, 관리자 설정 보유기간이 끝난 뒤 익명화·삭제 처리합니다.</dd>
                         <dt>보안 검증</dt><dd>부정 접속 방지를 위해 Firebase App Check와 reCAPTCHA가 접속 환경 정보를 처리할 수 있습니다. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google 개인정보처리방침</a></dd>
                         <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 개인별 진행도 확인에 필요한 필수 정보이므로 미동의 시 행사에 참여할 수 없습니다.</dd>
+                        <dt>회원 탈퇴</dt><dd>등록 후 내 정보 페이지에서 탈퇴할 수 있으며, 탈퇴 시 개인정보와 진행 기록은 삭제 또는 익명화되어 복구할 수 없습니다.</dd>
                     </dl>
                     <label class="consent-check consent-action">
                         <input id="privacyConsent" name="privacyConsent" type="checkbox" required>
-                        <span>위 개인정보 수집·이용 내용을 확인했으며 이에 동의합니다.</span>
+                        <span class="consent-copy"><strong>필수 동의</strong><span>위 개인정보 수집·이용 내용을 확인했으며 이에 동의합니다.</span></span>
                     </label>
                     <p class="required-note">동의하지 않으면 등록 및 QR 미션 참여가 불가능합니다.</p>
                 </section>

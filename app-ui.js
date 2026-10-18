@@ -20,6 +20,7 @@ function createNetworkBanner() {
 }
 
 async function reportError(error, context) {
+    if (window.__DOKTORI_ACCOUNT_DELETING__ === true) return;
     const user = auth.currentUser;
     if (!user) return;
     const code = String(error?.code || error?.name || "unknown").slice(0, 80);

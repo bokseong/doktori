@@ -1,14 +1,22 @@
 import {
+    deleteUser,
     GoogleAuthProvider,
     onAuthStateChanged,
+    reauthenticateWithPopup,
     signInWithPopup,
     signOut
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
+    collection,
     doc,
     getDoc,
+    getDocs,
+    limit,
+    query,
     serverTimestamp,
-    setDoc
+    setDoc,
+    where,
+    writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
 
@@ -17,6 +25,7 @@ export const PRIVACY_CONSENT_VERSION = "2026-10-16-v1";
 
 const STUDENT_NUMBER_PATTERN = /^[0-9]{4,20}$/;
 const STUDENT_NAME_PATTERN = /^[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}$/u;
+const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
@@ -179,4 +188,52 @@ export async function logout() {
     if (!window.confirm("로그아웃하면 다시 로그인해야 진행 상황을 확인할 수 있습니다. 로그아웃할까요?")) return;
     await signOut(auth);
     location.replace(new URL("./signin.html", import.meta.url));
+}
+
+async function deleteOwnedDocuments(collectionName, uid) {
+    while (true) {
+        const snapshot = await getDocs(query(
+            collection(db, collectionName),
+            where("uid", "==", uid),
+            limit(300)
+        ));
+        if (snapshot.empty) return;
+        const batch = writeBatch(db);
+        snapshot.docs.forEach((item) => batch.delete(item.ref));
+        await batch.commit();
+        if (snapshot.size < 300) return;
+    }
+}
+
+export async function deleteMemberAccount(user = auth.currentUser, beforeDelete) {
+    if (!user) throw new Error("로그인한 사용자만 회원 탈퇴를 진행할 수 있습니다.");
+    if (isMasterAdmin(user)) throw new Error("마스터 관리자 계정은 사이트에서 탈퇴할 수 없습니다.");
+
+    await reauthenticateWithPopup(user, provider);
+    if (typeof beforeDelete === "function") await beforeDelete(user);
+
+    await deleteOwnedDocuments("quizTelemetry", user.uid);
+    await deleteOwnedDocuments("clientErrors", user.uid);
+    await deleteOwnedDocuments("syncQueue", user.uid);
+
+    const profileBatch = writeBatch(db);
+    QR_IDS.forEach((qrId) => {
+        profileBatch.delete(doc(db, "users", user.uid, "progress", qrId));
+        profileBatch.delete(doc(db, "answerAttempts", `${user.uid}_${qrId}`));
+    });
+    profileBatch.set(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: "",
+        displayName: "",
+        studentNumber: "0000",
+        studentName: "탈퇴회원",
+        role: "withdrawn",
+        privacyConsent: false,
+        privacyConsentVersion: "withdrawn",
+        privacyConsentAt: serverTimestamp(),
+        withdrawnAt: serverTimestamp(),
+        lastActivityAt: serverTimestamp()
+    });
+    await profileBatch.commit();
+    await deleteUser(user);
 }
