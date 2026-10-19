@@ -237,6 +237,25 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /integrations/{integrationId} {
+      allow read: if isAdmin() && integrationId == "googleSheets";
+      allow create, update: if isAdmin()
+        && integrationId == "googleSheets"
+        && request.resource.data.keys().hasOnly([
+          "spreadsheetId", "spreadsheetUrl", "sheetName", "updatedAt", "updatedBy"
+        ])
+        && request.resource.data.spreadsheetId is string
+        && request.resource.data.spreadsheetId.matches('^[A-Za-z0-9_-]{20,100}$')
+        && request.resource.data.spreadsheetUrl is string
+        && request.resource.data.spreadsheetUrl.size() <= 500
+        && request.resource.data.sheetName is string
+        && request.resource.data.sheetName.size() >= 1
+        && request.resource.data.sheetName.size() <= 80
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow delete: if false;
+    }
+
     match /auditLogs/{logId} {
       allow read: if isAdmin();
       allow create: if isAdmin()
