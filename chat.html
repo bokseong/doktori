@@ -14,6 +14,10 @@
         .conversation-picker[hidden] { display: none; }
         .conversation-picker label { font-weight: 800; }
         .conversation-picker select { width: 100%; min-height: 46px; padding: 8px 10px; border: 2px solid var(--ink); background: white; }
+        .admin-identity-settings { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; gap: 10px; align-items: center; margin-top: 18px; padding: 14px 16px; border: 2px solid var(--ink); background: #dfe8ff; }
+        .admin-identity-settings[hidden] { display: none; }
+        .admin-identity-settings label { font-weight: 800; }
+        .admin-identity-settings input { min-height: 46px; padding: 8px 10px; border: 2px solid var(--ink); background: white; }
         #conversationTitle { margin: 18px 0 0; font-size: 1.05rem; }
         .messages { height: min(58vh, 620px); min-height: 360px; margin-top: 18px; padding: 18px; overflow-y: auto; border: 2px solid var(--ink); background: var(--paper-strong); box-shadow: var(--shadow); }
         .message-row { display: grid; gap: 5px; max-width: 78%; margin-bottom: 14px; }
@@ -27,7 +31,7 @@
         .chat-form textarea { min-height: 72px; padding: 12px; border: 2px solid var(--ink); resize: vertical; }
         .chat-form button { min-width: 120px; }
         #chatStatus { min-height: 1.5em; }
-        @media (max-width: 640px) { .chat-head { align-items: stretch; flex-direction: column; } .conversation-picker { grid-template-columns: 1fr; } .message-row { max-width: 92%; } .chat-form { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .chat-head { align-items: stretch; flex-direction: column; } .conversation-picker, .admin-identity-settings { grid-template-columns: 1fr; } .message-row { max-width: 92%; } .chat-form { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -35,6 +39,7 @@
     <main class="chat-shell">
         <section class="chat-head"><div><span class="label">PRIVATE SUPPORT</span><h1 id="chatTitle">관리자와 1:1 채팅</h1><p id="chatLead" class="lead">문제가 생기면 관리자에게 바로 질문하세요.</p></div><strong id="chatIdentity"></strong></section>
         <p class="chat-notice">전화번호, 주소, 비밀번호 등 민감한 개인정보는 작성하지 마세요. 메시지와 작성자의 학번·이름은 해당 참여자와 관리자만 확인할 수 있으며, 새 문의 알림은 관리자에게만 전달됩니다. 운영 방해 메시지는 관리자가 삭제할 수 있습니다.</p>
+        <form id="adminIdentityForm" class="admin-identity-settings" hidden><label for="adminChatName">관리자 표시 이름</label><input id="adminChatName" type="text" minlength="1" maxlength="30" pattern="[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.-]{0,29}" placeholder="이름 또는 사용할 ID" required><button class="button--paper" type="submit">저장</button></form>
         <section id="conversationPicker" class="conversation-picker" hidden><label for="conversationUser">대화할 참여자</label><select id="conversationUser"><option value="">참여자를 선택하세요.</option></select></section>
         <p id="conversationTitle" aria-live="polite"></p>
         <section id="messageList" class="messages" aria-live="polite" aria-label="채팅 메시지"><p class="muted">메시지를 불러오는 중...</p></section>

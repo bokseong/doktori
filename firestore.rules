@@ -69,12 +69,17 @@ service cloud.firestore {
           "uid", "email", "displayName", "photoURL", "createdAt", "lastLoginAt",
           "studentNumber", "studentName", "registeredAt",
           "completedQrIds", "lastActivityAt", "role",
-          "privacyConsent", "privacyConsentVersion", "privacyConsentAt"
+          "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
+          "adminChatName"
         ])
         && data.studentNumber is string
         && data.studentNumber.matches('^[0-9]{4,20}$')
         && data.studentName is string
         && data.studentName.matches('^[가-힣A-Za-z][가-힣A-Za-z .·\\-]{0,29}$')
+        && data.get("adminChatName", "") is string
+        && (!data.keys().hasAny(["adminChatName"])
+          || data.adminChatName.matches('^[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.\\-]{0,29}$'))
+        && (data.get("role", "participant") == "admin" || data.get("adminChatName", "") == "")
         && data.privacyConsent == true
         && data.privacyConsentVersion == currentConsentVersion()
         && data.privacyConsentAt is timestamp;
@@ -114,8 +119,10 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             "email", "displayName", "lastLoginAt", "studentNumber", "studentName",
             "registeredAt", "completedQrIds", "lastActivityAt", "role",
-            "privacyConsent", "privacyConsentVersion", "privacyConsentAt"
+            "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
+            "adminChatName"
           ])
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["adminChatName"]) || isAdmin())
           && (
             (
               resource.data.get("privacyConsent", false) == true
@@ -311,8 +318,17 @@ service cloud.firestore {
         && hasCurrentConsent(request.auth.uid)
         && request.resource.data.keys().hasOnly(["conversationUid", "senderUid", "studentNumber", "studentName", "text", "senderRole", "createdAt"])
         && request.resource.data.senderUid == request.auth.uid
-        && request.resource.data.studentNumber == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentNumber
-        && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName
+        && (
+          (isAdmin()
+            && request.resource.data.studentNumber == "관리자"
+            && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get(
+              "adminChatName",
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName
+            ))
+          || (!isAdmin()
+            && request.resource.data.studentNumber == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentNumber
+            && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName)
+        )
         && request.resource.data.text is string
         && request.resource.data.text.size() >= 1
         && request.resource.data.text.size() <= 300

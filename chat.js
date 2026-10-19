@@ -6,6 +6,7 @@ import {
     onSnapshot,
     query,
     serverTimestamp,
+    setDoc,
     where,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
@@ -22,10 +23,22 @@ const status = document.getElementById("chatStatus");
 const conversationPicker = document.getElementById("conversationPicker");
 const conversationUser = document.getElementById("conversationUser");
 const conversationTitle = document.getElementById("conversationTitle");
+const adminIdentityForm = document.getElementById("adminIdentityForm");
+const adminChatName = document.getElementById("adminChatName");
 let selectedConversationUid = access.isAdmin ? "" : user.uid;
 let stopConversation = () => {};
 
-document.getElementById("chatIdentity").textContent = `${profile.studentNumber} · ${profile.studentName} · ${access.isAdmin ? "관리자" : "참여자"}`;
+function currentAdminName() {
+    return String(profile.adminChatName || profile.studentName || user.displayName || "관리자").trim();
+}
+
+function updateChatIdentity() {
+    document.getElementById("chatIdentity").textContent = access.isAdmin
+        ? `관리자 · ${currentAdminName()}`
+        : `${profile.studentNumber} · ${profile.studentName} · 참여자`;
+}
+
+updateChatIdentity();
 document.getElementById("adminLink").hidden = !access.isAdmin;
 document.getElementById("chatTitle").textContent = access.isAdmin ? "1:1 도움 채팅 관리" : "관리자와 1:1 채팅";
 document.getElementById("chatLead").textContent = access.isAdmin
@@ -52,10 +65,12 @@ function renderMessages(documents) {
         row.className = `message-row${data.senderUid === user.uid ? " mine" : ""}${data.senderRole === "admin" ? " admin" : ""}`;
         const meta = document.createElement("span");
         meta.className = "message-meta";
-        const authorIdentity = data.studentNumber
-            ? `${data.studentNumber} · ${data.studentName || "이름 미등록"}`
-            : `학번 미기록 · ${data.studentName || "참여자"}`;
-        meta.textContent = `${authorIdentity}${data.senderRole === "admin" ? " · 관리자" : ""} · ${formatTime(data.createdAt)}`;
+        const authorIdentity = data.senderRole === "admin"
+            ? `관리자 · ${data.studentName || "이름 미등록"}`
+            : (data.studentNumber
+                ? `${data.studentNumber} · ${data.studentName || "이름 미등록"}`
+                : `학번 미기록 · ${data.studentName || "참여자"}`);
+        meta.textContent = `${authorIdentity} · ${formatTime(data.createdAt)}`;
         const bubble = document.createElement("div");
         bubble.className = "message-bubble";
         bubble.textContent = data.text || "";
@@ -111,6 +126,8 @@ function watchConversation(conversationUid) {
 }
 
 async function initializeAdminPicker() {
+    adminIdentityForm.hidden = false;
+    adminChatName.value = currentAdminName();
     conversationPicker.hidden = false;
     const snapshot = await getDocs(collection(db, "users"));
     const participants = snapshot.docs
@@ -137,6 +154,26 @@ async function initializeAdminPicker() {
     watchConversation(initialUid);
 }
 
+adminIdentityForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!access.isAdmin || !adminIdentityForm.reportValidity()) return;
+    const nextName = adminChatName.value.trim();
+    const saveButton = adminIdentityForm.querySelector("button");
+    saveButton.disabled = true;
+    status.textContent = "관리자 표시 이름을 저장하는 중...";
+    try {
+        await setDoc(doc(db, "users", user.uid), { adminChatName: nextName }, { merge: true });
+        profile.adminChatName = nextName;
+        updateChatIdentity();
+        status.textContent = `채팅에 관리자 · ${nextName}(으)로 표시됩니다.`;
+    } catch (error) {
+        console.error(error);
+        status.textContent = "관리자 표시 이름을 저장하지 못했습니다.";
+    } finally {
+        saveButton.disabled = false;
+    }
+});
+
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const text = input.value.trim();
@@ -149,8 +186,8 @@ form.addEventListener("submit", async (event) => {
         batch.set(messageReference, {
             conversationUid: selectedConversationUid,
             senderUid: user.uid,
-            studentNumber: profile.studentNumber,
-            studentName: profile.studentName,
+            studentNumber: access.isAdmin ? "관리자" : profile.studentNumber,
+            studentName: access.isAdmin ? currentAdminName() : profile.studentName,
             text,
             senderRole: access.isAdmin ? "admin" : "participant",
             createdAt: serverTimestamp()
