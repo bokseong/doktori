@@ -11,7 +11,7 @@ function startAccountStatusGuard() {
     onAuthStateChanged(auth, (user) => {
         stopAccountStatusGuard();
         stopAccountStatusGuard = () => {};
-        if (!user || /\/blocked\.html$/i.test(location.pathname)) return;
+        if (!user || /\/(?:blocked|chat)\.html$/i.test(location.pathname)) return;
         stopAccountStatusGuard = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
             if (snapshot.exists() && snapshot.data().accountStatus === "blocked") {
                 location.replace(new URL("../blocked.html", import.meta.url));

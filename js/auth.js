@@ -100,7 +100,7 @@ function redirectTo(page, next) {
     location.replace(url);
 }
 
-export async function requireUser() {
+export async function requireUser({ allowBlocked = false } = {}) {
     const user = await waitForAuth();
     const next = `${location.pathname}${location.search}${location.hash}`;
 
@@ -110,7 +110,7 @@ export async function requireUser() {
     }
 
     const profile = await getMemberProfile(user);
-    if (isAccountBlocked(profile)) {
+    if (isAccountBlocked(profile) && !allowBlocked) {
         location.replace(new URL("../blocked.html", import.meta.url));
         return new Promise(() => {});
     }

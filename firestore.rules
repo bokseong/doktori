@@ -47,11 +47,14 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/users/$(userId)/progress/qr6);
     }
 
-    function hasCurrentConsent(userId) {
+    function hasValidConsent(userId) {
       return exists(/databases/$(database)/documents/users/$(userId))
-        && isAccountActive(userId)
         && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsent", false) == true
         && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsentVersion", "") == currentConsentVersion();
+    }
+
+    function hasCurrentConsent(userId) {
+      return isAccountActive(userId) && hasValidConsent(userId);
     }
 
     function isMissionOpen(qrId) {
@@ -379,11 +382,11 @@ service cloud.firestore {
     match /chatMessages/{messageId} {
       allow read: if isAdmin()
         || (isSignedIn()
-          && hasCurrentConsent(request.auth.uid)
+          && hasValidConsent(request.auth.uid)
           && (resource.data.get("conversationUid", "") == request.auth.uid
             || resource.data.get("uid", "") == request.auth.uid));
       allow create: if isSignedIn()
-        && hasCurrentConsent(request.auth.uid)
+        && hasValidConsent(request.auth.uid)
         && request.resource.data.keys().hasOnly(["conversationUid", "senderUid", "studentNumber", "studentName", "text", "senderRole", "createdAt"])
         && request.resource.data.senderUid == request.auth.uid
         && (
@@ -406,7 +409,7 @@ service cloud.firestore {
           || (isAdmin()
             && exists(/databases/$(database)/documents/users/$(request.resource.data.conversationUid))
             && get(/databases/$(database)/documents/users/$(request.resource.data.conversationUid)).data.role == "participant"
-            && hasCurrentConsent(request.resource.data.conversationUid))
+            && hasValidConsent(request.resource.data.conversationUid))
         )
         && request.resource.data.createdAt == request.time
         && existsAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid))
@@ -423,9 +426,9 @@ service cloud.firestore {
     }
 
     match /chatRateLimits/{userId} {
-      allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
+      allow read: if (isOwner(userId) && hasValidConsent(userId)) || isAdmin();
       allow create: if isOwner(userId)
-        && isAccountActive(userId)
+        && hasValidConsent(userId)
         && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
         && request.resource.data.uid == userId
         && request.resource.data.lastMessageId is string
@@ -433,7 +436,7 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
         && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
       allow update: if isOwner(userId)
-        && isAccountActive(userId)
+        && hasValidConsent(userId)
         && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
         && request.resource.data.uid == userId
         && request.resource.data.lastMessageId is string

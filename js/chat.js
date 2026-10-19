@@ -13,7 +13,7 @@ import {
 import { getMemberProfile, getUserAccess, requireUser } from "./auth.js";
 import { db } from "./firebase.js";
 
-const user = await requireUser();
+const user = await requireUser({ allowBlocked: true });
 const [profile, access] = await Promise.all([getMemberProfile(user), getUserAccess(user)]);
 const list = document.getElementById("messageList");
 const form = document.getElementById("chatForm");
@@ -43,7 +43,9 @@ document.getElementById("adminLink").hidden = !access.isAdmin;
 document.getElementById("chatTitle").textContent = access.isAdmin ? "1:1 도움 채팅 관리" : "관리자와 1:1 채팅";
 document.getElementById("chatLead").textContent = access.isAdmin
     ? "참여자를 선택해 문의를 확인하고 답변하세요."
-    : "문제가 생기면 관리자에게 바로 질문하세요.";
+    : access.isBlocked
+        ? "계정 이용 제한에 관해 관리자에게 문의할 수 있습니다."
+        : "문제가 생기면 관리자에게 바로 질문하세요.";
 
 function formatTime(timestamp) {
     const date = timestamp?.toDate?.();
