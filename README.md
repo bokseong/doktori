@@ -7,7 +7,6 @@
 - 정적 사이트: GitHub Pages
 - 로그인·진행도·정답 검증: Firebase Authentication, Firestore, App Check
 - 진행도·상품 수령 관리: 관리자 전용 Firestore 대시보드
-- 관리자 화면: `zb0bl7hn6ghtak72c.html`
 - 회원 탈퇴: Google 재인증 후 Firestore 개인정보 익명화 및 활동 기록 삭제, Firebase Authentication 계정 삭제
 
-배포 시 GitHub Pages 파일만 갱신해서는 Firestore 규칙이 바뀌지 않습니다. `firestore.rules`는 Firebase 프로젝트에 별도로 게시하고, Apps Script를 수정한 경우 새 웹 앱 버전을 배포해야 합니다. 특히 회원 탈퇴 기능은 두 배포가 모두 완료되어야 정상 작동합니다. 정답은 저장소에 넣지 않고 Firestore의 `quizSecrets/qr1`~`quizSecrets/qr6` 문서에만 보관합니다.
+배포 시 GitHub Pages 파일만 갱신해서는 Firestore 규칙이 바뀌지 않습니다. `firestore.rules`는 Firebase 프로젝트에 별도로 게시하고, Apps Script를 수정한 경우 새 웹 앱 버전을 배포해야 합니다. 특히 회원 탈퇴 기능은 두 배포가 모두 완료되어야 정상 작동합니다.
