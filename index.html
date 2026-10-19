@@ -139,7 +139,7 @@
     <script type="module" src="./js/app-ui.js"></script>
     <script type="module">
         import { collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./js/auth.js";
+        import { getMemberProfile, getUserAccess, isAccountBlocked, isMemberProfileComplete, logout, waitForAuth } from "./js/auth.js";
         import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./js/event-config.js";
         import { db } from "./js/firebase.js";
 
@@ -223,6 +223,10 @@
             logoutButton.hidden = false;
             try {
                 const profile = await getMemberProfile(currentUser);
+                if (isAccountBlocked(profile)) {
+                    location.replace(new URL("./blocked.html", location.href));
+                    await new Promise(() => {});
+                }
                 const complete = isMemberProfileComplete(profile);
                 const access = await getUserAccess(currentUser);
                 const displayName = access.isAdmin

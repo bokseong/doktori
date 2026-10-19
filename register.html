@@ -160,6 +160,7 @@
         import { signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import {
             getMemberProfile,
+            isAccountBlocked,
             isMemberProfileComplete,
             registerMember,
             waitForAuth
@@ -222,6 +223,10 @@
             }
 
             const profile = await getMemberProfile(currentUser);
+            if (isAccountBlocked(profile)) {
+                location.replace(new URL("./blocked.html", location.href));
+                await new Promise(() => {});
+            }
             if (isMemberProfileComplete(profile)) {
                 message.textContent = "이미 회원 등록이 완료되어 있습니다. 이동하는 중...";
                 continueToPreviousPage();

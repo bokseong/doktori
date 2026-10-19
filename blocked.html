@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f0e6">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <title>이용 제한 · 복성고 독토리</title>
+    <link rel="stylesheet" href="./css/theme.css">
+    <link rel="stylesheet" href="./css/footer.css">
+    <style>
+        body { visibility: hidden; }
+        .blocked-card { width: min(720px, 100%); margin: 7vh auto 0; padding: clamp(26px, 5vw, 48px); }
+        .blocked-card h1 { margin: 14px 0; font: clamp(2.4rem, 8vw, 4.8rem)/1.05 "Black Han Sans", sans-serif; letter-spacing: -.025em; }
+        .notice { margin: 26px 0; padding: 18px; border: 2px solid var(--ink); background: var(--paper); }
+        .notice dt { font-weight: 800; }
+        .notice dd { margin: 4px 0 14px; }
+        .notice dd:last-child { margin-bottom: 0; }
+        .help { color: var(--muted); }
+    </style>
+</head>
+<body>
+    <main class="page-shell">
+        <section class="blocked-card panel" aria-labelledby="blockedTitle">
+            <span class="label">ACCOUNT RESTRICTED</span>
+            <h1 id="blockedTitle">계정 이용이 제한되었습니다</h1>
+            <p class="lead">현재 계정으로는 QR 미션, 진행률 조회, 도움 채팅을 이용할 수 없습니다.</p>
+            <dl class="notice">
+                <dt>제한 사유</dt><dd id="blockReason">확인 중...</dd>
+                <dt>처리 시각</dt><dd id="blockTime">-</dd>
+                <dt>로그인 계정</dt><dd id="accountEmail">-</dd>
+            </dl>
+            <p class="help">잘못 제한되었다고 생각되면 도서부 운영 관리자에게 직접 문의해 주세요.</p>
+            <div class="actions"><button id="logoutButton" class="button--coral" type="button">로그아웃</button><a class="button button--paper" href="./info.html">사이트 안내 · 이용약관</a></div>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
+        <div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal"><small>© 2026 복성고등학교 도서부</small><small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a></small></div></div>
+    </footer>
+    <script type="module">
+        import { getMemberProfile, isAccountBlocked, logout, waitForAuth } from "./js/auth.js";
+
+        const user = await waitForAuth().catch(() => null);
+        if (!user) {
+            location.replace("./signin.html");
+            await new Promise(() => {});
+        }
+
+        const profile = await getMemberProfile(user).catch(() => null);
+        if (!isAccountBlocked(profile)) {
+            location.replace("./index.html");
+            await new Promise(() => {});
+        }
+
+        document.getElementById("blockReason").textContent = profile.blockReason || "관리자에게 문의해 주세요.";
+        const blockedAt = profile.accountStatusAt?.toDate?.();
+        document.getElementById("blockTime").textContent = blockedAt
+            ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "long", timeStyle: "short" }).format(blockedAt)
+            : "기록 없음";
+        document.getElementById("accountEmail").textContent = user.email || "이메일 정보 없음";
+        document.getElementById("logoutButton").addEventListener("click", logout);
+        document.body.style.visibility = "visible";
+    </script>
+</body>
+</html>

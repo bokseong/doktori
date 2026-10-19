@@ -65,6 +65,10 @@ export function isMemberProfileComplete(profile) {
     );
 }
 
+export function isAccountBlocked(profile) {
+    return profile?.accountStatus === "blocked";
+}
+
 export async function getMemberProfile(user = auth.currentUser) {
     if (!user) return null;
     const snapshot = await getDoc(doc(db, "users", user.uid));
@@ -106,6 +110,10 @@ export async function requireUser() {
     }
 
     const profile = await getMemberProfile(user);
+    if (isAccountBlocked(profile)) {
+        location.replace(new URL("../blocked.html", import.meta.url));
+        return new Promise(() => {});
+    }
     if (isMemberProfileComplete(profile)) return user;
 
     redirectTo("../register.html", next);
@@ -136,6 +144,9 @@ export async function registerMember(user, studentNumber, studentName, privacyCo
 
     const reference = doc(db, "users", user.uid);
     const snapshot = await getDoc(reference);
+    if (snapshot.exists() && isAccountBlocked(snapshot.data())) {
+        throw new Error("차단된 계정은 회원 정보를 변경할 수 없습니다.");
+    }
     const profile = {
         uid: user.uid,
         email: user.email || "",
@@ -162,6 +173,7 @@ export async function registerMember(user, studentNumber, studentName, privacyCo
 
 export async function touchMemberProfile(user) {
     const profile = await getMemberProfile(user);
+    if (isAccountBlocked(profile)) return profile;
     if (!isMemberProfileComplete(profile)) return profile;
 
     const update = {
@@ -176,12 +188,13 @@ export async function touchMemberProfile(user) {
 }
 
 export async function getUserAccess(user = auth.currentUser) {
-    if (!user) return { role: null, isAdmin: false };
-    if (isMasterAdmin(user)) return { role: "admin", isAdmin: true };
+    if (!user) return { role: null, isAdmin: false, isBlocked: false };
+    if (isMasterAdmin(user)) return { role: "admin", isAdmin: true, isBlocked: false };
 
     const profile = await getMemberProfile(user);
     const role = profile?.role || "participant";
-    return { role, isAdmin: role === "admin" };
+    const isBlocked = isAccountBlocked(profile);
+    return { role, isAdmin: role === "admin" && !isBlocked, isBlocked };
 }
 
 export async function logout() {

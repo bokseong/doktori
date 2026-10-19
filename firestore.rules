@@ -14,6 +14,11 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isAccountActive(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.get("accountStatus", "active") != "blocked";
+    }
+
     function isMasterAdmin() {
       return isSignedIn()
         && request.auth.token.email == "github.jwastro09@gmail.com"
@@ -24,6 +29,7 @@ service cloud.firestore {
       return isMasterAdmin()
         || (isSignedIn()
           && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && isAccountActive(request.auth.uid)
           && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "participant") == "admin");
     }
 
@@ -43,6 +49,7 @@ service cloud.firestore {
 
     function hasCurrentConsent(userId) {
       return exists(/databases/$(database)/documents/users/$(userId))
+        && isAccountActive(userId)
         && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsent", false) == true
         && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsentVersion", "") == currentConsentVersion();
     }
@@ -70,7 +77,8 @@ service cloud.firestore {
           "studentNumber", "studentName", "registeredAt",
           "completedQrIds", "lastActivityAt", "role",
           "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
-          "adminChatName"
+          "adminChatName", "accountStatus", "blockReason", "accountStatusAt",
+          "accountStatusBy"
         ])
         && data.studentNumber is string
         && data.studentNumber.matches('^[0-9]{4,20}$')
@@ -80,6 +88,16 @@ service cloud.firestore {
         && (!data.keys().hasAny(["adminChatName"])
           || data.adminChatName.matches('^[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.\\-]{0,29}$'))
         && (data.get("role", "participant") == "admin" || data.get("adminChatName", "") == "")
+        && data.get("accountStatus", "active") in ["active", "blocked"]
+        && data.get("blockReason", "") is string
+        && data.get("blockReason", "").size() <= 200
+        && data.get("accountStatusBy", "") is string
+        && (!data.keys().hasAny(["accountStatusAt"]) || data.accountStatusAt is timestamp)
+        && (data.get("accountStatus", "active") != "blocked" || (
+          data.get("blockReason", "").size() >= 1
+          && data.get("accountStatusBy", "").size() >= 1
+          && data.keys().hasAny(["accountStatusAt"])
+        ))
         && data.privacyConsent == true
         && data.privacyConsentVersion == currentConsentVersion()
         && data.privacyConsentAt is timestamp;
@@ -109,12 +127,16 @@ service cloud.firestore {
 
       allow create: if isOwner(userId)
         && isValidMemberProfile(request.resource.data, userId)
+        && !request.resource.data.keys().hasAny([
+          "accountStatus", "blockReason", "accountStatusAt", "accountStatusBy"
+        ])
         && request.resource.data.privacyConsentAt == request.time
         && request.resource.data.get("role", "participant")
           == (isMasterAdmin() ? "admin" : "participant");
 
       allow update: if (
           isOwner(userId)
+          && isAccountActive(userId)
           && isValidMemberProfile(request.resource.data, userId)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             "email", "displayName", "lastLoginAt", "studentNumber", "studentName",
@@ -149,6 +171,24 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["role"])
           && request.resource.data.role in ["participant", "admin"]
         ) || (
+          isAdmin()
+          && userId != request.auth.uid
+          && resource.data.get("email", "") != "github.jwastro09@gmail.com"
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "accountStatus", "blockReason", "accountStatusAt", "accountStatusBy"
+          ])
+          && request.resource.data.accountStatus in ["active", "blocked"]
+          && request.resource.data.blockReason is string
+          && request.resource.data.blockReason.size() <= 200
+          && request.resource.data.accountStatusAt == request.time
+          && request.resource.data.accountStatusBy == request.auth.uid
+          && (
+            (request.resource.data.accountStatus == "blocked"
+              && request.resource.data.blockReason.size() >= 1)
+            || (request.resource.data.accountStatus == "active"
+              && request.resource.data.blockReason == "")
+          )
+        ) || (
           isMasterAdmin()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             "email", "displayName", "studentNumber", "studentName", "privacyConsent",
@@ -163,7 +203,7 @@ service cloud.firestore {
       allow delete: if false;
 
       match /progress/{qrId} {
-        allow read: if isOwner(userId) || isAdmin();
+        allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
         allow create: if (
             isOwner(userId)
             && hasCurrentConsent(userId)
@@ -186,7 +226,7 @@ service cloud.firestore {
             && request.resource.data.manualBy == request.auth.uid
           );
         allow update: if false;
-        allow delete: if isAdmin() || (isOwner(userId) && !isMasterAdmin());
+        allow delete: if isAdmin() || (isOwner(userId) && isAccountActive(userId) && !isMasterAdmin());
       }
     }
 
@@ -205,6 +245,7 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if isMasterAdmin() || (
         isSignedIn()
+        && isAccountActive(request.auth.uid)
         && !isMasterAdmin()
         && attemptId in [
           request.auth.uid + "_qr1", request.auth.uid + "_qr2", request.auth.uid + "_qr3",
@@ -268,20 +309,22 @@ service cloud.firestore {
     }
 
     match /quizTelemetry/{eventId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow read: if isAdmin() || (isSignedIn() && isAccountActive(request.auth.uid) && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn()
+        && isAccountActive(request.auth.uid)
         && request.resource.data.keys().hasOnly(["uid", "qrId", "outcome", "createdAt"])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
         && request.resource.data.outcome in ["correct", "incorrect", "save-error"]
         && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if isMasterAdmin() || (isSignedIn() && !isMasterAdmin() && resource.data.uid == request.auth.uid);
+      allow delete: if isMasterAdmin() || (isSignedIn() && isAccountActive(request.auth.uid) && !isMasterAdmin() && resource.data.uid == request.auth.uid);
     }
 
     match /clientErrors/{errorId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow read: if isAdmin() || (isSignedIn() && isAccountActive(request.auth.uid) && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn()
+        && isAccountActive(request.auth.uid)
         && request.resource.data.keys().hasOnly(["uid", "code", "context", "path", "online", "createdAt"])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.code is string
@@ -289,7 +332,7 @@ service cloud.firestore {
         && request.resource.data.path is string
         && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if isMasterAdmin() || (isSignedIn() && !isMasterAdmin() && resource.data.uid == request.auth.uid);
+      allow delete: if isMasterAdmin() || (isSignedIn() && isAccountActive(request.auth.uid) && !isMasterAdmin() && resource.data.uid == request.auth.uid);
     }
 
     match /announcements/{announcementId} {
@@ -310,7 +353,7 @@ service cloud.firestore {
     }
 
     match /prizeClaims/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly(["uid", "received", "receivedAt", "receivedBy", "updatedAt"])
         && request.resource.data.uid == userId
@@ -367,14 +410,16 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if isAdmin()
         || (isSignedIn()
+          && isAccountActive(request.auth.uid)
           && (resource.data.get("conversationUid", "") == request.auth.uid
             || resource.data.get("senderUid", "") == request.auth.uid
             || resource.data.get("uid", "") == request.auth.uid));
     }
 
     match /chatRateLimits/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
       allow create: if isOwner(userId)
+        && isAccountActive(userId)
         && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
         && request.resource.data.uid == userId
         && request.resource.data.lastMessageId is string
@@ -382,6 +427,7 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
         && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
       allow update: if isOwner(userId)
+        && isAccountActive(userId)
         && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
         && request.resource.data.uid == userId
         && request.resource.data.lastMessageId is string
@@ -389,7 +435,7 @@ service cloud.firestore {
         && request.time >= resource.data.lastSentAt + duration.value(3, "s")
         && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
         && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
-      allow delete: if isOwner(userId) || isAdmin();
+      allow delete: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
     }
 
     // 기존 축전 사이트의 공개 운세 읽기 규칙은 그대로 유지합니다.

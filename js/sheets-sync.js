@@ -62,7 +62,7 @@ function validatedSheetName() {
 }
 
 function sheetRange(name) {
-    return `'${name.replaceAll("'", "''")}'!A:Q`;
+    return `'${name.replaceAll("'", "''")}'!A:S`;
 }
 
 function setConnectedControls(connected) {
@@ -87,7 +87,7 @@ function buildRows() {
     });
     const claimsByUser = new Map(claims.map((item) => [item.id, item.data()]));
     const header = [
-        "UID", "학번", "이름", "이메일", "권한", "개인정보 동의", "참여 여부", "완료 수",
+        "UID", "학번", "이름", "이메일", "권한", "계정 상태", "차단 사유", "개인정보 동의", "참여 여부", "완료 수",
         ...QR_IDS.map((_, index) => `QR ${String(index + 1).padStart(2, "0")}`),
         "상품 대상", "상품 수령", "마지막 활동"
     ];
@@ -104,6 +104,8 @@ function buildRows() {
                 record.role === "admin" ? (record.adminChatName || record.studentName || "관리자") : (record.studentName || ""),
                 record.email || "",
                 record.role === "admin" ? "관리자" : "참여자",
+                record.accountStatus === "blocked" ? "차단" : "정상",
+                record.blockReason || "",
                 record.privacyConsent === true ? "동의" : "미동의",
                 completed.size ? "참여" : "미참여",
                 completed.size,

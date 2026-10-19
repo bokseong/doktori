@@ -5,6 +5,20 @@ import { auth, db } from "./firebase.js";
 
 let chatShortcut = null;
 let stopChatAlerts = () => {};
+let stopAccountStatusGuard = () => {};
+
+function startAccountStatusGuard() {
+    onAuthStateChanged(auth, (user) => {
+        stopAccountStatusGuard();
+        stopAccountStatusGuard = () => {};
+        if (!user || /\/blocked\.html$/i.test(location.pathname)) return;
+        stopAccountStatusGuard = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+            if (snapshot.exists() && snapshot.data().accountStatus === "blocked") {
+                location.replace(new URL("../blocked.html", import.meta.url));
+            }
+        }, (error) => console.warn("계정 상태를 확인하지 못했습니다.", error));
+    });
+}
 
 function createNetworkBanner() {
     const banner = document.createElement("div");
@@ -142,6 +156,7 @@ window.addEventListener("error", (event) => reportError(event.error || { name: "
 window.addEventListener("unhandledrejection", (event) => reportError(event.reason || { name: "unhandled-rejection" }, "unhandled-rejection"));
 
 createNetworkBanner();
+startAccountStatusGuard();
 createChatShortcut();
 startAdminChatAlerts();
 createAnnouncementPopup();

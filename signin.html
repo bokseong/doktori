@@ -56,6 +56,7 @@
     <script type="module">
         import {
             getMemberProfile,
+            isAccountBlocked,
             isMemberProfileComplete,
             signInWithGoogle,
             touchMemberProfile,
@@ -94,6 +95,10 @@
 
         async function continueWith(user) {
             const profile = await getMemberProfile(user);
+            if (isAccountBlocked(profile)) {
+                location.replace(new URL("./blocked.html", location.href));
+                return;
+            }
             if (isMemberProfileComplete(profile)) {
                 message.textContent = "회원 정보를 확인했습니다. 이동하는 중...";
                 await touchMemberProfile(user);
