@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import {
   initializeAppCheck,
-  ReCaptchaV3Provider
+  ReCaptchaEnterpriseProvider
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app-check.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
@@ -18,7 +18,7 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const appCheck = initializeAppCheck(app, {
-  provider: new ReCaptchaV3Provider("6LchkPEtAAAAAPJe8j2d3IekFE2eA_piKwYcp_pk"),
+  provider: new ReCaptchaEnterpriseProvider("6LchkPEtAAAAAPJe8j2d3IekFE2eA_piKwYcp_pk"),
   isTokenAutoRefreshEnabled: true
 });
 export const auth = getAuth(app);

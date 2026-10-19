@@ -128,9 +128,13 @@
                 await continueWith(await signInWithGoogle());
             } catch (error) {
                 console.error(error);
-                message.textContent = error.code === "auth/popup-closed-by-user"
-                    ? "로그인 창이 닫혔습니다."
-                    : "로그인하지 못했습니다. 잠시 후 다시 시도하세요.";
+                if (error.code === "auth/popup-closed-by-user") {
+                    message.textContent = "로그인 창이 닫혔습니다.";
+                } else if (String(error.code || "").includes("app-check") || error.code === "permission-denied") {
+                    message.textContent = "Google 로그인은 완료됐지만 App Check 보안 확인에 실패했습니다. 페이지를 새로고침한 뒤 다시 시도하세요.";
+                } else {
+                    message.textContent = "로그인하지 못했습니다. 잠시 후 다시 시도하세요.";
+                }
                 signInButton.disabled = false;
             }
         });
