@@ -10,7 +10,7 @@ import {
     where,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { getMemberProfile, getUserAccess, requireUser } from "./auth.js";
+import { getMemberProfile, getUserAccess, requireUser } from "./auth.js?v=27";
 import { db } from "./firebase.js";
 
 const user = await requireUser({ allowBlocked: true });
