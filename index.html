@@ -224,7 +224,12 @@
             try {
                 const profile = await getMemberProfile(currentUser);
                 const complete = isMemberProfileComplete(profile);
-                userInfo.textContent = complete ? `${profile.studentName} · ${profile.studentNumber}` : (currentUser.email || "로그인됨");
+                const access = await getUserAccess(currentUser);
+                const displayName = access.isAdmin
+                    ? (profile?.adminChatName || profile?.studentName || currentUser.displayName || "관리자")
+                    : profile?.studentName;
+                const displayNumber = access.isAdmin ? "관리자" : profile?.studentNumber;
+                userInfo.textContent = complete ? `${displayName} · ${displayNumber}` : (currentUser.email || "로그인됨");
                 if (!complete) {
                     mainLoginButton.hidden = false;
                     mainLoginButton.textContent = "회원정보 등록하기";
@@ -232,7 +237,6 @@
                     statusMessage.textContent = "QR 미션을 시작하려면 최초 등록을 완료해 주세요.";
                 } else {
                     myPageButton.hidden = false;
-                    const access = await getUserAccess(currentUser);
                     adminButton.hidden = !access.isAdmin;
                     qrBuilderButton.hidden = !access.isAdmin;
                     myProgress.hidden = false;
