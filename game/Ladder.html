@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0b0b0b"><link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
     <title>복성고 독토리</title>
     <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Jua&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../footer.css">
+    <link rel="stylesheet" href="../css/footer.css">
     <style>
         * {
             box-sizing: border-box;
@@ -205,7 +205,7 @@
     </footer>
 
     <script type="module">
-        import { requireUser } from "../auth.js";
+        import { requireUser } from "../js/auth.js";
 
         await requireUser();
         document.body.style.visibility = "visible";
@@ -550,6 +550,6 @@
         initSettings();
     </script>
 
-    <script type="module" src="../app-ui.js"></script>
+    <script type="module" src="../js/app-ui.js"></script>
 </body>
 </html>

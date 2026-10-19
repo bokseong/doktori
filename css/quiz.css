@@ -1,4 +1,4 @@
-@import url("../theme.css");
+@import url("./theme.css");
 
 body { visibility: hidden; }
 .qr-shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 64px; }

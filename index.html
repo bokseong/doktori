@@ -7,9 +7,9 @@
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.svg" type="image/svg+xml">
     <title>복성고 독토리</title>
-    <link rel="stylesheet" href="./theme.css">
-    <link rel="stylesheet" href="./footer.css">
-    <link rel="stylesheet" href="./qr-scanner.css">
+    <link rel="stylesheet" href="./css/theme.css">
+    <link rel="stylesheet" href="./css/footer.css">
+    <link rel="stylesheet" href="./css/qr-scanner.css">
     <style>
         .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 34px; align-items: end; }
         .hero-copy { padding: clamp(26px, 6vw, 70px) 0; }
@@ -135,13 +135,13 @@
     </footer>
 
     <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
-    <script src="./qr-scanner.js"></script>
-    <script type="module" src="./app-ui.js"></script>
+    <script src="./js/qr-scanner.js"></script>
+    <script type="module" src="./js/app-ui.js"></script>
     <script type="module">
         import { collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./auth.js";
-        import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js";
-        import { db } from "./firebase.js";
+        import { getMemberProfile, getUserAccess, isMemberProfileComplete, logout, waitForAuth } from "./js/auth.js";
+        import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./js/event-config.js";
+        import { db } from "./js/firebase.js";
 
         const userInfo = document.getElementById("userInfo");
         const loginButton = document.getElementById("loginButton");

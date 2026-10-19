@@ -101,14 +101,14 @@ export async function requireUser() {
     const next = `${location.pathname}${location.search}${location.hash}`;
 
     if (!user) {
-        redirectTo("./signin.html", next);
+        redirectTo("../signin.html", next);
         return new Promise(() => {});
     }
 
     const profile = await getMemberProfile(user);
     if (isMemberProfileComplete(profile)) return user;
 
-    redirectTo("./register.html", next);
+    redirectTo("../register.html", next);
     return new Promise(() => {});
 }
 
@@ -187,7 +187,7 @@ export async function getUserAccess(user = auth.currentUser) {
 export async function logout() {
     if (!window.confirm("로그아웃하면 다시 로그인해야 진행 상황을 확인할 수 있습니다. 로그아웃할까요?")) return;
     await signOut(auth);
-    location.replace(new URL("./signin.html", import.meta.url));
+    location.replace(new URL("../signin.html", import.meta.url));
 }
 
 async function deleteOwnedDocuments(collectionName, uid) {

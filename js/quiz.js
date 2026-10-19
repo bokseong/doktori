@@ -7,9 +7,9 @@ import {
     serverTimestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { requireUser } from "../auth.js";
-import { db } from "../firebase.js";
-import { getEventConfig, getMissionAvailability } from "../event-config.js";
+import { requireUser } from "./auth.js";
+import { db } from "./firebase.js";
+import { getEventConfig, getMissionAvailability } from "./event-config.js";
 
 const QUIZZES = Object.freeze({
     qr1: { question: "우리 학교 도서관에서는 1인당 책을 최대 ( )권, ( )주간 빌릴 수 있습니다. 빈칸에 들어갈 말은 무엇일까요?" },

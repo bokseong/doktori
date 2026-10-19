@@ -7,8 +7,8 @@
     <link rel="manifest" href="../manifest.webmanifest">
     <link rel="icon" href="../icon.svg" type="image/svg+xml">
     <title>QR 제작 · 복성고 독토리</title>
-    <link rel="stylesheet" href="../theme.css">
-    <link rel="stylesheet" href="../footer.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/footer.css">
     <style>
         body { visibility: hidden; }
         .builder-shell { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 80px; }
@@ -81,11 +81,11 @@
         <div class="site-footer__meta"><a class="site-footer__link" href="../info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal"><small>© 2026 복성고등학교 도서부</small><small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a></small></div></div>
     </footer>
 
-    <script src="./qrcode.min.js"></script>
+    <script src="../js/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js"></script>
-    <script type="module" src="../app-ui.js"></script>
+    <script type="module" src="../js/app-ui.js"></script>
     <script type="module">
-        import { getUserAccess, requireUser } from "../auth.js";
+        import { getUserAccess, requireUser } from "../js/auth.js";
 
         const currentUser = await requireUser();
         const access = await getUserAccess(currentUser);

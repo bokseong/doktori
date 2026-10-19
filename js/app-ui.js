@@ -28,7 +28,7 @@ function createChatShortcut() {
     if (/\/chat\.html$/i.test(location.pathname)) return;
     const link = document.createElement("a");
     link.className = "support-chat-link";
-    link.href = new URL("./chat.html", import.meta.url).href;
+    link.href = new URL("../chat.html", import.meta.url).href;
     link.textContent = "1:1 도움 채팅";
     link.setAttribute("aria-label", "관리자와 1대1 도움 채팅 열기");
     document.body.append(link);
@@ -147,6 +147,6 @@ startAdminChatAlerts();
 createAnnouncementPopup();
 
 if ("serviceWorker" in navigator && location.protocol === "https:") {
-    navigator.serviceWorker.register(new URL("./sw.js", import.meta.url)).catch((error) => reportError(error, "service-worker"));
+    navigator.serviceWorker.register(new URL("../sw.js", import.meta.url)).catch((error) => reportError(error, "service-worker"));
 }
 

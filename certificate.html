@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f0e6">
-    <title>완주 인증서 · 독토리</title><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./theme.css"><link rel="stylesheet" href="./footer.css">
+    <title>완주 인증서 · 독토리</title><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./css/theme.css"><link rel="stylesheet" href="./css/footer.css">
     <style>
         body { visibility: hidden; }
         .certificate-shell { width: min(900px, calc(100% - 32px)); margin: 36px auto; }
@@ -24,11 +24,11 @@
         <div class="certificate-actions"><button id="printButton" type="button" hidden>인쇄 또는 PDF 저장</button><a class="button button--paper" href="./index.html">메인화면으로</a></div>
     </main>
     <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal"><small>© 2026 복성고등학교 도서부</small><small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a></small></div></div></footer>
-    <script type="module" src="./app-ui.js"></script>
+    <script type="module" src="./js/app-ui.js"></script>
     <script type="module">
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { getMemberProfile, requireUser } from "./auth.js";
-        import { db } from "./firebase.js";
+        import { getMemberProfile, requireUser } from "./js/auth.js";
+        import { db } from "./js/firebase.js";
         const user = await requireUser();
         const [profile, progress] = await Promise.all([getMemberProfile(user), getDocs(collection(db, "users", user.uid, "progress"))]);
         const completed = progress.docs.filter((item) => item.data().found === true && /^qr[1-6]$/.test(item.id));

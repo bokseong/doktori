@@ -7,8 +7,8 @@
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.svg" type="image/svg+xml">
     <title>내 정보 · 복성고 독토리</title>
-    <link rel="stylesheet" href="./theme.css">
-    <link rel="stylesheet" href="./footer.css">
+    <link rel="stylesheet" href="./css/theme.css">
+    <link rel="stylesheet" href="./css/footer.css">
     <style>
         body { visibility: hidden; }
         .mypage-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr); gap: 24px; align-items: end; margin-bottom: 28px; }
@@ -130,12 +130,12 @@
 
     <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal"><small>© 2026 복성고등학교 도서부</small><small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a></small></div></div></footer>
 
-    <script type="module" src="./app-ui.js"></script>
+    <script type="module" src="./js/app-ui.js"></script>
     <script type="module">
         import { collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "./auth.js";
-        import { getEventConfig } from "./event-config.js";
-        import { db } from "./firebase.js";
+        import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "./js/auth.js";
+        import { getEventConfig } from "./js/event-config.js";
+        import { db } from "./js/firebase.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const user = await requireUser();
