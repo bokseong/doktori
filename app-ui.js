@@ -29,8 +29,8 @@ function createChatShortcut() {
     const link = document.createElement("a");
     link.className = "support-chat-link";
     link.href = new URL("./chat.html", import.meta.url).href;
-    link.textContent = "도움 채팅";
-    link.setAttribute("aria-label", "독토리 전체 도움 채팅방 열기");
+    link.textContent = "1:1 도움 채팅";
+    link.setAttribute("aria-label", "관리자와 1대1 도움 채팅 열기");
     document.body.append(link);
     chatShortcut = link;
 }
@@ -39,13 +39,15 @@ function showAdminChatAlert(message) {
     if (!chatShortcut) return;
     const identity = [message.studentNumber, message.studentName].filter(Boolean).join(" · ") || "참여자";
     chatShortcut.classList.add("has-new-message");
-    chatShortcut.textContent = "도움 채팅 · 새 메시지";
+    chatShortcut.textContent = "1:1 도움 채팅 · 새 메시지";
     chatShortcut.setAttribute("aria-label", `${identity}님의 새 도움 메시지 확인하기`);
 
     document.querySelector(".admin-chat-alert")?.remove();
     const alert = document.createElement("a");
     alert.className = "admin-chat-alert";
-    alert.href = chatShortcut.href;
+    const conversationUrl = new URL(chatShortcut.href);
+    if (message.conversationUid) conversationUrl.searchParams.set("user", message.conversationUid);
+    alert.href = conversationUrl.href;
     alert.setAttribute("role", "status");
     const title = document.createElement("strong");
     title.textContent = `새 도움 메시지 · ${identity}`;
@@ -73,7 +75,7 @@ function startAdminChatAlerts() {
                 }
                 snapshot.docChanges().forEach((change) => {
                     const message = change.doc.data();
-                    if (change.type === "added" && !change.doc.metadata.hasPendingWrites && message.uid !== user.uid) {
+                    if (change.type === "added" && !change.doc.metadata.hasPendingWrites && message.senderRole === "participant" && message.senderUid !== user.uid) {
                         showAdminChatAlert(message);
                     }
                 });

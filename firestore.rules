@@ -302,24 +302,39 @@ service cloud.firestore {
     }
 
     match /chatMessages/{messageId} {
-      allow read: if isSignedIn() && hasCurrentConsent(request.auth.uid);
+      allow read: if isAdmin()
+        || (isSignedIn()
+          && hasCurrentConsent(request.auth.uid)
+          && (resource.data.get("conversationUid", "") == request.auth.uid
+            || resource.data.get("uid", "") == request.auth.uid));
       allow create: if isSignedIn()
         && hasCurrentConsent(request.auth.uid)
-        && request.resource.data.keys().hasOnly(["uid", "studentNumber", "studentName", "text", "authorRole", "createdAt"])
-        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(["conversationUid", "senderUid", "studentNumber", "studentName", "text", "senderRole", "createdAt"])
+        && request.resource.data.senderUid == request.auth.uid
         && request.resource.data.studentNumber == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentNumber
         && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName
         && request.resource.data.text is string
         && request.resource.data.text.size() >= 1
         && request.resource.data.text.size() <= 300
-        && request.resource.data.authorRole == (isAdmin() ? "admin" : "participant")
+        && request.resource.data.senderRole == (isAdmin() ? "admin" : "participant")
+        && (
+          (!isAdmin() && request.resource.data.conversationUid == request.auth.uid)
+          || (isAdmin()
+            && exists(/databases/$(database)/documents/users/$(request.resource.data.conversationUid))
+            && get(/databases/$(database)/documents/users/$(request.resource.data.conversationUid)).data.role == "participant"
+            && hasCurrentConsent(request.resource.data.conversationUid))
+        )
         && request.resource.data.createdAt == request.time
         && existsAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid))
         && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.uid == request.auth.uid
         && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.lastMessageId == messageId
         && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.lastSentAt == request.time;
       allow update: if false;
-      allow delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow delete: if isAdmin()
+        || (isSignedIn()
+          && (resource.data.get("conversationUid", "") == request.auth.uid
+            || resource.data.get("senderUid", "") == request.auth.uid
+            || resource.data.get("uid", "") == request.auth.uid));
     }
 
     match /chatRateLimits/{userId} {
@@ -329,14 +344,16 @@ service cloud.firestore {
         && request.resource.data.uid == userId
         && request.resource.data.lastMessageId is string
         && request.resource.data.lastSentAt == request.time
-        && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId));
+        && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
+        && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
       allow update: if isOwner(userId)
         && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
         && request.resource.data.uid == userId
         && request.resource.data.lastMessageId is string
         && request.resource.data.lastSentAt == request.time
         && request.time >= resource.data.lastSentAt + duration.value(3, "s")
-        && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId));
+        && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
+        && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
       allow delete: if isOwner(userId) || isAdmin();
     }
 
