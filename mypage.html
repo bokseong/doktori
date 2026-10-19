@@ -37,6 +37,9 @@
         .privacy-grid dt { color: var(--ink); font-weight: 800; }
         .privacy-grid dd { margin: 0; }
         .consent-state { margin-top: 20px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper); font-weight: 800; }
+        .admin-profile-form { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 12px; align-items: end; margin-top: 20px; }
+        .admin-profile-form label { display: grid; gap: 7px; font-weight: 800; }
+        .admin-profile-form input { min-height: 48px; padding: 9px 11px; border: 2px solid var(--ink); background: white; }
         .danger-zone { border-color: #9b321e; }
         .danger-zone .label { background: #9b321e; }
         .danger-copy { color: var(--muted); line-height: 1.75; }
@@ -47,7 +50,7 @@
         #withdrawButton { color: white; background: #9b321e; }
         #withdrawMessage { margin: 0; }
         @media (max-width: 760px) { .mypage-hero, .site-facts { grid-template-columns: 1fr; } .progress-items { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 520px) { .panel-head { flex-direction: column; } .privacy-grid { grid-template-columns: 1fr; gap: 4px; } .privacy-grid dd + dt { margin-top: 9px; } }
+        @media (max-width: 520px) { .panel-head { flex-direction: column; } .privacy-grid, .admin-profile-form { grid-template-columns: 1fr; gap: 4px; } .privacy-grid dd + dt { margin-top: 9px; } }
     </style>
 </head>
 <body>
@@ -68,6 +71,16 @@
                 <div id="progressTrack" class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
                 <div id="progressItems" class="progress-items" aria-live="polite"></div>
                 <div class="progress-actions"><p id="progressMessage" class="status" role="status"></p><a id="certificateButton" class="button button--coral" href="./certificate.html" hidden>완주 인증서 확인</a></div>
+            </section>
+
+            <section id="adminProfilePanel" class="info-panel panel" aria-labelledby="adminProfileTitle" hidden>
+                <span class="label">ADMIN PROFILE</span><h2 id="adminProfileTitle" class="section-title">관리자 표시 정보</h2>
+                <p class="muted">관리자의 학번은 자동으로 ‘관리자’로 표시됩니다. 아래 이름 또는 ID는 1:1 도움 채팅의 관리자 이름으로 사용됩니다.</p>
+                <form id="adminProfileForm" class="admin-profile-form">
+                    <label for="adminProfileName">이름 또는 사용할 ID<input id="adminProfileName" type="text" minlength="1" maxlength="30" pattern="[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.-]{0,29}" placeholder="예: 도서부관리자 또는 library-admin" required></label>
+                    <button id="adminProfileSave" type="submit">저장</button>
+                </form>
+                <p id="adminProfileMessage" class="status" role="status"></p>
             </section>
 
             <section class="info-panel panel" aria-labelledby="aboutTitle">
@@ -119,14 +132,15 @@
 
     <script type="module" src="./app-ui.js"></script>
     <script type="module">
-        import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { deleteMemberAccount, getMemberProfile, isMasterAdmin, logout, requireUser } from "./auth.js";
+        import { collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "./auth.js";
         import { getEventConfig } from "./event-config.js";
         import { db } from "./firebase.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const user = await requireUser();
         const profile = await getMemberProfile(user);
+        const access = await getUserAccess(user);
         const progressItems = document.getElementById("progressItems");
         const progressMessage = document.getElementById("progressMessage");
         const certificateButton = document.getElementById("certificateButton");
@@ -158,8 +172,45 @@
             certificateButton.hidden = remaining !== 0;
         }
 
-        document.getElementById("memberName").textContent = profile.studentName;
-        document.getElementById("memberDetail").textContent = `${profile.studentNumber} · ${user.email || "이메일 없음"}`;
+        function currentAdminName() {
+            return String(profile.adminChatName || profile.studentName || user.displayName || "관리자").trim();
+        }
+
+        function renderMemberIdentity() {
+            document.getElementById("memberName").textContent = access.isAdmin ? currentAdminName() : profile.studentName;
+            document.getElementById("memberDetail").textContent = `${access.isAdmin ? "관리자" : profile.studentNumber} · ${user.email || "이메일 없음"}`;
+        }
+
+        renderMemberIdentity();
+        if (access.isAdmin) {
+            const adminProfilePanel = document.getElementById("adminProfilePanel");
+            const adminProfileForm = document.getElementById("adminProfileForm");
+            const adminProfileName = document.getElementById("adminProfileName");
+            const adminProfileSave = document.getElementById("adminProfileSave");
+            const adminProfileMessage = document.getElementById("adminProfileMessage");
+            adminProfilePanel.hidden = false;
+            adminProfileName.value = currentAdminName();
+            adminProfileForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                if (!adminProfileForm.reportValidity()) return;
+                const nextName = adminProfileName.value.trim();
+                adminProfileSave.disabled = true;
+                adminProfileMessage.textContent = "관리자 표시 이름을 저장하는 중...";
+                try {
+                    await setDoc(doc(db, "users", user.uid), { adminChatName: nextName }, { merge: true });
+                    profile.adminChatName = nextName;
+                    renderMemberIdentity();
+                    adminProfileMessage.textContent = `관리자 · ${nextName}(으)로 저장했습니다.`;
+                } catch (error) {
+                    console.error(error);
+                    adminProfileMessage.textContent = error.code === "permission-denied"
+                        ? "관리자 권한을 확인하지 못해 저장할 수 없습니다."
+                        : "관리자 표시 이름을 저장하지 못했습니다.";
+                } finally {
+                    adminProfileSave.disabled = false;
+                }
+            });
+        }
         document.getElementById("consentState").textContent = profile.privacyConsent === true
             ? `개인정보 수집·이용 동의 완료 · ${formatDate(profile.privacyConsentAt)}`
             : "개인정보 수집·이용에 동의하지 않은 상태입니다.";
