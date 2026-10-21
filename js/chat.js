@@ -71,7 +71,8 @@ function renderMessages(documents) {
             : (data.studentNumber
                 ? `${data.studentNumber} · ${data.studentName || "이름 미등록"}`
                 : `학번 미기록 · ${data.studentName || "참여자"}`);
-        meta.textContent = `${authorIdentity} · ${formatTime(data.createdAt)}`;
+        const senderEmail = data.senderEmail || "이메일 미기록";
+        meta.textContent = `${authorIdentity} · ${senderEmail} · ${formatTime(data.createdAt)}`;
         const bubble = document.createElement("div");
         bubble.className = "message-bubble";
         bubble.textContent = data.text || "";
@@ -173,6 +174,7 @@ form.addEventListener("submit", async (event) => {
             senderUid: user.uid,
             studentNumber: access.isAdmin ? "관리자" : profile.studentNumber,
             studentName: access.isAdmin ? currentAdminName() : profile.studentName,
+            senderEmail: user.email || profile.email || "",
             text,
             senderRole: access.isAdmin ? "admin" : "participant",
             createdAt: serverTimestamp()

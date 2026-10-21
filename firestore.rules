@@ -398,8 +398,10 @@ service cloud.firestore {
             || resource.data.get("uid", "") == request.auth.uid));
       allow create: if isSignedIn()
         && hasValidConsent(request.auth.uid)
-        && request.resource.data.keys().hasOnly(["conversationUid", "senderUid", "studentNumber", "studentName", "text", "senderRole", "createdAt"])
+        && request.resource.data.keys().hasOnly(["conversationUid", "senderUid", "studentNumber", "studentName", "senderEmail", "text", "senderRole", "createdAt"])
         && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderEmail is string
+        && request.resource.data.senderEmail == request.auth.token.email
         && (
           (isAdmin()
             && request.resource.data.studentNumber == "관리자"
