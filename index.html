@@ -6,309 +6,131 @@
     <meta name="theme-color" content="#f4f0e6">
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icon.svg" type="image/svg+xml">
-    <title>복성고 독토리</title>
+    <title>복성고 도서부 행사 안내</title>
     <link rel="stylesheet" href="./css/theme.css">
     <link rel="stylesheet" href="./css/footer.css">
-    <link rel="stylesheet" href="./css/qr-scanner.css">
-    <style>
-        .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr); gap: 34px; align-items: end; }
-        .hero-copy { padding: clamp(26px, 6vw, 70px) 0; }
-        .hero-ticket { position: relative; padding: 26px; transform: rotate(1.5deg); }
-        .hero-ticket::before, .hero-ticket::after { content: ""; position: absolute; left: -13px; width: 24px; height: 24px; border: 2px solid var(--ink); border-radius: 50%; background: var(--paper); }
-        .hero-ticket::before { top: 32%; } .hero-ticket::after { bottom: 32%; }
-        .ticket-number { margin: 12px 0 0; font: 6rem/.9 "Black Han Sans", sans-serif; color: var(--blue); }
-        .rule { height: 2px; margin: 20px 0; background: var(--ink); }
-        .guide { margin-top: 38px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid var(--ink); background: var(--ink); gap: 2px; box-shadow: var(--shadow); }
-        .guide article { padding: 24px; background: var(--paper-strong); }
-        .guide b { display: block; margin-bottom: 30px; color: var(--coral); font: 2rem "Black Han Sans", sans-serif; }
-        .guide h2 { margin: 0 0 10px; font-size: 1.3rem; font-weight: 800; line-height: 1.35; }
-        .guide p { margin: 0; color: var(--muted); line-height: 1.65; }
-        .my-progress { margin-top: 34px; padding: clamp(22px, 4vw, 34px); }
-        .progress-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
-        .progress-head p { margin: 8px 0 0; color: var(--muted); }
-        .progress-score { flex: 0 0 auto; font: 2.7rem/1 "Black Han Sans", sans-serif; color: var(--blue); }
-        .progress-track { height: 18px; margin: 22px 0 16px; border: 2px solid var(--ink); background: var(--paper); overflow: hidden; }
-        .progress-track span { display: block; width: 0; height: 100%; background: var(--coral); transition: width .25s ease; }
-        .progress-items { display: flex; flex-wrap: wrap; gap: 8px; min-height: 36px; }
-        .progress-chip { padding: 6px 10px; border: 2px solid var(--ink); background: var(--lime); font-weight: 700; }
-        .progress-empty { color: var(--muted); }
-        .progress-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px; }
-        .progress-footer .status { margin: 0; }
-        .event-notice { margin-top: 28px; padding: 18px 22px; border: 2px solid var(--ink); background: var(--blue); color: white; box-shadow: 5px 5px 0 var(--ink); }
-        .event-notice strong { margin-right: 8px; }
-        .mode-select { margin-top: 34px; padding: clamp(22px, 4vw, 34px); }
-        .mode-select__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-        .mode-select__head p { margin: 8px 0 0; color: var(--muted); }
-        .mode-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
-        .mode-card { display: grid; gap: 10px; min-height: 220px; padding: 24px; border: 2px solid var(--ink); background: var(--paper); text-align: left; box-shadow: none; }
-        .mode-card:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--ink); }
-        .mode-card strong { font-size: 1.35rem; }
-        .mode-card p { margin: 0; color: var(--muted); font-weight: 400; line-height: 1.65; }
-        .mode-card--story { background: #e9efff; }
-        .mode-card small { color: var(--blue); font-weight: 800; }
-        @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .hero-ticket { transform: none; } .guide { grid-template-columns: 1fr; } }
-        @media (max-width: 560px) { .progress-head, .progress-footer { align-items: stretch; flex-direction: column; } .progress-score { font-size: 2.2rem; } .mode-cards { grid-template-columns: 1fr; } }
-    </style>
+    <link rel="stylesheet" href="./css/event-hub.css">
 </head>
 <body>
     <header class="site-header">
-        <div class="brand"><span class="brand-mark">D</span><span class="brand-text">복성고 도서부 · 독토리</span></div>
+        <div class="brand"><span class="brand-mark">D</span><span class="brand-text">복성고 도서부 · 행사 안내</span></div>
         <div class="account">
             <span id="userInfo" class="account-label">로그인하지 않음</span>
-            <a id="loginButton" class="button" href="./signin.html?next=./participate.html">Google 로그인</a>
+            <a id="loginButton" class="button" href="./signin.html?next=./index.html">Google 로그인</a>
             <a id="myPageButton" class="button button--paper" href="./mypage.html" hidden>내 정보</a>
             <button id="logoutButton" class="button--paper" type="button" hidden>로그아웃</button>
         </div>
     </header>
 
-    <main class="page-shell">
-        <section class="hero">
-            <div class="hero-copy">
-                <span class="label">BOKSEONG LIBRARY CLUB EVENT</span>
-                <h1 class="display-title">독토리<br><span class="accent">QR 탐색 행사</span></h1>
-                <p class="lead">복성고 도서부가 준비한 교내 독서 탐색 행사입니다. 학교 곳곳의 QR을 찾아 문제를 풀고, 책을 만나는 새로운 출발점을 발견해 보세요.</p>
+    <main class="page-shell event-hub">
+        <section class="hub-hero" aria-labelledby="hubTitle">
+            <div class="hub-hero__copy">
+                <span class="label">BOKSEONG LIBRARY CLUB</span>
+                <h1 id="hubTitle" class="display-title">도서부 행사를<br><span class="accent">한곳에서</span></h1>
+                <p class="lead">복성고 도서부가 운영하는 행사와 부스를 소개하는 안내 페이지입니다. 참여하고 싶은 부스를 확인하고, 각 부스의 안내에 따라 체험해 보세요.</p>
                 <div class="actions">
-                    <a class="button button--coral" href="./participate.html">QR 이벤트 참여하기</a>
-                    <a id="mainLoginButton" class="button button--paper" href="./signin.html?next=./participate.html">로그인하고 준비하기</a>
+                    <a class="button button--coral" href="#booths">부스 둘러보기</a>
                     <a id="adminButton" class="button button--ink" href="./zb0bl7hn6ghtak72c.html" hidden>관리자 메뉴</a>
-                    <a id="qrBuilderButton" class="button button--ink" href="./qr/QR.html" hidden>QR 제작</a>
                 </div>
                 <p id="statusMessage" class="status" role="status"></p>
             </div>
-            <aside class="hero-ticket panel" aria-label="참여 안내">
-                <span class="muted">DOKTORI FIELD PASS</span>
-                <div class="ticket-number">06</div>
-                <strong>QR MISSION</strong>
-                <div class="rule"></div>
-                <p>참여하기에서 일반 모드 또는 BS-001 스토리 모드를 고른 뒤, 해당 모드의 QR을 스캔해 진행합니다.</p>
+            <aside class="hub-pass panel" aria-label="도서부 행사 안내 카드">
+                <span class="hub-pass__eyebrow">LIBRARY EVENT HUB</span>
+                <strong>OPEN</strong>
+                <div class="hub-pass__line"></div>
+                <p>새로운 부스가 확정되면 이 페이지에 참여 방법, 위치와 운영 정보를 순서대로 추가합니다.</p>
             </aside>
         </section>
 
-        <section id="modeSelect" class="mode-select panel" aria-labelledby="modeSelectTitle" hidden aria-hidden="true">
-            <div class="mode-select__head"><div><span class="label">CHOOSE YOUR ROUTE</span><h2 id="modeSelectTitle" class="section-title">어떤 방식으로 참여할까요?</h2><p>선택한 모드는 첫 QR 완료 후에는 바꿀 수 없습니다.</p></div></div>
-            <div class="mode-cards">
-                <button id="normalModeButton" class="mode-card" type="button"><small>GENERAL MODE</small><strong>일반 모드</strong><p>현장에서 QR을 찾아 문제를 풉니다. 이야기와 순서 제한 없이 기존 방식으로 진행합니다.</p></button>
-                <button id="storyModeButton" class="mode-card mode-card--story" type="button"><small>STORY MODE / BS-001</small><strong>특별 분류 카드 복원</strong><p>도서부 탐색 카드의 여섯 항목을 순서대로 되돌립니다. QR을 찾고 문제를 풀어 다음 항목을 해금하세요.</p></button>
+        <aside class="event-notice" aria-label="행사 공지">
+            <strong>행사 공지</strong>
+            <span id="eventNoticeText">도서부 행사 정보를 확인해 주세요.</span>
+        </aside>
+
+        <section id="booths" class="booth-section" aria-labelledby="boothTitle">
+            <div class="section-heading">
+                <div><span class="label">EVENT BOOTHS</span><h2 id="boothTitle" class="section-title">행사와 부스</h2></div>
+                <p>현재 공개된 부스부터 확인할 수 있습니다. 준비 중인 부스는 내용이 확정된 뒤 공개됩니다.</p>
+            </div>
+
+            <div class="booth-grid">
+                <article class="booth-card booth-card--featured panel">
+                    <div class="booth-card__top"><span class="booth-card__number">MAIN</span><span class="booth-card__state">미정</span></div>
+                    <div><span class="booth-card__category">FEATURED BOOTH</span><h3>대표 부스</h3><p>대표 부스는 아직 지정되지 않았습니다. 내용이 확정되면 이 자리에 소개와 참여 정보를 추가합니다.</p></div>
+                </article>
+
+                <article class="booth-card panel">
+                    <div class="booth-card__top"><span class="booth-card__number">01</span><span class="booth-card__state">참여 가능</span></div>
+                    <div><span class="booth-card__category">QR 탐색 · 독서 미션</span><h3>독토리 QR 탐색 행사</h3><p>학교 곳곳에 설치된 QR 6개를 찾아 문제를 해결합니다. 일반 모드와 BS-001 스토리 모드 중 하나를 선택할 수 있습니다.</p></div>
+                    <div class="booth-card__actions"><a class="button button--coral" href="./participate.html">QR 이벤트 참여하기</a><a class="button button--paper" href="./mypage.html">나의 진행률</a></div>
+                </article>
+
+                <article class="booth-card booth-card--pending panel" aria-label="추가 부스 준비 중">
+                    <div class="booth-card__top"><span class="booth-card__number">02</span><span class="booth-card__state">준비 중</span></div>
+                    <div><span class="booth-card__category">COMING SOON</span><h3>추가 부스 안내 예정</h3><p>부스명과 운영 내용이 확정되면 소개, 위치와 참여 방법을 추가합니다.</p></div>
+                </article>
             </div>
         </section>
 
-        <section class="guide" aria-label="참여 방법">
-            <article><b>01</b><h2>로그인과 등록</h2><p>Google 로그인 후 학번·이름과 개인정보 수집·이용 동의를 등록합니다.</p></article>
-            <article><b>02</b><h2>모드 선택</h2><p>자유롭게 찾는 일반 모드와 순서대로 진행하는 스토리 모드 중 하나를 선택합니다.</p></article>
-            <article><b>03</b><h2>QR 탐색</h2><p>선택한 모드의 QR을 스캔하고 정답을 맞히면 진행도가 저장됩니다.</p></article>
-        </section>
-
-        <aside class="event-notice" aria-label="행사 공지"><strong>행사 안내</strong><span id="eventNoticeText">학교 곳곳에 숨은 QR을 찾아 6개의 미션을 완료하세요.</span></aside>
-
-        <section id="myProgress" class="my-progress panel" aria-labelledby="myProgressTitle" hidden>
-            <div class="progress-head">
-                <div><span class="label">MY RECORD</span><h2 id="myProgressTitle" class="section-title">내 진행 상황</h2><p>완료한 QR 번호만 표시되며 문제 페이지로 연결되지는 않습니다.</p></div>
-                <strong id="progressScore" class="progress-score">0 / 6</strong>
+        <section class="hub-guide" aria-labelledby="guideTitle">
+            <div class="section-heading"><div><span class="label">HOW TO USE</span><h2 id="guideTitle" class="section-title">행사 안내 페이지 이용 방법</h2></div></div>
+            <div class="hub-guide__steps">
+                <article><b>01</b><h3>부스 확인</h3><p>공개된 부스의 내용과 참여 조건을 확인합니다.</p></article>
+                <article><b>02</b><h3>참여 페이지 이동</h3><p>참여 버튼이 있는 부스는 전용 페이지에서 진행합니다.</p></article>
+                <article><b>03</b><h3>기록 확인</h3><p>로그인이 필요한 행사의 진행 정보는 내 정보에서 확인합니다.</p></article>
             </div>
-            <div class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
-            <div id="progressItems" class="progress-items" aria-live="polite"></div>
-            <div class="progress-footer"><p id="progressMessage" class="status" role="status"></p><div class="actions" style="margin-top:0"><a id="certificateButton" class="button button--coral" href="./certificate.html" hidden>완주 인증서</a><button id="refreshProgressButton" class="button--paper" type="button">진행률 새로고침</button></div></div>
         </section>
     </main>
 
-    <dialog id="qrScannerDialog" class="scanner-dialog" aria-labelledby="qrScannerTitle">
-        <section class="scanner-card panel">
-            <header class="scanner-head">
-                <div><span class="label">QR SCANNER</span><h2 id="qrScannerTitle">단서 스캔</h2></div>
-                <button id="closeScannerButton" class="scanner-close" type="button" aria-label="QR 스캐너 닫기">✕</button>
-            </header>
-
-            <div id="scannerView">
-                <div class="scanner-frame">
-                    <video id="qrScannerVideo" playsinline muted aria-label="QR 스캔 카메라 화면"></video>
-                    <div class="scanner-reticle" aria-hidden="true"></div>
-                </div>
-                <p id="scannerStatus" class="scanner-status" role="status" aria-live="polite">카메라를 준비하고 있습니다...</p>
-                <p class="scanner-help">카메라 영상은 서버로 전송되지 않으며 이 브라우저에서만 QR 인식에 사용됩니다.</p>
-                <div class="scanner-actions">
-                    <button id="startCameraButton" type="button">카메라 다시 시작</button>
-                    <button id="switchCameraButton" class="button--paper" type="button" hidden>카메라 전환</button>
-                    <button id="torchButton" class="button--paper" type="button" hidden>손전등 켜기</button>
-                    <label class="button button--paper scanner-upload" for="qrImageInput">QR 이미지 선택</label>
-                    <input id="qrImageInput" type="file" accept="image/*" capture="environment" hidden>
-                </div>
-            </div>
-
-            <div id="scannerResult" class="scanner-result" hidden>
-                <div class="scanner-result__mark" aria-hidden="true">✓</div>
-                <h3 id="scannerResultTitle">QR을 인식했습니다</h3>
-                <p id="scannerResultCopy"></p>
-                <div class="scanner-result__actions">
-                    <a id="openScannedQrLink" class="button button--coral" href="./index.html">문제 페이지 열기</a>
-                    <button id="scanAgainButton" class="button--paper" type="button">다시 스캔하기</button>
-                    <a class="button button--paper" href="./index.html">메인화면으로 돌아가기</a>
-                </div>
-            </div>
-        </section>
-    </dialog>
-
     <footer class="site-footer">
-        <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
+        <div class="site-footer__identity"><strong>복성고 도서부 · 행사 안내</strong><span>도서부의 행사와 부스를 한곳에서 확인하세요.</span></div>
         <div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
                 <small>© 2026 복성고등학교 도서부</small>
                 <small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small>
             </div></div>
     </footer>
 
-    <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
-    <script src="./js/qr-scanner.js"></script>
     <script type="module" src="./js/app-ui.js"></script>
     <script type="module">
-        import { collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getMemberProfile, getUserAccess, isAccountBlocked, isMemberProfileComplete, logout, waitForAuth } from "./js/auth.js";
         import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./js/event-config.js";
-        import { db } from "./js/firebase.js";
-        import { chooseNormalMode, chooseStoryMode } from "./js/story-mode.js";
 
         const userInfo = document.getElementById("userInfo");
         const loginButton = document.getElementById("loginButton");
-        const mainLoginButton = document.getElementById("mainLoginButton");
-        const logoutButton = document.getElementById("logoutButton");
         const myPageButton = document.getElementById("myPageButton");
+        const logoutButton = document.getElementById("logoutButton");
         const adminButton = document.getElementById("adminButton");
-        const qrBuilderButton = document.getElementById("qrBuilderButton");
         const statusMessage = document.getElementById("statusMessage");
-        const myProgress = document.getElementById("myProgress");
-        const progressScore = document.getElementById("progressScore");
-        const progressFill = document.getElementById("progressFill");
-        const progressTrack = document.querySelector(".progress-track");
-        const progressItems = document.getElementById("progressItems");
-        const progressMessage = document.getElementById("progressMessage");
-        const refreshProgressButton = document.getElementById("refreshProgressButton");
-        const certificateButton = document.getElementById("certificateButton");
-        const modeSelect = document.getElementById("modeSelect");
-        const normalModeButton = document.getElementById("normalModeButton");
-        const storyModeButton = document.getElementById("storyModeButton");
-        const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
-        const currentUser = await waitForAuth();
-        if (!currentUser && new URLSearchParams(location.search).get("withdrawn") === "1") {
-            statusMessage.textContent = "회원 탈퇴가 완료되었습니다. 개인정보와 진행 기록은 복구할 수 없습니다.";
-            history.replaceState(null, "", new URL("./index.html", location.href));
-        }
-
-        function renderMyProgress(documents) {
-                const found = documents
-                    .filter((item) => item.data().found === true && QR_IDS.includes(item.id))
-                    .map((item) => item.id)
-                    .sort((left, right) => Number(left.slice(2)) - Number(right.slice(2)));
-                const count = found.length;
-                progressScore.textContent = `${count} / ${QR_IDS.length}`;
-                progressFill.style.width = `${(count / QR_IDS.length) * 100}%`;
-                progressTrack.setAttribute("aria-valuenow", String(count));
-                certificateButton.hidden = count !== QR_IDS.length;
-                progressItems.replaceChildren();
-                if (count) {
-                    found.forEach((id) => {
-                        const chip = document.createElement("span");
-                        chip.className = "progress-chip";
-                        chip.textContent = `QR ${String(Number(id.slice(2))).padStart(2, "0")} 완료`;
-                        progressItems.append(chip);
-                    });
-                } else {
-                    const empty = document.createElement("span");
-                    empty.className = "progress-empty";
-                    empty.textContent = "아직 완료한 QR이 없습니다.";
-                    progressItems.append(empty);
-                }
-                const remaining = QR_IDS.length - count;
-                progressMessage.textContent = count === QR_IDS.length
-                    ? "모든 미션을 완료했습니다! 완주 인증서를 확인해 보세요."
-                    : remaining === 1
-                        ? "마지막 QR 하나만 남았습니다!"
-                        : `앞으로 ${remaining}개의 QR이 남았습니다.`;
-        }
-
-        async function loadMyProgress() {
-            if (!currentUser) return;
-            refreshProgressButton.disabled = true;
-            progressMessage.textContent = "진행률을 확인하는 중...";
-            try {
-                const snapshot = await getDocs(collection(db, "users", currentUser.uid, "progress"));
-                renderMyProgress(snapshot.docs);
-            } catch (error) {
-                console.error(error);
-                progressMessage.textContent = "진행률을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
-            } finally {
-                refreshProgressButton.disabled = false;
-            }
-        }
-
-        async function selectMode(mode) {
-            normalModeButton.disabled = true;
-            storyModeButton.disabled = true;
-            try {
-                if (mode === "story") {
-                    await chooseStoryMode(currentUser);
-                    statusMessage.textContent = "스토리 모드를 시작합니다. 첫 번째 단서는 책을 빌리고 돌려주는 규칙이 보이는 곳에 있습니다.";
-                } else {
-                    await chooseNormalMode(currentUser);
-                    statusMessage.textContent = "일반 모드로 준비했습니다. 현장에서 QR을 찾아 스캔해 주세요.";
-                }
-                modeSelect.hidden = true;
-            } catch (error) {
-                console.error(error);
-                statusMessage.textContent = "참여 방식을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.";
-                normalModeButton.disabled = false;
-                storyModeButton.disabled = false;
-            }
-        }
 
         getEventConfig().then((config) => {
             document.getElementById("eventNoticeText").textContent = config.notice || DEFAULT_EVENT_CONFIG.notice;
         }).catch(() => {});
 
+        const currentUser = await waitForAuth();
+        if (!currentUser && new URLSearchParams(location.search).get("withdrawn") === "1") {
+            statusMessage.textContent = "회원 탈퇴가 완료되었습니다.";
+            history.replaceState(null, "", new URL("./index.html", location.href));
+        }
+
         if (currentUser) {
-            loginButton.hidden = true;
-            mainLoginButton.hidden = true;
-            logoutButton.hidden = false;
-            try {
-                const profile = await getMemberProfile(currentUser);
-                if (isAccountBlocked(profile)) {
-                    location.replace(new URL("./blocked.html", location.href));
-                    await new Promise(() => {});
-                }
-                const complete = isMemberProfileComplete(profile);
-                const access = await getUserAccess(currentUser);
-                const displayName = access.isAdmin
-                    ? (profile?.adminChatName || profile?.studentName || currentUser.displayName || "관리자")
-                    : profile?.studentName;
-                const displayNumber = access.isAdmin ? "관리자" : profile?.studentNumber;
-                userInfo.textContent = complete ? `${displayName} · ${displayNumber}` : (currentUser.email || "로그인됨");
-                if (!complete) {
-                    mainLoginButton.hidden = false;
-                    mainLoginButton.textContent = "회원정보 등록하기";
-                    mainLoginButton.href = "./register.html?next=./index.html";
-                    statusMessage.textContent = "QR 미션을 시작하려면 최초 등록을 완료해 주세요.";
-                } else {
-                    myPageButton.hidden = false;
-                    adminButton.hidden = !access.isAdmin;
-                    qrBuilderButton.hidden = !access.isAdmin;
-                    myProgress.hidden = false;
-                    await loadMyProgress();
-                    onSnapshot(collection(db, "users", currentUser.uid, "progress"), (snapshot) => renderMyProgress(snapshot.docs), (error) => console.warn("실시간 진행률 갱신 실패", error));
-                    if (profile?.storyMode === "story") {
-                        statusMessage.textContent = "BS-001 탐색 카드를 진행 중입니다. QR 이벤트 참여하기에서 스토리 전용 QR을 스캔해 주세요.";
-                    } else if (profile?.storyMode === "normal") {
-                        statusMessage.textContent = "일반 모드를 진행 중입니다. QR 이벤트 참여하기에서 일반 전용 QR을 스캔해 주세요.";
-                    } else {
-                        statusMessage.textContent = "QR 이벤트 참여하기에서 참여 방식을 선택해 주세요.";
-                    }
-                }
-            } catch (error) {
-                console.error(error);
-                statusMessage.textContent = "회원 정보를 확인하지 못했습니다. 다시 로그인해 주세요.";
+            const profile = await getMemberProfile(currentUser);
+            if (isAccountBlocked(profile)) {
+                location.replace(new URL("./blocked.html", location.href));
+                await new Promise(() => {});
             }
+            const access = await getUserAccess(currentUser);
+            const complete = isMemberProfileComplete(profile);
+            const displayName = access.isAdmin ? (profile?.adminChatName || profile?.studentName || "관리자") : profile?.studentName;
+            const displayNumber = access.isAdmin ? "관리자" : profile?.studentNumber;
+            userInfo.textContent = complete ? `${displayName} · ${displayNumber}` : "회원 등록 필요";
+            loginButton.hidden = true;
+            myPageButton.hidden = !complete;
+            logoutButton.hidden = false;
+            adminButton.hidden = !access.isAdmin;
+            statusMessage.textContent = complete ? "로그인되었습니다. 참여할 부스를 선택해 주세요." : "로그인되었습니다. 참여 전 회원 등록을 완료해 주세요.";
         }
 
         logoutButton.addEventListener("click", logout);
-        refreshProgressButton.addEventListener("click", loadMyProgress);
-        normalModeButton.addEventListener("click", () => selectMode("normal"));
-        storyModeButton.addEventListener("click", () => selectMode("story"));
     </script>
 </body>
 </html>
