@@ -38,13 +38,16 @@ async function recordQuizTelemetry(user, qrId, outcome) {
     }
 }
 
-export async function initQuiz(qrId) {
+export async function initQuiz(qrId, pageMode = "normal") {
     const quiz = QUIZZES[qrId];
     if (!quiz) throw new Error(`지원하지 않는 QR ID: ${qrId}`);
+    if (!["normal", "story"].includes(pageMode)) throw new Error(`지원하지 않는 QR 페이지 모드: ${pageMode}`);
 
     const user = await requireUser();
     const profileSnapshot = await getDoc(doc(db, "users", user.uid));
-    const storyActive = isStoryMode(profileSnapshot.data());
+    const selectedMode = profileSnapshot.data()?.storyMode;
+    const profileStoryMode = isStoryMode(profileSnapshot.data());
+    const storyActive = pageMode === "story" && profileStoryMode;
     const story = STORY_STAGES[qrId];
     const form = document.getElementById("quizForm");
     const input = document.getElementById("answerInput");
@@ -94,6 +97,29 @@ export async function initQuiz(qrId) {
 
     document.getElementById("quizQuestion").textContent = quiz.question;
     showStoryPanel();
+
+    if (!selectedMode) {
+        message.textContent = "QR 이벤트 참여하기에서 일반 모드 또는 스토리 모드를 먼저 선택해 주세요.";
+        input.disabled = true;
+        submit.disabled = true;
+        document.body.style.visibility = "visible";
+        return;
+    }
+
+    if (pageMode === "story" && !profileStoryMode) {
+        message.textContent = "이 페이지는 스토리 모드 전용 QR입니다. 참여하기 페이지에서 스토리 모드를 선택한 뒤 이용해 주세요.";
+        input.disabled = true;
+        submit.disabled = true;
+        document.body.style.visibility = "visible";
+        return;
+    }
+    if (pageMode === "normal" && profileStoryMode) {
+        message.textContent = "이 페이지는 일반 모드 전용 QR입니다. 스토리 모드 QR을 스캔해 주세요.";
+        input.disabled = true;
+        submit.disabled = true;
+        document.body.style.visibility = "visible";
+        return;
+    }
 
     if (storyActive && !(await isStoryStageUnlocked(user.uid, qrId))) {
         const previousQrId = getPreviousQrId(qrId);

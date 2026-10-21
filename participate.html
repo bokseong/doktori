@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f0e6">
+    <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <title>QR 이벤트 참여하기 · 독토리</title>
+    <link rel="stylesheet" href="./css/theme.css"><link rel="stylesheet" href="./css/footer.css"><link rel="stylesheet" href="./css/qr-scanner.css">
+    <style>
+        .participate-head { max-width:760px; } .participate-head .lead { max-width:720px; }
+        .mode-select { margin-top:34px; padding:clamp(22px,4vw,34px); } .mode-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:22px; }
+        .mode-card { display:grid; gap:10px; min-height:244px; padding:24px; border:2px solid var(--ink); background:var(--paper); text-align:left; box-shadow:none; }
+        .mode-card:hover { transform:translate(2px,2px); box-shadow:3px 3px 0 var(--ink); } .mode-card strong { font-size:1.4rem; } .mode-card p { margin:0; color:var(--muted); font-weight:400; line-height:1.65; }
+        .mode-card--story { background:#e9efff; } .mode-card small { color:var(--blue); font-weight:800; } .mode-card em { color:#94321f; font-style:normal; font-weight:800; }
+        .scanner-entry { margin-top:34px; padding:clamp(22px,4vw,34px); } .scanner-entry h2 { margin:8px 0; } .scanner-entry p { margin:0; color:var(--muted); }
+        @media (max-width:640px) { .mode-cards { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <header class="site-header"><div class="brand"><span class="brand-mark">D</span><span class="brand-text">복성고 도서부 · 독토리</span></div><nav class="account" aria-label="계정 메뉴"><a class="button button--paper" href="./index.html">행사 안내</a><a id="myPageButton" class="button button--paper" href="./mypage.html" hidden>내 정보</a></nav></header>
+    <main class="page-shell">
+        <section class="participate-head"><span class="label">QR EVENT ENTRY</span><h1 class="display-title">참여 방식<br><span class="accent">선택하기</span></h1><p class="lead">일반 모드는 QR 6개를 원하는 순서로 찾는 방식입니다. 스토리 모드는 BS-001 특별 분류 카드를 QR 01부터 순서대로 복원합니다. 한 번 선택하면 첫 QR 완료 전까지만 바꿀 수 있습니다.</p><p id="entryStatus" class="status" role="status"></p></section>
+        <section class="mode-select panel" aria-labelledby="modeTitle"><span class="label">CHOOSE YOUR ROUTE</span><h2 id="modeTitle" class="section-title">어떤 방식으로 참여할까요?</h2><div class="mode-cards"><button id="normalModeButton" class="mode-card" type="button"><small>GENERAL MODE</small><strong>일반 모드</strong><p>현장에서 일반 모드 QR을 찾아 문제를 풉니다. QR 순서와 스토리 제한 없이 자유롭게 진행합니다.</p><em>일반 전용 QR 6개 사용</em></button><button id="storyModeButton" class="mode-card mode-card--story" type="button"><small>STORY MODE / BS-001</small><strong>특별 분류 카드 복원</strong><p>스토리 전용 QR을 QR 01부터 순서대로 스캔합니다. 정답을 맞힐 때마다 다음 항목의 안내가 열립니다.</p><em>스토리 전용 QR 6개 사용</em></button></div></section>
+        <section id="scannerEntry" class="scanner-entry panel" hidden aria-labelledby="scannerEntryTitle"><span id="selectedModeLabel" class="label">MODE READY</span><h2 id="scannerEntryTitle" class="section-title">선택한 모드의 QR을 스캔하세요</h2><p id="scannerEntryCopy">현장에 설치된 QR을 카메라로 스캔해 문제 페이지를 엽니다.</p><div class="actions"><button id="scanQrButton" class="button--coral" type="button">QR 스캔하기</button></div></section>
+    </main>
+    <dialog id="qrScannerDialog" class="scanner-dialog" aria-labelledby="qrScannerTitle"><section class="scanner-card panel"><header class="scanner-head"><div><span class="label">QR SCANNER</span><h2 id="qrScannerTitle">단서 스캔</h2></div><button id="closeScannerButton" class="scanner-close" type="button" aria-label="QR 스캐너 닫기">✕</button></header><div id="scannerView"><div class="scanner-frame"><video id="qrScannerVideo" playsinline muted aria-label="QR 스캔 카메라 화면"></video><div class="scanner-reticle" aria-hidden="true"></div></div><p id="scannerStatus" class="scanner-status" role="status" aria-live="polite">카메라를 준비하고 있습니다...</p><p class="scanner-help">카메라 영상은 서버로 전송되지 않으며 이 브라우저에서만 QR 인식에 사용됩니다.</p><div class="scanner-actions"><button id="startCameraButton" type="button">카메라 다시 시작</button><button id="switchCameraButton" class="button--paper" type="button" hidden>카메라 전환</button><button id="torchButton" class="button--paper" type="button" hidden>손전등 켜기</button><label class="button button--paper scanner-upload" for="qrImageInput">QR 이미지 선택</label><input id="qrImageInput" type="file" accept="image/*" capture="environment" hidden></div></div><div id="scannerResult" class="scanner-result" hidden><div class="scanner-result__mark" aria-hidden="true">✓</div><h3 id="scannerResultTitle">QR을 인식했습니다</h3><p id="scannerResultCopy"></p><div class="scanner-result__actions"><a id="openScannedQrLink" class="button button--coral" href="./participate.html">문제 페이지 열기</a><button id="scanAgainButton" class="button--paper" type="button">다시 스캔하기</button><a class="button button--paper" href="./index.html">행사 안내로 돌아가기</a></div></div></section></dialog>
+    <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal"><small>© 2026 복성고등학교 도서부</small><small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small></div></div></footer>
+    <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script><script src="./js/qr-scanner.js"></script><script type="module" src="./js/app-ui.js"></script>
+    <script type="module">
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getMemberProfile, isAccountBlocked, isMemberProfileComplete, waitForAuth } from "./js/auth.js";
+        import { db } from "./js/firebase.js";
+        import { chooseNormalMode, chooseStoryMode } from "./js/story-mode.js";
+        const normalButton = document.getElementById("normalModeButton"), storyButton = document.getElementById("storyModeButton"), entryStatus = document.getElementById("entryStatus"), scannerEntry = document.getElementById("scannerEntry"), selectedModeLabel = document.getElementById("selectedModeLabel"), scannerEntryCopy = document.getElementById("scannerEntryCopy");
+        const loginUrl = new URL("./signin.html", location.href); loginUrl.searchParams.set("next", `${location.pathname}${location.search}${location.hash}`);
+        let user = await waitForAuth();
+        async function activateMode(mode, locked = false) { const story = mode === "story"; scannerEntry.hidden = false; selectedModeLabel.textContent = story ? "STORY MODE / BS-001" : "GENERAL MODE"; scannerEntryCopy.textContent = story ? "스토리 전용 QR 01부터 순서대로 스캔해 주세요. 일반 모드 QR은 사용할 수 없습니다." : "일반 모드 전용 QR을 스캔해 주세요. 6개 QR은 원하는 순서로 진행할 수 있습니다."; normalButton.disabled = locked && mode !== "normal"; storyButton.disabled = locked && mode !== "story"; }
+        async function selectMode(mode) {
+            if (!user) { location.assign(loginUrl); return; }
+            normalButton.disabled = true; storyButton.disabled = true; entryStatus.textContent = "참여 방식을 저장하는 중...";
+            try { if (mode === "story") await chooseStoryMode(user); else await chooseNormalMode(user); entryStatus.textContent = `${mode === "story" ? "스토리" : "일반"} 모드를 선택했습니다. 첫 QR을 완료하기 전에는 다른 모드로 바꿀 수 있습니다.`; await activateMode(mode, false); }
+            catch (error) { console.error(error); entryStatus.textContent = "참여 방식을 저장하지 못했습니다. 이미 QR을 완료했다면 모드를 바꿀 수 없습니다."; normalButton.disabled = false; storyButton.disabled = false; }
+        }
+        normalButton.addEventListener("click", () => selectMode("normal")); storyButton.addEventListener("click", () => selectMode("story"));
+        if (!user) { entryStatus.textContent = "모드를 선택하려면 먼저 Google 로그인과 회원 등록이 필요합니다."; }
+        else { const profile = await getMemberProfile(user); if (isAccountBlocked(profile)) { location.replace(new URL("./blocked.html", location.href)); } else if (!isMemberProfileComplete(profile)) { const registerUrl = new URL("./register.html", location.href); registerUrl.searchParams.set("next", `${location.pathname}${location.search}${location.hash}`); location.replace(registerUrl); } else if (profile.storyMode) { const progress = await getDocs(collection(db, "users", user.uid, "progress")); const locked = !progress.empty; entryStatus.textContent = locked ? `${profile.storyMode === "story" ? "스토리" : "일반"} 모드를 진행 중입니다. 해당 전용 QR을 이용해 주세요.` : `${profile.storyMode === "story" ? "스토리" : "일반"} 모드가 선택되어 있습니다. 첫 QR을 완료하기 전에는 다른 모드로 바꿀 수 있습니다.`; await activateMode(profile.storyMode, locked); } else { entryStatus.textContent = "참여 방식을 선택한 뒤 현장에서 해당 전용 QR을 스캔해 주세요."; } }
+    </script>
+</body>
+</html>

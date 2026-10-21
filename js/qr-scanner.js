@@ -31,6 +31,14 @@
         "eq4bunq5v": 5,
         "jk1ba63db": 6
     });
+    const STORY_QR_ROUTES = Object.freeze({
+        "bs001-01": 1,
+        "bs001-02": 2,
+        "bs001-03": 3,
+        "bs001-04": 4,
+        "bs001-05": 5,
+        "bs001-06": 6
+    });
 
     function setStatus(message) {
         status.textContent = message;
@@ -65,15 +73,16 @@
         const trustedOrigins = new Set([location.origin, "https://bokseong.github.io"]);
         if (!trustedOrigins.has(parsed.origin)) return null;
 
-        const match = parsed.pathname.match(/^\/(?:doktori\/)?qr\/([a-z0-9]+)\.html\/?$/i);
+        const match = parsed.pathname.match(/^\/(?:doktori\/)?qr\/(story\/)?([a-z0-9-]+)\.html\/?$/i);
         if (!match) return null;
-        const route = match[1].toLowerCase();
-        const number = QR_ROUTES[route];
+        const isStory = Boolean(match[1]);
+        const route = match[2].toLowerCase();
+        const number = (isStory ? STORY_QR_ROUTES : QR_ROUTES)[route];
         if (!number) return null;
         return {
             number,
-            label: `QR ${String(number).padStart(2, "0")}`,
-            target: new URL(`./qr/${route}.html`, location.href).href
+            label: `${isStory ? "스토리 " : "일반 "}QR ${String(number).padStart(2, "0")}`,
+            target: new URL(`./qr/${isStory ? "story/" : ""}${route}.html`, location.href).href
         };
     }
 

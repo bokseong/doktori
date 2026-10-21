@@ -12,7 +12,7 @@
 <body>
     <main class="qr-shell">
         <header class="qr-top">
-            <div class="qr-brand">DOKTORI FIELD NOTE</div>
+            <div class="qr-brand">DOKTORI GENERAL MODE</div>
             <span class="qr-index">QR 06</span>
         </header>
         <div class="qr-grid">
@@ -23,9 +23,9 @@
                 </div>
             </section>
             <section class="mission panel">
-                <span class="mission-kicker">CLUE 06 / 06</span>
+                <span class="mission-kicker">GENERAL QR 06 / 06</span>
                 <h1>단서를<br>해독하세요</h1>
-                <p class="mission-copy">이미지는 추후 이 자리에 추가됩니다. 아래 문제의 답을 입력하면 진행도가 기록됩니다.</p>
+                <p class="mission-copy">일반 모드 전용 QR입니다. 이미지는 추후 이 자리에 추가되며, 아래 문제의 답을 입력하면 진행도가 기록됩니다.</p>
                 <div class="quiz-card">
                     <h2 id="quizQuestion"></h2>
                     <form id="quizForm">
@@ -48,7 +48,7 @@
     <script type="module" src="../js/app-ui.js"></script>
     <script type="module">
         import { initQuiz } from "../js/quiz.js";
-        await initQuiz("qr6");
+        await initQuiz("qr6", "normal");
     </script>
 </body>
 </html>

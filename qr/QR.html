@@ -58,6 +58,11 @@
                     <button type="button" data-qr="4">QR 04</button><button type="button" data-qr="5">QR 05</button><button type="button" data-qr="6">QR 06</button>
                 </div>
                 <div class="field">
+                    <label for="modeInput">QR 종류</label>
+                    <select id="modeInput"><option value="normal">일반 모드 전용 QR</option><option value="story">스토리 모드 전용 QR (BS-001)</option></select>
+                    <small>일반 모드와 스토리 모드는 서로 다른 QR 주소를 사용합니다.</small>
+                </div>
+                <div class="field">
                     <label for="textInput">QR에 넣을 주소 또는 텍스트</label>
                     <input type="text" id="textInput" placeholder="URL 또는 텍스트를 입력하세요" autocomplete="off">
                     <small>인쇄 전에 주소가 올바른지 한 번 스캔해 확인하세요.</small>
@@ -99,6 +104,7 @@
         document.body.style.visibility = "visible";
 
         const input = document.getElementById("textInput");
+        const modeInput = document.getElementById("modeInput");
         const qrBox = document.getElementById("qrBox");
         const qrCode = document.getElementById("qrCode");
         const status = document.getElementById("builderStatus");
@@ -109,9 +115,15 @@
             "299az81a68c", "hq1bq8pg1c", "iq1bz5iutx",
             "qrxc7ij88f", "eq4bunq5v", "jk1ba63db"
         ]);
+        const STORY_QR_ROUTES = Object.freeze([
+            "bs001-01", "bs001-02", "bs001-03",
+            "bs001-04", "bs001-05", "bs001-06"
+        ]);
 
         function missionUrl(number) {
-            return new URL(`./${QR_ROUTES[number - 1]}.html`, location.href).href;
+            const story = modeInput.value === "story";
+            const route = story ? STORY_QR_ROUTES[number - 1] : QR_ROUTES[number - 1];
+            return new URL(`./${story ? "story/" : ""}${route}.html`, location.href).href;
         }
 
         function generateQR() {
@@ -136,7 +148,8 @@
             const canvas = qrCode.querySelector("canvas");
             const image = qrCode.querySelector("img");
             currentQRDataUrl = canvas ? canvas.toDataURL("image/png") : (image?.src || "");
-            status.textContent = selectedQrNumber ? `QR ${String(selectedQrNumber).padStart(2, "0")} 코드를 만들었습니다.` : "QR 코드를 만들었습니다.";
+            const type = modeInput.value === "story" ? "스토리" : "일반";
+            status.textContent = selectedQrNumber ? `${type} QR ${String(selectedQrNumber).padStart(2, "0")} 코드를 만들었습니다.` : "QR 코드를 만들었습니다.";
         }
 
         function selectQr(number) {
@@ -150,7 +163,8 @@
             if (!currentQRDataUrl) return;
             const link = document.createElement("a");
             link.href = currentQRDataUrl;
-            link.download = selectedQrNumber ? `doktori-qr-${String(selectedQrNumber).padStart(2, "0")}.png` : "doktori-qrcode.png";
+            const prefix = modeInput.value === "story" ? "doktori-story-qr" : "doktori-qr";
+            link.download = selectedQrNumber ? `${prefix}-${String(selectedQrNumber).padStart(2, "0")}.png` : "doktori-qrcode.png";
             link.click();
             status.textContent = "QR 이미지 다운로드를 시작했습니다.";
         }
@@ -181,7 +195,8 @@
             try {
                 const zip = new JSZip();
                 for (let number = 1; number <= 6; number += 1) {
-                    zip.file(`doktori-qr-${String(number).padStart(2, "0")}.png`, createQrDataUrl(number).split(",")[1], { base64: true });
+                    const prefix = modeInput.value === "story" ? "doktori-story-qr" : "doktori-qr";
+                    zip.file(`${prefix}-${String(number).padStart(2, "0")}.png`, createQrDataUrl(number).split(",")[1], { base64: true });
                 }
                 const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
                 const objectUrl = URL.createObjectURL(blob);
@@ -190,7 +205,7 @@
                 link.download = "doktori-qr-01-06.zip";
                 link.click();
                 setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-                status.textContent = "QR 1~6 ZIP 다운로드를 시작했습니다.";
+                status.textContent = `${modeInput.value === "story" ? "스토리" : "일반"} QR 1~6 ZIP 다운로드를 시작했습니다.`;
             } catch (error) {
                 console.error(error);
                 status.textContent = "ZIP 파일을 만들지 못했습니다.";
@@ -209,7 +224,7 @@
                 image.src = createQrDataUrl(number);
                 image.alt = `독토리 QR ${number}`;
                 const label = document.createElement("strong");
-                label.textContent = `독토리 QR ${String(number).padStart(2, "0")}`;
+                label.textContent = `${modeInput.value === "story" ? "BS-001 스토리" : "독토리 일반"} QR ${String(number).padStart(2, "0")}`;
                 const address = document.createElement("small");
                 address.textContent = missionUrl(number);
                 card.append(image, label, address);
@@ -237,6 +252,7 @@
         document.getElementById("downloadAllButton").addEventListener("click", downloadAllQr);
         document.getElementById("printAllButton").addEventListener("click", printAllQr);
         presetButtons.forEach((button) => button.addEventListener("click", () => selectQr(Number(button.dataset.qr))));
+        modeInput.addEventListener("change", () => selectQr(selectedQrNumber || 1));
         input.addEventListener("input", () => {
             selectedQrNumber = null;
             presetButtons.forEach((button) => button.setAttribute("aria-pressed", "false"));

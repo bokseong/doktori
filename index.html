@@ -55,7 +55,7 @@
         <div class="brand"><span class="brand-mark">D</span><span class="brand-text">복성고 도서부 · 독토리</span></div>
         <div class="account">
             <span id="userInfo" class="account-label">로그인하지 않음</span>
-            <a id="loginButton" class="button" href="./signin.html?next=./index.html">Google 로그인</a>
+            <a id="loginButton" class="button" href="./signin.html?next=./participate.html">Google 로그인</a>
             <a id="myPageButton" class="button button--paper" href="./mypage.html" hidden>내 정보</a>
             <button id="logoutButton" class="button--paper" type="button" hidden>로그아웃</button>
         </div>
@@ -64,12 +64,12 @@
     <main class="page-shell">
         <section class="hero">
             <div class="hero-copy">
-                <span class="label">6개의 QR · 하나의 기록</span>
-                <h1 class="display-title">책장 밖으로<br><span class="accent">나온 단서</span></h1>
-                <p class="lead">학교 곳곳에 숨은 QR을 발견했다면 스캔해서 입장하세요. 로그인과 최초 등록을 마치면 해당 단서 페이지로 바로 연결됩니다.</p>
+                <span class="label">BOKSEONG LIBRARY CLUB EVENT</span>
+                <h1 class="display-title">독토리<br><span class="accent">QR 탐색 행사</span></h1>
+                <p class="lead">복성고 도서부가 준비한 교내 독서 탐색 행사입니다. 학교 곳곳의 QR을 찾아 문제를 풀고, 책을 만나는 새로운 출발점을 발견해 보세요.</p>
                 <div class="actions">
-                    <button id="scanQrButton" class="button--coral" type="button">QR 스캔하기</button>
-                    <a id="mainLoginButton" class="button button--coral" href="./signin.html?next=./index.html">로그인하고 준비하기</a>
+                    <a class="button button--coral" href="./participate.html">QR 이벤트 참여하기</a>
+                    <a id="mainLoginButton" class="button button--paper" href="./signin.html?next=./participate.html">로그인하고 준비하기</a>
                     <a id="adminButton" class="button button--ink" href="./zb0bl7hn6ghtak72c.html" hidden>관리자 메뉴</a>
                     <a id="qrBuilderButton" class="button button--ink" href="./qr/QR.html" hidden>QR 제작</a>
                 </div>
@@ -80,11 +80,11 @@
                 <div class="ticket-number">06</div>
                 <strong>QR MISSION</strong>
                 <div class="rule"></div>
-                <p>이 페이지에는 문제 바로가기가 없습니다. 현장에서 발견한 QR을 직접 스캔해 주세요.</p>
+                <p>참여하기에서 일반 모드 또는 BS-001 스토리 모드를 고른 뒤, 해당 모드의 QR을 스캔해 진행합니다.</p>
             </aside>
         </section>
 
-        <section id="modeSelect" class="mode-select panel" aria-labelledby="modeSelectTitle" hidden>
+        <section id="modeSelect" class="mode-select panel" aria-labelledby="modeSelectTitle" hidden aria-hidden="true">
             <div class="mode-select__head"><div><span class="label">CHOOSE YOUR ROUTE</span><h2 id="modeSelectTitle" class="section-title">어떤 방식으로 참여할까요?</h2><p>선택한 모드는 첫 QR 완료 후에는 바꿀 수 없습니다.</p></div></div>
             <div class="mode-cards">
                 <button id="normalModeButton" class="mode-card" type="button"><small>GENERAL MODE</small><strong>일반 모드</strong><p>현장에서 QR을 찾아 문제를 풉니다. 이야기와 순서 제한 없이 기존 방식으로 진행합니다.</p></button>
@@ -93,9 +93,9 @@
         </section>
 
         <section class="guide" aria-label="참여 방법">
-            <article><b>01</b><h2>QR 발견</h2><p>학교 안에 숨은 표식을 찾아 카메라로 스캔합니다.</p></article>
-            <article><b>02</b><h2>계정 확인</h2><p>Google 로그인 후 개인정보 수집·이용에 동의하고 학번과 이름을 등록합니다.</p></article>
-            <article><b>03</b><h2>문제 해결</h2><p>정답을 맞히면 내 진행도가 자동으로 기록됩니다.</p></article>
+            <article><b>01</b><h2>로그인과 등록</h2><p>Google 로그인 후 학번·이름과 개인정보 수집·이용 동의를 등록합니다.</p></article>
+            <article><b>02</b><h2>모드 선택</h2><p>자유롭게 찾는 일반 모드와 순서대로 진행하는 스토리 모드 중 하나를 선택합니다.</p></article>
+            <article><b>03</b><h2>QR 탐색</h2><p>선택한 모드의 QR을 스캔하고 정답을 맞히면 진행도가 저장됩니다.</p></article>
         </section>
 
         <aside class="event-notice" aria-label="행사 공지"><strong>행사 안내</strong><span id="eventNoticeText">학교 곳곳에 숨은 QR을 찾아 6개의 미션을 완료하세요.</span></aside>
@@ -291,13 +291,12 @@
                     myProgress.hidden = false;
                     await loadMyProgress();
                     onSnapshot(collection(db, "users", currentUser.uid, "progress"), (snapshot) => renderMyProgress(snapshot.docs), (error) => console.warn("실시간 진행률 갱신 실패", error));
-                    if (!profile?.storyMode) {
-                        modeSelect.hidden = false;
-                        statusMessage.textContent = "참여 방식을 선택한 뒤 현장에서 QR을 찾아 스캔해 주세요.";
-                    } else if (profile.storyMode === "story") {
-                        statusMessage.textContent = "BS-001 탐색 카드를 복원 중입니다. 현재 항목의 QR을 현장에서 찾아 스캔해 주세요.";
+                    if (profile?.storyMode === "story") {
+                        statusMessage.textContent = "BS-001 탐색 카드를 진행 중입니다. QR 이벤트 참여하기에서 스토리 전용 QR을 스캔해 주세요.";
+                    } else if (profile?.storyMode === "normal") {
+                        statusMessage.textContent = "일반 모드를 진행 중입니다. QR 이벤트 참여하기에서 일반 전용 QR을 스캔해 주세요.";
                     } else {
-                        statusMessage.textContent = "준비가 끝났습니다. 현장에서 QR을 찾아 스캔해 주세요.";
+                        statusMessage.textContent = "QR 이벤트 참여하기에서 참여 방식을 선택해 주세요.";
                     }
                 }
             } catch (error) {
