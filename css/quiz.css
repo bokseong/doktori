@@ -26,6 +26,13 @@ body { visibility: hidden; }
 .mission-kicker { color: var(--blue); font-weight: 700; }
 .mission h1 { margin: 18px 0 8px; font: clamp(2.8rem, 7vw, 4.6rem)/1.08 "Black Han Sans", sans-serif; letter-spacing: -.025em; }
 .mission-copy { margin: 0 0 28px; color: var(--muted); line-height: 1.7; }
+.story-panel, .story-resolution { margin: 0 0 24px; padding: 18px; border: 2px solid var(--ink); background: #e9efff; }
+.story-panel__label { display: inline-block; margin-bottom: 8px; padding: 4px 7px; color: white; background: var(--blue); font-size: .82rem; font-weight: 800; }
+.story-panel h2 { margin: 0 0 8px; font-size: 1.35rem; line-height: 1.3; }
+.story-panel p, .story-resolution p { margin: 7px 0 0; line-height: 1.65; }
+.story-panel__location { color: var(--muted); font-size: .92rem; font-weight: 700; }
+.story-resolution { margin-top: 20px; background: #e8f7bf; }
+.story-resolution strong { font-size: 1.1rem; }
 .quiz-card { border-top: 2px solid var(--ink); padding-top: 28px; }
 .quiz-card h2 { margin: 0 0 18px; font-size: clamp(1.25rem, 3vw, 1.65rem); font-weight: 800; line-height: 1.55; letter-spacing: -.015em; }
 .quiz-card form { display: grid; gap: 10px; }

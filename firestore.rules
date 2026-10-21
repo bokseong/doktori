@@ -47,6 +47,30 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/users/$(userId)/progress/qr6);
     }
 
+    function hasAnyMissionProgress(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)/progress/qr1)
+        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr2)
+        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr3)
+        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr4)
+        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr5)
+        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr6);
+    }
+
+    function isStoryMode(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.get("storyMode", "normal") == "story";
+    }
+
+    function isStoryStepUnlocked(userId, qrId) {
+      return !isStoryMode(userId)
+        || qrId == "qr1"
+        || (qrId == "qr2" && exists(/databases/$(database)/documents/users/$(userId)/progress/qr1))
+        || (qrId == "qr3" && exists(/databases/$(database)/documents/users/$(userId)/progress/qr2))
+        || (qrId == "qr4" && exists(/databases/$(database)/documents/users/$(userId)/progress/qr3))
+        || (qrId == "qr5" && exists(/databases/$(database)/documents/users/$(userId)/progress/qr4))
+        || (qrId == "qr6" && exists(/databases/$(database)/documents/users/$(userId)/progress/qr5));
+    }
+
     function hasValidConsent(userId) {
       return exists(/databases/$(database)/documents/users/$(userId))
         && get(/databases/$(database)/documents/users/$(userId)).data.get("privacyConsent", false) == true
@@ -81,7 +105,7 @@ service cloud.firestore {
           "completedQrIds", "lastActivityAt", "role",
           "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
           "adminChatName", "accountStatus", "blockReason", "accountStatusAt",
-          "accountStatusBy"
+          "accountStatusBy", "storyMode"
         ])
         && data.studentNumber is string
         && data.studentNumber.matches('^[0-9]{4,20}$')
@@ -91,6 +115,7 @@ service cloud.firestore {
         && (!data.keys().hasAny(["adminChatName"])
           || data.adminChatName.matches('^[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.\\-]{0,29}$'))
         && (data.get("role", "participant") == "admin" || data.get("adminChatName", "") == "")
+        && data.get("storyMode", "normal") in ["normal", "story"]
         && data.get("accountStatus", "active") in ["active", "blocked"]
         && data.get("blockReason", "") is string
         && data.get("blockReason", "").size() <= 200
@@ -145,9 +170,12 @@ service cloud.firestore {
             "email", "displayName", "lastLoginAt", "studentNumber", "studentName",
             "registeredAt", "completedQrIds", "lastActivityAt", "role",
             "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
-            "adminChatName"
+            "adminChatName", "storyMode"
           ])
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["adminChatName"]) || isAdmin())
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["storyMode"])
+            || (!hasAnyMissionProgress(userId)
+              && request.resource.data.storyMode in ["normal", "story"]))
           && (
             (
               resource.data.get("privacyConsent", false) == true
@@ -211,6 +239,7 @@ service cloud.firestore {
             isOwner(userId)
             && hasCurrentConsent(userId)
             && isMissionOpen(qrId)
+            && isStoryStepUnlocked(userId, qrId)
             && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
             && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt"])
             && request.resource.data.qrId == qrId
@@ -248,6 +277,7 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
         && isMissionOpen(request.resource.data.qrId)
+        && isStoryStepUnlocked(request.auth.uid, request.resource.data.qrId)
         && request.resource.data.answer is string
         && request.resource.data.submittedAt == request.time
         && isCorrectAnswer(request.resource.data.qrId, request.resource.data.answer);

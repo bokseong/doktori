@@ -25,6 +25,14 @@
         .progress-items { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
         .progress-item { padding: 13px 8px; border: 2px solid var(--ink); background: var(--paper); text-align: center; font-weight: 800; }
         .progress-item.completed { background: var(--lime); }
+        .story-record { margin-top: 20px; padding-top: 18px; border-top: 2px solid var(--ink); }
+        .story-record h3 { margin: 0 0 7px; font-size: 1.25rem; }
+        .story-record > p { margin: 0 0 14px; color: var(--muted); }
+        .story-record__items { display: grid; gap: 8px; }
+        .story-record__item { padding: 12px 14px; border: 2px solid var(--ink); background: var(--paper); }
+        .story-record__item strong { display: block; }
+        .story-record__item p { margin: 4px 0 0; color: var(--muted); font-size: .93rem; line-height: 1.55; }
+        .story-record__item.completed { background: #e9efff; }
         .progress-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
         .site-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 2px; background: var(--ink); }
         .site-facts article { padding: 22px; background: var(--paper-strong); }
@@ -70,6 +78,7 @@
                 <div class="panel-head"><div><span class="label">MY PROGRESS</span><h2 id="progressTitle" class="section-title">나의 진행률</h2><p>정답을 맞혀 완료된 QR만 표시됩니다.</p></div><strong id="progressScore" class="progress-score">0 / 6</strong></div>
                 <div id="progressTrack" class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
                 <div id="progressItems" class="progress-items" aria-live="polite"></div>
+                <section id="storyRecord" class="story-record" hidden aria-labelledby="storyRecordTitle"><h3 id="storyRecordTitle">R-06 복구 기록</h3><p id="storyRecordMessage"></p><div id="storyRecordItems" class="story-record__items"></div></section>
                 <div class="progress-actions"><p id="progressMessage" class="status" role="status"></p><a id="certificateButton" class="button button--coral" href="./certificate.html" hidden>완주 인증서 확인</a></div>
             </section>
 
@@ -139,6 +148,7 @@
         import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "./js/auth.js";
         import { getEventConfig } from "./js/event-config.js";
         import { db } from "./js/firebase.js";
+        import { isStoryMode, STORY_STAGES } from "./js/story-mode.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const user = await requireUser();
@@ -150,6 +160,9 @@
         const withdrawConsent = document.getElementById("withdrawConsent");
         const withdrawButton = document.getElementById("withdrawButton");
         const withdrawMessage = document.getElementById("withdrawMessage");
+        const storyRecord = document.getElementById("storyRecord");
+        const storyRecordMessage = document.getElementById("storyRecordMessage");
+        const storyRecordItems = document.getElementById("storyRecordItems");
         let stopProgressListener = () => {};
 
         function formatDate(value) {
@@ -160,6 +173,7 @@
         function renderProgress(documents) {
             const completed = new Set(documents.filter((item) => item.data().found === true && QR_IDS.includes(item.id)).map((item) => item.id));
             const count = completed.size;
+            const remaining = QR_IDS.length - count;
             document.getElementById("progressScore").textContent = `${count} / ${QR_IDS.length}`;
             document.getElementById("progressFill").style.width = `${(count / QR_IDS.length) * 100}%`;
             document.getElementById("progressTrack").setAttribute("aria-valuenow", String(count));
@@ -170,7 +184,22 @@
                 item.textContent = `QR ${String(index + 1).padStart(2, "0")} ${completed.has(qrId) ? "완료" : "미완료"}`;
                 progressItems.append(item);
             });
-            const remaining = QR_IDS.length - count;
+            if (isStoryMode(profile)) {
+                storyRecord.hidden = false;
+                storyRecordItems.replaceChildren();
+                storyRecordMessage.textContent = remaining === 0
+                    ? "R-06 복구가 완료되었습니다. 책은 읽는 사람에게서 완성됩니다."
+                    : `현재 ${count}/6 기록을 복구했습니다. 다음 단서는 현재 단계의 QR에서 확인할 수 있습니다.`;
+                QR_IDS.forEach((qrId) => {
+                    const stage = STORY_STAGES[qrId];
+                    const item = document.createElement("article");
+                    item.className = `story-record__item${completed.has(qrId) ? " completed" : ""}`;
+                    item.innerHTML = completed.has(qrId)
+                        ? `<strong>기록 ${stage.number} · ${stage.title}</strong><p>${stage.record}</p>`
+                        : `<strong>기록 ${stage.number} · 잠김</strong><p>이전 기록을 복구하면 내용이 표시됩니다.</p>`;
+                    storyRecordItems.append(item);
+                });
+            }
             progressMessage.textContent = remaining === 0 ? "모든 QR 미션을 완료했습니다." : `완료까지 ${remaining}개의 QR이 남았습니다.`;
             certificateButton.hidden = remaining !== 0;
         }
