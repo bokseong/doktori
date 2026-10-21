@@ -225,20 +225,6 @@ export async function deleteMemberAccount(user = auth.currentUser) {
     await reauthenticateWithPopup(user, provider);
     await deleteOwnedDocuments("quizTelemetry", user.uid);
     await deleteOwnedDocuments("clientErrors", user.uid);
-    await deleteOwnedDocuments("chatMessages", user.uid);
-    while (true) {
-        const conversation = await getDocs(query(
-            collection(db, "chatMessages"),
-            where("conversationUid", "==", user.uid),
-            limit(300)
-        ));
-        if (conversation.empty) break;
-        const chatBatch = writeBatch(db);
-        conversation.docs.forEach((item) => chatBatch.delete(item.ref));
-        await chatBatch.commit();
-        if (conversation.size < 300) break;
-    }
-
     const profileBatch = writeBatch(db);
     QR_IDS.forEach((qrId) => {
         profileBatch.delete(doc(db, "users", user.uid, "progress", qrId));

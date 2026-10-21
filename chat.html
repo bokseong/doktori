@@ -26,7 +26,6 @@
         .message-bubble { padding: 11px 13px; border: 2px solid var(--ink); background: white; white-space: pre-wrap; overflow-wrap: anywhere; }
         .message-row.mine .message-bubble { background: var(--lime); }
         .message-row.admin .message-bubble { background: #dfe8ff; }
-        .message-actions button { min-height: 30px; padding: 4px 8px; font-size: .76rem; box-shadow: 2px 2px 0 var(--ink); }
         .chat-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 16px; }
         .chat-form textarea { min-height: 72px; padding: 12px; border: 2px solid var(--ink); resize: vertical; }
         .chat-form button { min-width: 120px; }
@@ -38,7 +37,7 @@
     <header class="site-header"><div class="brand"><span class="brand-mark">C</span><span class="brand-text">독토리 도움 채팅</span></div><nav class="account"><a class="button button--paper" href="./index.html">메인으로</a><a id="adminLink" class="button" href="./zb0bl7hn6ghtak72c.html" hidden>관리자 메뉴</a></nav></header>
     <main class="chat-shell">
         <section class="chat-head"><div><span class="label">PRIVATE SUPPORT</span><h1 id="chatTitle">관리자와 1:1 채팅</h1><p id="chatLead" class="lead">문제가 생기면 관리자에게 바로 질문하세요.</p></div><strong id="chatIdentity"></strong></section>
-        <p class="chat-notice">전화번호, 주소, 비밀번호 등 민감한 개인정보는 작성하지 마세요. 메시지와 작성자의 학번·이름은 해당 참여자와 관리자만 확인할 수 있으며, 새 문의 알림은 관리자에게만 전달됩니다. 운영 방해 메시지는 관리자가 삭제할 수 있습니다.</p>
+        <p class="chat-notice">전화번호, 주소, 비밀번호 등 민감한 개인정보는 작성하지 마세요. 메시지와 작성자의 학번·이름은 해당 참여자와 관리자만 확인할 수 있으며, 모든 대화는 행사 운영과 문의 이력 확인을 위해 Firestore에 저장됩니다. 새 문의 알림은 관리자에게만 전달됩니다.</p>
         <form id="adminIdentityForm" class="admin-identity-settings" hidden><label for="adminChatName">관리자 표시 이름</label><input id="adminChatName" type="text" minlength="1" maxlength="30" pattern="[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.-]{0,29}" placeholder="이름 또는 사용할 ID" required><button class="button--paper" type="submit">저장</button></form>
         <section id="conversationPicker" class="conversation-picker" hidden><label for="conversationUser">대화할 참여자</label><select id="conversationUser"><option value="">참여자를 선택하세요.</option></select></section>
         <p id="conversationTitle" aria-live="polite"></p>

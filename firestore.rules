@@ -428,12 +428,8 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.lastMessageId == messageId
         && getAfter(/databases/$(database)/documents/chatRateLimits/$(request.auth.uid)).data.lastSentAt == request.time;
       allow update: if false;
-      allow delete: if isAdmin()
-        || (isSignedIn()
-          && isAccountActive(request.auth.uid)
-          && (resource.data.get("conversationUid", "") == request.auth.uid
-            || resource.data.get("senderUid", "") == request.auth.uid
-            || resource.data.get("uid", "") == request.auth.uid));
+      // 문의 이력은 운영 기록으로 보존합니다. 정정이 필요하면 별도 감사 절차를 사용합니다.
+      allow delete: if false;
     }
 
     match /chatRateLimits/{userId} {

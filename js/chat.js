@@ -1,6 +1,5 @@
 import {
     collection,
-    deleteDoc,
     doc,
     getDocs,
     onSnapshot,
@@ -77,21 +76,6 @@ function renderMessages(documents) {
         bubble.className = "message-bubble";
         bubble.textContent = data.text || "";
         row.append(meta, bubble);
-        if (access.isAdmin) {
-            const actions = document.createElement("div");
-            actions.className = "message-actions";
-            const remove = document.createElement("button");
-            remove.type = "button";
-            remove.className = "button--paper";
-            remove.textContent = "삭제";
-            remove.addEventListener("click", async () => {
-                if (!confirm("이 메시지를 삭제할까요?")) return;
-                try { await deleteDoc(item.ref); }
-                catch (error) { console.error(error); status.textContent = "메시지를 삭제하지 못했습니다."; }
-            });
-            actions.append(remove);
-            row.append(actions);
-        }
         list.append(row);
     });
     list.scrollTop = list.scrollHeight;
@@ -119,7 +103,6 @@ function watchConversation(conversationUid) {
                     || (leftTime?.nanoseconds || 0) - (rightTime?.nanoseconds || 0)
                     || left.id.localeCompare(right.id);
             })
-            .slice(-100);
         renderMessages(documents);
     }, (error) => {
         console.error(error);
