@@ -86,11 +86,13 @@ export async function initQuiz(qrId, pageMode = "normal") {
     navigation.hidden = true;
     const scanAnother = document.createElement("a");
     scanAnother.className = "button button--coral";
-    scanAnother.href = qrId === "qr6" && storyActive ? "../mypage.html" : "../index.html#scan";
+    scanAnother.href = qrId === "qr6" && storyActive
+        ? new URL("../account/mypage.html", import.meta.url).href
+        : new URL("../index.html#scan", import.meta.url).href;
     scanAnother.textContent = qrId === "qr6" && storyActive ? "나의 기록 확인하기" : "다른 QR 스캔하기";
     const goHome = document.createElement("a");
     goHome.className = "button button--paper";
-    goHome.href = "../index.html";
+    goHome.href = new URL("../index.html", import.meta.url).href;
     goHome.textContent = "메인화면으로 돌아가기";
     navigation.append(scanAnother, goHome);
     message.after(navigation);

@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#f4f0e6"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><title>독토리 관리자</title>
-    <link rel="stylesheet" href="./css/theme.css">
-    <link rel="stylesheet" href="./css/footer.css">
+    <meta name="theme-color" content="#f4f0e6"><link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml"><title>독토리 관리자</title>
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/footer.css">
     <style>
         body { visibility: hidden; }
         .admin-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
@@ -55,7 +55,7 @@
 <body>
     <header class="site-header">
         <div class="brand"><span class="brand-mark">A</span><span class="brand-text">독토리 관리자 콘솔</span></div>
-        <nav class="account"><span id="adminIdentity" class="account-label"></span><a class="button button--paper" href="./index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
+        <nav class="account"><span id="adminIdentity" class="account-label"></span><a class="button button--paper" href="../index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
     </header>
     <main id="adminContent" class="page-shell" hidden>
         <section class="admin-intro">
@@ -68,10 +68,10 @@
         <section class="shortcut-panel panel" aria-labelledby="shortcutTitle">
             <div class="shortcut-head">
                 <div class="shortcut-title"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
-                <div class="actions" style="margin-top:0"><a class="button" href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" href="./chat.html">1:1 도움 채팅</a><a class="button button--coral" href="./qr/QR.html">QR 생성기</a></div>
+                <div class="actions" style="margin-top:0"><a class="button" href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" href="../support/chat.html">1:1 도움 채팅</a><a class="button button--coral" href="./QR.html">QR 생성기</a></div>
             </div>
             <div class="qr-shortcuts">
-                <a class="button" href="./qr/299az81a68c.html">QR 01</a><a class="button" href="./qr/hq1bq8pg1c.html">QR 02</a><a class="button" href="./qr/iq1bz5iutx.html">QR 03</a><a class="button" href="./qr/qrxc7ij88f.html">QR 04</a><a class="button" href="./qr/eq4bunq5v.html">QR 05</a><a class="button" href="./qr/jk1ba63db.html">QR 06</a>
+                <a class="button" href="../qr/299az81a68c.html">QR 01</a><a class="button" href="../qr/hq1bq8pg1c.html">QR 02</a><a class="button" href="../qr/iq1bz5iutx.html">QR 03</a><a class="button" href="../qr/qrxc7ij88f.html">QR 04</a><a class="button" href="../qr/eq4bunq5v.html">QR 05</a><a class="button" href="../qr/jk1ba63db.html">QR 06</a>
             </div>
         </section>
 
@@ -114,16 +114,16 @@
         <p id="message" class="status" role="status"></p>
         <div class="table-wrap"><table><thead><tr><th>참여자</th><th>학번</th><th>개인정보 동의</th><th>권한</th><th>계정 상태</th><th>차단 관리</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead><tbody id="userRows"></tbody></table></div>
     </main>
-    <section id="denied" class="panel" hidden><h2 class="section-title">접근 권한이 없습니다</h2><p>이 페이지는 관리자 계정만 이용할 수 있습니다.</p><a class="button" href="./index.html">메인으로 돌아가기</a></section>
+    <section id="denied" class="panel" hidden><h2 class="section-title">접근 권한이 없습니다</h2><p>이 페이지는 관리자 계정만 이용할 수 있습니다.</p><a class="button" href="../index.html">메인으로 돌아가기</a></section>
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
-        <div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
+        <div class="site-footer__meta"><a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
                 <small>© 2026 복성고등학교 도서부</small>
                 <small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small>
             </div></div>
     </footer>
-    <script type="module" src="./js/app-ui.js"></script>
-    <script type="module" src="./js/admin-tools.js"></script>
+    <script type="module" src="../js/app-ui.js"></script>
+    <script type="module" src="../js/admin-tools.js"></script>
     <script type="module">
         import { collection, doc, getDocs, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "./js/auth.js";

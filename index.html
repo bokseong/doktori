@@ -16,8 +16,8 @@
         <div class="brand"><span class="brand-mark">D</span><span class="brand-text">복성고 도서부 · 행사 안내</span></div>
         <div class="account">
             <span id="userInfo" class="account-label">로그인하지 않음</span>
-            <a id="loginButton" class="button" href="./signin.html?next=./index.html">Google 로그인</a>
-            <a id="myPageButton" class="button button--paper" href="./mypage.html" hidden>내 정보</a>
+            <a id="loginButton" class="button" href="./account/signin.html?next=../index.html">Google 로그인</a>
+            <a id="myPageButton" class="button button--paper" href="./account/mypage.html" hidden>내 정보</a>
             <button id="logoutButton" class="button--paper" type="button" hidden>로그아웃</button>
         </div>
     </header>
@@ -30,7 +30,7 @@
                 <p class="lead">복성고 도서부가 운영하는 행사와 부스를 소개하는 안내 페이지입니다. 참여하고 싶은 부스를 확인하고, 각 부스의 안내에 따라 체험해 보세요.</p>
                 <div class="actions">
                     <a class="button button--coral" href="#booths">부스 둘러보기</a>
-                    <a id="adminButton" class="button button--ink" href="./zb0bl7hn6ghtak72c.html" hidden>관리자 메뉴</a>
+                    <a id="adminButton" class="button button--ink" href="./admin/zb0bl7hn6ghtak72c.html" hidden>관리자 메뉴</a>
                 </div>
                 <p id="statusMessage" class="status" role="status"></p>
             </div>
@@ -59,7 +59,7 @@
                     <div><span class="booth-card__category">FEATURED BOOTH</span><h3>대표 부스</h3><p>대표 부스는 아직 지정되지 않았습니다. 내용이 확정되면 이 자리에 소개와 참여 정보를 추가합니다.</p></div>
                 </article>
 
-                <a class="booth-card booth-card--link panel" href="./booths/doktori-qr.html" aria-label="독토리 QR 탐색 행사 상세 안내 보기">
+                <a class="booth-card booth-card--link panel" href="./booths/doktori/doktori-qr.html" aria-label="독토리 QR 탐색 행사 상세 안내 보기">
                     <div class="booth-card__top"><span class="booth-card__number">01</span><span class="booth-card__state">참여 가능</span></div>
                     <div><span class="booth-card__category">QR 탐색 · 독서 미션</span><h3>독토리 QR 탐색 행사</h3><p>학교 곳곳에 설치된 QR 6개를 찾아 문제를 해결합니다. 일반 모드와 BS-001 스토리 모드 중 하나를 선택할 수 있습니다.</p></div>
                     <span class="booth-card__detail-link">상세 안내 보기 <span aria-hidden="true">→</span></span>
@@ -84,7 +84,7 @@
 
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 행사 안내</strong><span>도서부의 행사와 부스를 한곳에서 확인하세요.</span></div>
-        <div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
+        <div class="site-footer__meta"><a class="site-footer__link" href="./support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
                 <small>© 2026 복성고등학교 도서부</small>
                 <small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small>
             </div></div>
@@ -115,7 +115,7 @@
         if (currentUser) {
             const profile = await getMemberProfile(currentUser);
             if (isAccountBlocked(profile)) {
-                location.replace(new URL("./blocked.html", location.href));
+                location.replace(new URL("./account/blocked.html", location.href));
                 await new Promise(() => {});
             }
             const access = await getUserAccess(currentUser);

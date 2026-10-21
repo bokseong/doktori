@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#f4f0e6">
-    <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
-    <title>전체 진행률 · 독토리 관리자</title><link rel="stylesheet" href="./css/theme.css"><link rel="stylesheet" href="./css/footer.css">
+    <link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <title>전체 진행률 · 독토리 관리자</title><link rel="stylesheet" href="../css/theme.css"><link rel="stylesheet" href="../css/footer.css">
     <style>
         body { visibility: hidden; }
         .dashboard { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 80px; }
@@ -26,18 +26,18 @@
     </style>
 </head>
 <body>
-    <header class="site-header"><div class="brand"><span class="brand-mark">P</span><span class="brand-text">독토리 전체 진행률</span></div><nav class="account"><a class="button button--paper" href="./zb0bl7hn6ghtak72c.html">관리자 메뉴</a><a class="button button--paper" href="./index.html">메인으로</a></nav></header>
+    <header class="site-header"><div class="brand"><span class="brand-mark">P</span><span class="brand-text">독토리 전체 진행률</span></div><nav class="account"><a class="button button--paper" href="./zb0bl7hn6ghtak72c.html">관리자 메뉴</a><a class="button button--paper" href="../index.html">메인으로</a></nav></header>
     <main id="dashboard" class="dashboard" hidden>
         <section class="dashboard-head"><div><span class="label">ADMIN ONLY</span><h1>참여·수령 현황</h1><p class="lead">참여 여부, QR 완료 수와 상품 수령 여부를 실시간으로 확인합니다.</p></div><button id="exportButton" class="button--paper" type="button">CSV 내보내기</button></section>
         <section class="summary-grid"><article>등록 참여자<strong id="registeredCount">0</strong></article><article>참여 시작<strong id="startedCount">0</strong></article><article>6개 완주<strong id="completedCount">0</strong></article><article>상품 수령<strong id="receivedCount">0</strong></article></section>
         <div class="toolbar"><input id="searchInput" type="search" placeholder="이름·학번·이메일 검색"><p id="dashboardStatus" class="status" role="status"></p></div>
         <div class="table-wrap"><table><thead><tr><th>이름</th><th>학번</th><th>이메일</th><th>참여 여부</th><th>진행률</th><th>찾은 QR</th><th>상품 대상</th><th>상품 수령</th><th>수령 처리</th></tr></thead><tbody id="progressRows"></tbody></table></div>
     </main>
-    <section id="denied" class="panel" style="width:min(520px,calc(100% - 32px));margin:12vh auto;padding:36px;text-align:center" hidden><h1 class="section-title">접근 권한이 없습니다</h1><p>관리자만 전체 진행률과 상품 수령 현황을 확인할 수 있습니다.</p><a class="button" href="./index.html">메인으로</a></section>
-    <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
+    <section id="denied" class="panel" style="width:min(520px,calc(100% - 32px));margin:12vh auto;padding:36px;text-align:center" hidden><h1 class="section-title">접근 권한이 없습니다</h1><p>관리자만 전체 진행률과 상품 수령 현황을 확인할 수 있습니다.</p><a class="button" href="../index.html">메인으로</a></section>
+    <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
                 <small>© 2026 복성고등학교 도서부</small>
                 <small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small>
             </div></div></footer>
-    <script type="module" src="./js/app-ui.js"></script><script type="module" src="./js/progress-dashboard.js"></script>
+    <script type="module" src="../js/app-ui.js"></script><script type="module" src="../js/progress-dashboard.js"></script>
 </body>
 </html>

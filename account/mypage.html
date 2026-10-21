@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f0e6">
-    <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
     <title>내 정보 · 복성고 독토리</title>
-    <link rel="stylesheet" href="./css/theme.css">
-    <link rel="stylesheet" href="./css/footer.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/footer.css">
     <style>
         body { visibility: hidden; }
         .mypage-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr); gap: 24px; align-items: end; margin-bottom: 28px; }
@@ -64,7 +64,7 @@
 <body>
     <header class="site-header">
         <div class="brand"><span class="brand-mark">M</span><span class="brand-text">독토리 · 내 정보</span></div>
-        <nav class="account" aria-label="계정 메뉴"><a class="button button--paper" href="./index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
+        <nav class="account" aria-label="계정 메뉴"><a class="button button--paper" href="../index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
     </header>
 
     <main class="page-shell">
@@ -137,18 +137,18 @@
         </div>
     </main>
 
-    <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
+    <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
                 <small>© 2026 복성고등학교 도서부</small>
                 <small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small>
             </div></div></footer>
 
-    <script type="module" src="./js/app-ui.js"></script>
+    <script type="module" src="../js/app-ui.js"></script>
     <script type="module">
         import { collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "./js/auth.js";
-        import { getEventConfig } from "./js/event-config.js";
-        import { db } from "./js/firebase.js";
-        import { isStoryMode, STORY_STAGES } from "./js/story-mode.js";
+        import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "../js/auth.js";
+        import { getEventConfig } from "../js/event-config.js";
+        import { db } from "../js/firebase.js";
+        import { isStoryMode, STORY_STAGES } from "../js/story-mode.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const user = await requireUser();
@@ -277,7 +277,7 @@
                         const key = localStorage.key(index);
                         if (key?.startsWith("doktori-")) localStorage.removeItem(key);
                     }
-                    location.replace(new URL("./index.html?withdrawn=1", import.meta.url));
+                    location.replace(new URL("../index.html?withdrawn=1", import.meta.url));
                 } catch (error) {
                     console.error(error);
                     window.__DOKTORI_ACCOUNT_DELETING__ = false;

@@ -14,7 +14,7 @@ function startAccountStatusGuard() {
         if (!user || /\/(?:blocked|chat)\.html$/i.test(location.pathname)) return;
         stopAccountStatusGuard = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
             if (snapshot.exists() && snapshot.data().accountStatus === "blocked") {
-                location.replace(new URL("../blocked.html", import.meta.url));
+                location.replace(new URL("../account/blocked.html", import.meta.url));
             }
         }, (error) => console.warn("계정 상태를 확인하지 못했습니다.", error));
     });
@@ -42,7 +42,7 @@ function createChatShortcut() {
     if (/\/chat\.html$/i.test(location.pathname)) return;
     const link = document.createElement("a");
     link.className = "support-chat-link";
-    link.href = new URL("../chat.html", import.meta.url).href;
+    link.href = new URL("../support/chat.html", import.meta.url).href;
     link.textContent = "1:1 도움 채팅";
     link.setAttribute("aria-label", "관리자와 1대1 도움 채팅 열기");
     document.body.append(link);

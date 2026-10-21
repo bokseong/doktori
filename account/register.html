@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f0e6">
-    <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.webmanifest">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
     <title>회원 등록 · 복성고 독토리</title>
-    <link rel="stylesheet" href="./css/theme.css">
-    <link rel="stylesheet" href="./css/footer.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="../css/footer.css">
     <style>
         body { display: grid; place-items: center; padding: 28px 16px; }
         .auth-shell { width: min(980px, 100%); display: grid; grid-template-columns: .85fr 1.15fr; }
@@ -153,7 +153,7 @@
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
         <div class="site-footer__meta">
-            <a class="site-footer__link" href="./info.html">사이트 안내 · 이용약관</a>
+            <a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a>
             <div class="site-footer__legal">
                 <small>© 2026 복성고등학교 도서부</small>
                 <small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small>
@@ -161,7 +161,7 @@
         </div>
     </footer>
 
-    <script type="module" src="./js/app-ui.js"></script>
+    <script type="module" src="../js/app-ui.js"></script>
     <script type="module">
         import { signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import {
@@ -170,8 +170,8 @@
             isMemberProfileComplete,
             registerMember,
             waitForAuth
-        } from "./js/auth.js";
-        import { auth } from "./js/firebase.js";
+        } from "../js/auth.js";
+        import { auth } from "../js/firebase.js";
 
         const accountRow = document.getElementById("accountRow");
         const registerForm = document.getElementById("registerForm");
@@ -182,7 +182,7 @@
         reloadButton.hidden = true;
 
         function safeNext() {
-            const fallback = new URL("./index.html", location.href);
+            const fallback = new URL("../index.html", location.href);
             const requested = new URLSearchParams(location.search).get("next");
             try {
                 const target = new URL(requested || fallback.href, location.href);

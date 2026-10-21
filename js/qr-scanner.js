@@ -82,7 +82,7 @@
         return {
             number,
             label: `${isStory ? "스토리 " : "일반 "}QR ${String(number).padStart(2, "0")}`,
-            target: new URL(`./qr/${isStory ? "story/" : ""}${route}.html`, location.href).href
+            target: new URL(`${document.body.dataset.root || "./"}qr/${isStory ? "story/" : ""}${route}.html`, location.href).href
         };
     }
 

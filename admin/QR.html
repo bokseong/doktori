@@ -45,7 +45,7 @@
 <body>
     <header class="site-header">
         <div class="brand"><span class="brand-mark">Q</span><span class="brand-text">독토리 QR 제작소</span></div>
-        <nav class="account"><a class="button button--paper" href="../zb0bl7hn6ghtak72c.html">관리자 메뉴</a><a class="button button--paper" href="../index.html">메인으로</a></nav>
+        <nav class="account"><a class="button button--paper" href="./zb0bl7hn6ghtak72c.html">관리자 메뉴</a><a class="button button--paper" href="../index.html">메인으로</a></nav>
     </header>
 
     <main class="builder-shell">
@@ -83,13 +83,13 @@
 
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
-        <div class="site-footer__meta"><a class="site-footer__link" href="../info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
+        <div class="site-footer__meta"><a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">
                 <small>© 2026 복성고등학교 도서부</small>
                 <small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small>
             </div></div>
     </footer>
 
-    <script src="../js/qrcode.min.js"></script>
+    <script src="../js/vendor/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js"></script>
     <script type="module" src="../js/app-ui.js"></script>
     <script type="module">
@@ -123,7 +123,7 @@
         function missionUrl(number) {
             const story = modeInput.value === "story";
             const route = story ? STORY_QR_ROUTES[number - 1] : QR_ROUTES[number - 1];
-            return new URL(`./${story ? "story/" : ""}${route}.html`, location.href).href;
+            return new URL(`../qr/${story ? "story/" : ""}${route}.html`, location.href).href;
         }
 
         function generateQR() {
