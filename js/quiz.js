@@ -56,7 +56,7 @@ export async function initQuiz(qrId) {
         if (!storyActive || !story) return;
         const panel = document.createElement("aside");
         panel.className = "story-panel";
-        panel.innerHTML = `<span class="story-panel__label">R-06 / 기록 ${story.number}</span><h2>${story.title}</h2><p>${story.lead}</p><p class="story-panel__location">현장 단서: ${story.location}</p>`;
+        panel.innerHTML = `<span class="story-panel__label">BS-001 / 항목 ${story.number}</span><h2>${story.title}</h2><p>${story.lead}</p><p class="story-panel__location">현장 단서: ${story.location}</p>`;
         document.querySelector(".quiz-card").before(panel);
     }
 
@@ -64,7 +64,7 @@ export async function initQuiz(qrId) {
         if (!storyActive || !story) return;
         const panel = document.createElement("aside");
         panel.className = "story-resolution";
-        panel.innerHTML = `<strong>기록 ${story.number} 복구 완료</strong><p>${story.record}</p><p>${qrId === "qr6" ? getStoryCompletionCopy() : story.next}</p>`;
+        panel.innerHTML = `<strong>항목 ${story.number} 복원 완료</strong><p>${story.record}</p><p>${qrId === "qr6" ? getStoryCompletionCopy() : story.next}</p>`;
         message.before(panel);
     }
 
@@ -97,7 +97,7 @@ export async function initQuiz(qrId) {
 
     if (storyActive && !(await isStoryStageUnlocked(user.uid, qrId))) {
         const previousQrId = getPreviousQrId(qrId);
-        message.textContent = `아직 복구되지 않은 기록이 있습니다. QR ${String(Number(previousQrId.slice(2))).padStart(2, "0")}을(를) 먼저 완료하세요.`;
+        message.textContent = `이전 항목이 아직 복원되지 않았습니다. QR ${String(Number(previousQrId.slice(2))).padStart(2, "0")}을(를) 먼저 완료하세요.`;
         input.disabled = true;
         submit.disabled = true;
         document.body.style.visibility = "visible";
@@ -115,7 +115,7 @@ export async function initQuiz(qrId) {
     }
     const existing = await getDoc(progressReference);
     if (existing.exists()) {
-        message.textContent = storyActive ? `기록 ${story.number}은(는) 이미 복구되었습니다.` : "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
+        message.textContent = storyActive ? `BS-001의 항목 ${story.number}은(는) 이미 복원되었습니다.` : "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
         input.disabled = true;
         submit.disabled = true;
         navigation.hidden = false;
@@ -174,7 +174,7 @@ export async function initQuiz(qrId) {
             message.textContent = "2/3 · 진행도를 저장했습니다. 완료 기록을 확인하는 중...";
             await recordQuizTelemetry(user, qrId, "correct");
             message.textContent = storyActive
-                ? `기록 ${story.number}을(를) 복구했습니다. 다음 단서를 확인하세요.`
+                ? `BS-001의 항목 ${story.number}을(를) 복원했습니다. 다음 단서를 확인하세요.`
                 : "3/3 · 정답입니다! 진행도 저장을 완료했습니다.";
             navigation.hidden = false;
             showStoryResolution();

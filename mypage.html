@@ -78,7 +78,7 @@
                 <div class="panel-head"><div><span class="label">MY PROGRESS</span><h2 id="progressTitle" class="section-title">나의 진행률</h2><p>정답을 맞혀 완료된 QR만 표시됩니다.</p></div><strong id="progressScore" class="progress-score">0 / 6</strong></div>
                 <div id="progressTrack" class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
                 <div id="progressItems" class="progress-items" aria-live="polite"></div>
-                <section id="storyRecord" class="story-record" hidden aria-labelledby="storyRecordTitle"><h3 id="storyRecordTitle">R-06 복구 기록</h3><p id="storyRecordMessage"></p><div id="storyRecordItems" class="story-record__items"></div></section>
+                <section id="storyRecord" class="story-record" hidden aria-labelledby="storyRecordTitle"><h3 id="storyRecordTitle">BS-001 탐색 카드</h3><p id="storyRecordMessage"></p><div id="storyRecordItems" class="story-record__items"></div></section>
                 <div class="progress-actions"><p id="progressMessage" class="status" role="status"></p><a id="certificateButton" class="button button--coral" href="./certificate.html" hidden>완주 인증서 확인</a></div>
             </section>
 
@@ -188,15 +188,15 @@
                 storyRecord.hidden = false;
                 storyRecordItems.replaceChildren();
                 storyRecordMessage.textContent = remaining === 0
-                    ? "R-06 복구가 완료되었습니다. 책은 읽는 사람에게서 완성됩니다."
-                    : `현재 ${count}/6 기록을 복구했습니다. 다음 단서는 현재 단계의 QR에서 확인할 수 있습니다.`;
+                    ? "BS-001 탐색 카드가 완성되었습니다. 다음 책을 펼칠 여섯 개의 출발점을 모두 찾았습니다."
+                    : `현재 ${count}/6 항목을 복원했습니다. 다음 단서는 현재 단계의 QR에서 확인할 수 있습니다.`;
                 QR_IDS.forEach((qrId) => {
                     const stage = STORY_STAGES[qrId];
                     const item = document.createElement("article");
                     item.className = `story-record__item${completed.has(qrId) ? " completed" : ""}`;
                     item.innerHTML = completed.has(qrId)
-                        ? `<strong>기록 ${stage.number} · ${stage.title}</strong><p>${stage.record}</p>`
-                        : `<strong>기록 ${stage.number} · 잠김</strong><p>이전 기록을 복구하면 내용이 표시됩니다.</p>`;
+                        ? `<strong>항목 ${stage.number} · ${stage.title}</strong><p>${stage.record}</p>`
+                        : `<strong>항목 ${stage.number} · 잠김</strong><p>이전 항목을 복원하면 내용이 표시됩니다.</p>`;
                     storyRecordItems.append(item);
                 });
             }
