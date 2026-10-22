@@ -84,7 +84,8 @@ service cloud.firestore {
     function isMissionOpen(qrId) {
       return !exists(/databases/$(database)/documents/eventConfig/current)
         || (
-          get(/databases/$(database)/documents/eventConfig/current).data.get("qrStatus", {})[qrId] == "active"
+          get(/databases/$(database)/documents/eventConfig/current).data.get("participationEnabled", true) == true
+          && get(/databases/$(database)/documents/eventConfig/current).data.get("qrStatus", {})[qrId] == "active"
           && (
             get(/databases/$(database)/documents/eventConfig/current).data.get("startAt", null) == null
             || request.time >= get(/databases/$(database)/documents/eventConfig/current).data.startAt
@@ -301,9 +302,10 @@ service cloud.firestore {
       allow read: if configId == "current";
       allow create, update: if isAdmin()
         && configId == "current"
-        && request.resource.data.keys().hasOnly(["notice", "startAt", "endAt", "retentionAt", "qrStatus", "updatedAt", "updatedBy"])
+        && request.resource.data.keys().hasOnly(["notice", "participationEnabled", "startAt", "endAt", "retentionAt", "qrStatus", "updatedAt", "updatedBy"])
         && request.resource.data.notice is string
         && request.resource.data.notice.size() <= 300
+        && request.resource.data.participationEnabled is bool
         && request.resource.data.updatedBy == request.auth.uid
         && request.resource.data.updatedAt == request.time
         && request.resource.data.qrStatus.keys().hasAll(["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"])

@@ -70,6 +70,7 @@ function createQrStateControls() {
 async function loadConfig() {
     currentConfig = await getEventConfig().catch(() => ({ ...DEFAULT_EVENT_CONFIG, qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus } }));
     document.getElementById("eventNotice").value = currentConfig.notice || DEFAULT_EVENT_CONFIG.notice;
+    document.getElementById("participationEnabled").value = currentConfig.participationEnabled === false ? "false" : "true";
     document.getElementById("eventStartAt").value = toInputValue(currentConfig.startAt);
     document.getElementById("eventEndAt").value = toInputValue(currentConfig.endAt);
     document.getElementById("retentionAt").value = toInputValue(currentConfig.retentionAt);
@@ -84,6 +85,7 @@ async function saveConfig() {
     try {
         await setDoc(doc(db, "eventConfig", "current"), {
             notice: document.getElementById("eventNotice").value.trim(),
+            participationEnabled: document.getElementById("participationEnabled").value === "true",
             startAt: fromInput("eventStartAt"),
             endAt: fromInput("eventEndAt"),
             retentionAt: fromInput("retentionAt"),
@@ -91,7 +93,7 @@ async function saveConfig() {
             updatedAt: serverTimestamp(),
             updatedBy: user.uid
         });
-        await audit("event-config-updated", { qrStatus });
+        await audit("event-config-updated", { participationEnabled: document.getElementById("participationEnabled").value === "true", qrStatus });
         await loadConfig();
         configMessage.textContent = "운영 설정을 저장했습니다.";
     } catch (error) {

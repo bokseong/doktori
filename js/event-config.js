@@ -3,6 +3,7 @@ import { db } from "./firebase.js";
 
 export const DEFAULT_EVENT_CONFIG = Object.freeze({
     notice: "학교 곳곳에 숨은 QR을 찾아 6개의 미션을 완료하세요.",
+    participationEnabled: true,
     startAt: null,
     endAt: null,
     retentionAt: null,
@@ -21,6 +22,9 @@ export async function getEventConfig() {
 }
 
 export function getMissionAvailability(config, qrId, now = new Date()) {
+    if (config.participationEnabled === false) {
+        return { available: false, message: "현재 QR 이벤트 참여가 일시 중지되어 있습니다. 운영 안내를 확인해 주세요." };
+    }
     const start = config.startAt?.toDate?.();
     const end = config.endAt?.toDate?.();
     if (start && now < start) return { available: false, message: `행사는 ${start.toLocaleString("ko-KR")}부터 시작합니다.` };

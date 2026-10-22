@@ -1,4 +1,4 @@
-const CACHE_NAME = "doktori-static-v31";
+const CACHE_NAME = "doktori-static-v32";
 const STATIC_FILES = [
     "./", "./index.html", "./account/signin.html", "./account/register.html", "./account/blocked.html", "./css/theme.css", "./css/footer.css", "./css/qr-scanner.css", "./js/qr-scanner.js",
     "./js/auth.js", "./js/firebase.js", "./js/app-ui.js", "./js/event-config.js", "./js/chat.js", "./js/auth.js?v=27", "./js/app-ui.js?v=27", "./js/chat.js?v=27", "./account/mypage.html", "./support/info.html", "./support/chat.html", "./support/chat.html?access=blocked&v=27", "./offline.html", "./icon.svg"
