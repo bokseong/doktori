@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b0b0b"><link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
-    <title>복성고 독토리</title>
-    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Jua&display=swap" rel="stylesheet">
+    <title>룰렛 게임 · 독토리 관리자</title>
+    <link rel="stylesheet" href="../css/theme.css">
     <link rel="stylesheet" href="../css/footer.css">
     <style>
         * {
@@ -14,27 +14,25 @@
         }
         body {
             visibility: hidden;
-            font-family: 'Jua', sans-serif;
+            font-family: inherit;
             line-height: 1.55;
             word-break: keep-all;
             overflow-wrap: break-word;
-            background: linear-gradient(135deg, #0b0b0b, #1a0926);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: var(--paper);
             min-height: 100vh;
             margin: 0;
-            color: #ff9f43;
+            color: var(--cream);
         }
 
+        .game-shell { width: min(760px, calc(100% - 32px)); margin: 42px auto 78px; display: flex; flex-direction: column; align-items: center; }
+
         h1 {
-            font-family: 'Creepster', cursive;
-            font-size: 3rem;
+            font-family: "Black Han Sans", sans-serif;
+            font-size: clamp(2.4rem, 7vw, 4.4rem);
             margin-bottom: 20px;
-            color: #ff4757;
-            text-shadow: 0 0 10px #ff4757, 0 0 20px #e84118;
-            letter-spacing: 2px;
+            color: var(--cream);
+            text-shadow: 4px 4px 0 var(--coral);
+            letter-spacing: -.03em;
             text-align: center;
             line-height: 1.15;
         }
@@ -43,11 +41,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: #1e1e24;
-            border: 3px solid #ff6b81;
+            background: var(--paper-strong);
+            border: 2px solid var(--ink);
             padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(255, 71, 87, 0.4);
+            border-radius: 0;
+            box-shadow: var(--shadow);
             width: 380px;
         }
 
@@ -64,7 +62,7 @@
             height: 100%;
             border-radius: 50%;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
-            border: 4px solid #3d3d4d;
+            border: 4px solid var(--ink);
         }
 
         /* 멈춤 바늘 */
@@ -77,9 +75,9 @@
             height: 0;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
-            border-top: 32px solid #ff4757;
+            border-top: 32px solid var(--coral);
             z-index: 10;
-            filter: drop-shadow(0 0 8px #ff4757);
+            filter: none;
         }
 
         /* 조작부 */
@@ -94,40 +92,41 @@
         .power-bar-container {
             width: 100%;
             height: 14px;
-            background-color: #2f3542;
-            border-radius: 7px;
+            background-color: var(--paper);
+            border-radius: 0;
             overflow: hidden;
             display: none; /* 누를 때만 보임 */
-            border: 1px solid #ff6b81;
+            border: 2px solid var(--ink);
         }
 
         .power-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #ffa502, #ff4757, #ff3838);
+            background: var(--lime);
             transition: width 0.05s linear;
         }
 
         button {
-            background-color: #e58e26;
-            color: #fff;
-            border: none;
+            background-color: var(--coral);
+            color: var(--ink);
+            border: 2px solid var(--ink);
             padding: 15px;
             font-size: 1.2rem;
-            font-family: 'Jua', sans-serif;
-            border-radius: 12px;
+            font-family: inherit;
+            border-radius: 0;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(229, 142, 38, 0.5);
-            transition: background 0.2s, transform 0.1s;
+            box-shadow: 4px 4px 0 var(--ink);
+            transition: background 0.2s, transform 0.1s, box-shadow 0.1s;
             width: 100%;
         }
 
         button:hover {
-            background-color: #f6b93b;
+            background-color: var(--lime);
         }
 
         button:active {
-            transform: scale(0.96);
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 var(--ink);
         }
 
         #result {
@@ -145,9 +144,9 @@
     </style>
 </head>
 <body>
-
-    <h1>HALLOWEEN ROULETTE</h1>
-
+    <header class="site-header"><div class="brand"><span class="brand-mark">G</span><span class="brand-text">독토리 행사 보조 게임</span></div><nav class="account"><a class="button button--paper" href="../admin/">행사 운영</a></nav></header>
+    <main class="game-shell">
+    <span class="label">ADMIN GAME · ROULETTE</span><h1>룰렛 게임</h1>
     <div class="container">
         <!-- 돌림판 -->
         <div class="roulette-wrapper">
@@ -161,10 +160,11 @@
                 <div class="power-bar" id="powerBar"></div>
             </div>
             <!-- 마우스 클릭 및 모바일 터치 이벤트 모두 지원 -->
-            <button id="spinBtn">꾹 눌렀다 떼세요! 👻</button>
+            <button id="spinBtn">꾹 눌렀다 떼세요</button>
             <p id="result" aria-live="polite"></p>
         </div>
     </div>
+    </main>
 
     <footer class="site-footer">
         <div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div>
@@ -175,9 +175,9 @@
     </footer>
 
     <script type="module">
-        import { requireUser } from "../js/auth.js";
+        import { requireHubEntry } from "../js/admin-guard.js";
 
-        await requireUser();
+        if (!requireHubEntry({ fallbackUrl: "../admin/" })) await new Promise(() => {});
         document.body.style.visibility = "visible";
 
         const canvas = document.getElementById('canvas');
@@ -250,7 +250,7 @@
 
                 ctx.save();
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 18px 'Jua', sans-serif";
+                ctx.font = "bold 18px system-ui, sans-serif";
                 ctx.translate(
                     200 + Math.cos(angle + sliceAngle / 2) * textRadius,
                     200 + Math.sin(angle + sliceAngle / 2) * textRadius

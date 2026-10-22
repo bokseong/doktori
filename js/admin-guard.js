@@ -22,7 +22,7 @@ const stopWatching = onSnapshot(doc(db, "users", user.uid), async () => {
 });
 window.addEventListener("pagehide", () => stopWatching(), { once: true });
 
-export function requireHubEntry() {
+export function requireHubEntry({ fallbackUrl = "./index.html" } = {}) {
     const key = "doktori-admin-hub-entry";
     let ticket = null;
     try { ticket = JSON.parse(sessionStorage.getItem(key) || "null"); } catch { /* ignore */ }
@@ -31,7 +31,7 @@ export function requireHubEntry() {
         && Number.isFinite(ticket.issuedAt)
         && Date.now() - ticket.issuedAt < 10 * 60 * 1000;
     if (!valid) {
-        location.replace(new URL("./index.html", location.href));
+        location.replace(new URL(fallbackUrl, location.href));
         return false;
     }
     return true;
