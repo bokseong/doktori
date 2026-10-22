@@ -56,7 +56,7 @@
 <body>
     <header class="site-header">
         <div class="brand"><span class="brand-mark">A</span><span class="brand-text">행사 운영·회원 담당</span></div>
-        <nav class="account"><span id="adminIdentity" class="account-label"></span><a class="button button--paper" href="./index.html">통합 관리자</a><a class="button button--paper" href="../index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
+        <nav class="account"><span id="adminIdentity" class="account-label"></span><a class="button button--paper" data-admin-page href="./member-management.html">회원 담당</a><a class="button button--paper" data-admin-page href="./progress-dashboard.html">진행률·상품 수령</a><a class="button button--paper" href="../index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
     </header>
     <main id="adminContent" class="page-shell" hidden>
         <section class="admin-intro">
@@ -69,7 +69,7 @@
         <section class="shortcut-panel panel" data-admin-view="event" aria-labelledby="shortcutTitle">
             <div class="shortcut-head">
                 <div class="shortcut-title"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
-                <div class="actions" style="margin-top:0"><a class="button" data-admin-page href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" href="../support/chat.html?admin=1">1:1 도움 채팅</a><a id="qrBuilderLink" class="button button--coral" data-admin-page href="./QR.html">QR 생성기</a></div>
+                <div class="actions" style="margin-top:0"><a class="button" data-admin-page href="./member-management.html">회원 담당</a><a class="button" data-admin-page href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" href="../support/chat.html?admin=1">1:1 도움 채팅</a><a id="qrBuilderLink" class="button button--coral" data-admin-page href="./QR.html">QR 생성기</a></div>
             </div>
             <div class="qr-shortcuts">
                 <a class="button" href="../qr/299az81a68c.html">QR 01</a><a class="button" href="../qr/hq1bq8pg1c.html">QR 02</a><a class="button" href="../qr/iq1bz5iutx.html">QR 03</a><a class="button" href="../qr/qrxc7ij88f.html">QR 04</a><a class="button" href="../qr/eq4bunq5v.html">QR 05</a><a class="button" href="../qr/jk1ba63db.html">QR 06</a>
