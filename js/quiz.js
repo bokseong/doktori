@@ -50,7 +50,9 @@ export async function initQuiz(qrId, pageMode = "normal") {
     const storyActive = pageMode === "story" && profileStoryMode;
     const story = STORY_STAGES[qrId];
     const form = document.getElementById("quizForm");
-    const input = document.getElementById("answerInput");
+    const inlineInputs = [...form.querySelectorAll("[data-answer-part]")];
+    const answerInputs = inlineInputs.length ? inlineInputs : [document.getElementById("answerInput")];
+    const input = answerInputs[0];
     const message = document.getElementById("quizMessage");
     const submit = document.getElementById("answerButton");
     const progressReference = doc(db, "users", user.uid, "progress", qrId);
@@ -71,15 +73,27 @@ export async function initQuiz(qrId, pageMode = "normal") {
         message.before(panel);
     }
 
-    input.placeholder = "정답을 입력하세요";
-    input.autocapitalize = "none";
-    input.spellcheck = false;
-    input.setAttribute("aria-describedby", "answerHelp");
+    answerInputs.forEach((answerInput) => {
+        if (!answerInput.placeholder) answerInput.placeholder = "정답";
+        answerInput.autocapitalize = "none";
+        answerInput.spellcheck = false;
+        answerInput.setAttribute("aria-describedby", "answerHelp");
+    });
     const answerHelp = document.createElement("p");
     answerHelp.id = "answerHelp";
     answerHelp.className = "answer-help";
-    answerHelp.textContent = "띄어쓰기, 영문 대소문자와 일반적인 문장부호는 구분하지 않습니다.";
-    input.after(answerHelp);
+    answerHelp.textContent = inlineInputs.length
+        ? "두 빈칸을 모두 숫자로 입력해 주세요."
+        : "띄어쓰기, 영문 대소문자와 일반적인 문장부호는 구분하지 않습니다.";
+    form.append(answerHelp);
+
+    function setAnswerInputsDisabled(disabled) {
+        answerInputs.forEach((answerInput) => { answerInput.disabled = disabled; });
+    }
+
+    function submittedAnswer() {
+        return answerInputs.map((answerInput) => answerInput.value.trim()).join(", ");
+    }
 
     const navigation = document.createElement("div");
     navigation.className = "quiz-navigation";
@@ -97,12 +111,14 @@ export async function initQuiz(qrId, pageMode = "normal") {
     navigation.append(scanAnother, goHome);
     message.after(navigation);
 
-    document.getElementById("quizQuestion").textContent = quiz.question;
+    document.getElementById("quizQuestion").textContent = qrId === "qr1" && inlineInputs.length
+        ? "빈칸을 채워 도서관 이용 규칙을 완성하세요."
+        : quiz.question;
     showStoryPanel();
 
     if (!selectedMode) {
         message.textContent = "QR 이벤트 참여하기에서 일반 모드 또는 스토리 모드를 먼저 선택해 주세요.";
-        input.disabled = true;
+        setAnswerInputsDisabled(true);
         submit.disabled = true;
         document.body.style.visibility = "visible";
         return;
@@ -110,14 +126,14 @@ export async function initQuiz(qrId, pageMode = "normal") {
 
     if (pageMode === "story" && !profileStoryMode) {
         message.textContent = "이 페이지는 스토리 모드 전용 QR입니다. 참여하기 페이지에서 스토리 모드를 선택한 뒤 이용해 주세요.";
-        input.disabled = true;
+        setAnswerInputsDisabled(true);
         submit.disabled = true;
         document.body.style.visibility = "visible";
         return;
     }
     if (pageMode === "normal" && profileStoryMode) {
         message.textContent = "이 페이지는 일반 모드 전용 QR입니다. 스토리 모드 QR을 스캔해 주세요.";
-        input.disabled = true;
+        setAnswerInputsDisabled(true);
         submit.disabled = true;
         document.body.style.visibility = "visible";
         return;
@@ -126,7 +142,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
     if (storyActive && !(await isStoryStageUnlocked(user.uid, qrId))) {
         const previousQrId = getPreviousQrId(qrId);
         message.textContent = `이전 항목이 아직 복원되지 않았습니다. QR ${String(Number(previousQrId.slice(2))).padStart(2, "0")}을(를) 먼저 완료하세요.`;
-        input.disabled = true;
+        setAnswerInputsDisabled(true);
         submit.disabled = true;
         document.body.style.visibility = "visible";
         return;
@@ -135,7 +151,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
         const availability = getMissionAvailability(await getEventConfig(), qrId);
         if (!availability.available) {
             message.textContent = availability.message;
-            input.disabled = true;
+            setAnswerInputsDisabled(true);
             submit.disabled = true;
         }
     } catch (error) {
@@ -144,7 +160,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
     const existing = await getDoc(progressReference);
     if (existing.exists()) {
         message.textContent = storyActive ? `BS-001의 항목 ${story.number}은(는) 이미 복원되었습니다.` : "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
-        input.disabled = true;
+        setAnswerInputsDisabled(true);
         submit.disabled = true;
         navigation.hidden = false;
         showStoryResolution();
@@ -158,7 +174,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
             const availability = getMissionAvailability(await getEventConfig(), qrId);
             if (!availability.available) {
                 message.textContent = availability.message;
-                input.disabled = true;
+                setAnswerInputsDisabled(true);
                 submit.disabled = true;
                 return;
             }
@@ -174,7 +190,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
         }
         localStorage.setItem(throttleKey, String(Date.now()));
         submit.disabled = true;
-        input.disabled = true;
+        setAnswerInputsDisabled(true);
         message.textContent = "1/3 · 정답을 확인하는 중...";
         try {
             const latest = await getDoc(progressReference);
@@ -184,7 +200,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
                 batch.set(attemptReference, {
                     uid: user.uid,
                     qrId,
-                    answer: normalize(input.value),
+                    answer: normalize(submittedAnswer()),
                     submittedAt: serverTimestamp()
                 });
                 batch.set(progressReference, {
@@ -213,7 +229,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
                 ? "정답이 아닙니다. 다시 생각해 보세요."
                 : "진행도를 저장하지 못했습니다. 네트워크를 확인하고 다시 시도하세요.";
             submit.disabled = false;
-            input.disabled = false;
+            setAnswerInputsDisabled(false);
             input.focus();
         }
     });
