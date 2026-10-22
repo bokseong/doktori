@@ -79,7 +79,7 @@
                 <div id="progressTrack" class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
                 <div id="progressItems" class="progress-items" aria-live="polite"></div>
                 <section id="storyRecord" class="story-record" hidden aria-labelledby="storyRecordTitle"><h3 id="storyRecordTitle">BS-001 탐색 카드</h3><p id="storyRecordMessage"></p><div id="storyRecordItems" class="story-record__items"></div></section>
-                <div class="progress-actions"><p id="progressMessage" class="status" role="status"></p><a id="certificateButton" class="button button--coral" href="./certificate.html" hidden>완주 인증서 확인</a></div>
+                <div class="progress-actions"><p id="progressMessage" class="status" role="status"></p></div>
             </section>
 
             <section id="adminProfilePanel" class="info-panel panel" aria-labelledby="adminProfileTitle" hidden>
@@ -130,7 +130,7 @@
 
             <section class="info-panel panel danger-zone" aria-labelledby="withdrawTitle">
                 <span class="label">ACCOUNT</span><h2 id="withdrawTitle" class="section-title">회원 탈퇴</h2>
-                <p class="danger-copy">탈퇴하면 Firestore의 개인정보·진행 기록·본인이 작성한 채팅이 삭제 또는 익명화되고 Firebase 로그인 계정도 삭제됩니다. 완료한 QR과 인증서는 복구할 수 없습니다. 이미 지급된 상품 수령 기록은 중복 지급 방지를 위해 최소 정보로 보관될 수 있습니다.</p>
+                <p class="danger-copy">탈퇴하면 Firestore의 개인정보·진행 기록·본인이 작성한 채팅이 삭제 또는 익명화되고 Firebase 로그인 계정도 삭제됩니다. 완료한 QR 진행 기록은 복구할 수 없습니다. 이미 지급된 상품 수령 기록은 중복 지급 방지를 위해 최소 정보로 보관될 수 있습니다.</p>
                 <label class="withdraw-check"><input id="withdrawConsent" type="checkbox"><span>삭제되는 정보와 복구할 수 없다는 점을 확인했습니다.</span></label>
                 <div class="withdraw-actions"><button id="withdrawButton" type="button" disabled>회원 탈퇴</button><p id="withdrawMessage" class="status" role="status"></p></div>
             </section>
@@ -156,7 +156,6 @@
         const access = await getUserAccess(user);
         const progressItems = document.getElementById("progressItems");
         const progressMessage = document.getElementById("progressMessage");
-        const certificateButton = document.getElementById("certificateButton");
         const withdrawConsent = document.getElementById("withdrawConsent");
         const withdrawButton = document.getElementById("withdrawButton");
         const withdrawMessage = document.getElementById("withdrawMessage");
@@ -201,7 +200,6 @@
                 });
             }
             progressMessage.textContent = remaining === 0 ? "모든 QR 미션을 완료했습니다." : `완료까지 ${remaining}개의 QR이 남았습니다.`;
-            certificateButton.hidden = remaining !== 0;
         }
 
         function currentAdminName() {
