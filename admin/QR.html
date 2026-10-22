@@ -45,7 +45,7 @@
 <body>
     <header class="site-header">
         <div class="brand"><span class="brand-mark">Q</span><span class="brand-text">독토리 QR 제작소</span></div>
-        <nav class="account"><a class="button button--paper" href="./zb0bl7hn6ghtak72c.html">관리자 메뉴</a><a class="button button--paper" href="../index.html">메인으로</a></nav>
+        <nav class="account"><a class="button button--paper" href="./index.html">통합 관리자</a><a class="button button--paper" href="../index.html">메인으로</a></nav>
     </header>
 
     <main class="builder-shell">
@@ -93,10 +93,9 @@
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js"></script>
     <script type="module" src="../js/app-ui.js"></script>
     <script type="module">
-        import { getUserAccess, requireUser } from "../js/auth.js";
+        import { adminAccess as access, adminUser as currentUser, requireHubEntry } from "../js/admin-guard.js";
 
-        const currentUser = await requireUser();
-        const access = await getUserAccess(currentUser);
+        if (!requireHubEntry()) await new Promise(() => {});
         if (!access.isAdmin) {
             location.replace(new URL("../index.html", location.href));
             await new Promise(() => {});

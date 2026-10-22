@@ -14,6 +14,16 @@ import { db } from "./firebase.js";
 
 const user = await requireUser({ allowBlocked: true });
 const [profile, access] = await Promise.all([getMemberProfile(user), getUserAccess(user)]);
+const adminModeRequested = new URLSearchParams(location.search).get("admin") === "1";
+if (adminModeRequested && !access.isAdmin) {
+    location.replace(new URL("../index.html", import.meta.url));
+    await new Promise(() => {});
+}
+if (access.isAdmin) {
+    onSnapshot(doc(db, "users", user.uid), async () => {
+        if (!(await getUserAccess(user)).isAdmin) location.replace(new URL("../index.html", import.meta.url));
+    }, () => {});
+}
 const list = document.getElementById("messageList");
 const form = document.getElementById("chatForm");
 const input = document.getElementById("chatInput");

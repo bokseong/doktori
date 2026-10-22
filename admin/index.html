@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101014"><link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <title>통합 관리자 · 독토리</title><link rel="stylesheet" href="../css/theme.css"><link rel="stylesheet" href="../css/footer.css">
+    <style>
+        body { visibility: hidden; }
+        .admin-hub { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0 78px; }
+        .admin-hub h1 { margin: 12px 0 8px; font: clamp(2.7rem, 7vw, 4.8rem)/1.08 "Black Han Sans", sans-serif; }
+        .admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 30px; }
+        .admin-card { display: grid; gap: 12px; min-height: 210px; padding: 26px; border: 2px solid #403347; background: var(--paper-strong); box-shadow: var(--shadow); color: var(--cream); text-decoration: none; transition: transform .12s ease, box-shadow .12s ease; }
+        .admin-card:hover { transform: translate(2px, 2px); box-shadow: 5px 5px 0 var(--ink); }
+        .admin-card strong { color: var(--blue); font-size: 1.35rem; }
+        .admin-card p { margin: 0; color: var(--muted); line-height: 1.7; }
+        .admin-card span { color: var(--lime); font-weight: 800; }
+        @media (max-width: 680px) { .admin-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="site-header"><div class="brand"><span class="brand-mark">A</span><span class="brand-text">독토리 통합 관리자</span></div><nav class="account"><a class="button button--paper" href="../index.html">메인으로</a></nav></header>
+    <main class="admin-hub"><span class="label">ADMIN HUB</span><h1>통합 관리 페이지</h1><p class="lead">담당 업무를 선택해 이동하세요. 각 담당 페이지는 관리자 권한과 통합 관리 페이지를 통한 접근 여부를 다시 확인합니다.</p>
+        <section class="admin-grid" aria-label="담당 관리자 페이지">
+            <a class="admin-card" data-admin-page href="./zb0bl7hn6ghtak72c.html"><strong>행사 운영·회원 담당</strong><p>행사 참여 상태, 공지, QR별 운영 상태, 회원 권한·차단, 수동 진행 처리와 감사 기록을 관리합니다.</p><span>담당 페이지 열기 →</span></a>
+            <a class="admin-card" data-admin-page href="./progress-dashboard.html"><strong>진행률·상품 수령 담당</strong><p>참여 현황, 완주 여부와 상품 수령 처리를 확인하고 CSV로 내보냅니다.</p><span>담당 페이지 열기 →</span></a>
+            <a class="admin-card" data-admin-page href="./QR.html"><strong>QR 제작 담당</strong><p>일반·스토리 모드 QR을 만들고 인쇄용 파일을 준비합니다.</p><span>담당 페이지 열기 →</span></a>
+            <a class="admin-card" data-admin-page href="./support.html"><strong>1:1 문의 담당</strong><p>참여자의 문의를 확인하고 답변합니다. 일반 사용자 간 채팅은 제공하지 않습니다.</p><span>담당 페이지 열기 →</span></a>
+        </section>
+    </main>
+    <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>행사 운영 관리자 전용</span></div><div class="site-footer__meta"><a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal"><small>© 2026 복성고등학교 도서부</small><small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small></div></div></footer>
+    <script type="module">
+        import { adminUser } from "../js/admin-guard.js";
+        document.querySelectorAll("[data-admin-page]").forEach((link) => link.addEventListener("click", () => {
+            sessionStorage.setItem("doktori-admin-hub-entry", JSON.stringify({ path: new URL(link.href).pathname, issuedAt: Date.now(), uid: adminUser.uid }));
+        }));
+        document.body.style.visibility = "visible";
+    </script>
+</body>
+</html>

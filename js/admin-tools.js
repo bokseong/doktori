@@ -14,14 +14,13 @@ import {
     Timestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { getUserAccess, MASTER_ADMIN_EMAIL, requireUser } from "./auth.js";
+import { MASTER_ADMIN_EMAIL } from "./auth.js";
+import { adminAccess as access, adminUser as user, requireHubEntry } from "./admin-guard.js";
 import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js";
 import { appCheck, db } from "./firebase.js";
 
 const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
-const user = await requireUser();
-const access = await getUserAccess(user);
-if (!access.isAdmin) await new Promise(() => {});
+if (!requireHubEntry()) await new Promise(() => {});
 
 const configMessage = document.getElementById("configMessage");
 const manualMessage = document.getElementById("manualMessage");

@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#f4f0e6"><link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml"><title>독토리 관리자</title>
+    <meta name="theme-color" content="#101014"><link rel="manifest" href="../manifest.webmanifest"><link rel="icon" href="../icon.svg" type="image/svg+xml"><title>행사 운영·회원 담당 · 독토리</title>
     <link rel="stylesheet" href="../css/theme.css">
     <link rel="stylesheet" href="../css/footer.css">
     <style>
@@ -54,8 +54,8 @@
 </head>
 <body>
     <header class="site-header">
-        <div class="brand"><span class="brand-mark">A</span><span class="brand-text">독토리 관리자 콘솔</span></div>
-        <nav class="account"><span id="adminIdentity" class="account-label"></span><a class="button button--paper" href="../index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
+        <div class="brand"><span class="brand-mark">A</span><span class="brand-text">행사 운영·회원 담당</span></div>
+        <nav class="account"><span id="adminIdentity" class="account-label"></span><a class="button button--paper" href="./index.html">통합 관리자</a><a class="button button--paper" href="../index.html">메인으로</a><button id="logoutButton" class="button--coral" type="button">로그아웃</button></nav>
     </header>
     <main id="adminContent" class="page-shell" hidden>
         <section class="admin-intro">
@@ -126,8 +126,8 @@
     <script type="module" src="../js/admin-tools.js"></script>
     <script type="module">
         import { collection, doc, getDocs, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "./js/auth.js";
-        import { db } from "./js/firebase.js";
+        import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "../js/auth.js";
+        import { db } from "../js/firebase.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const currentUser = await requireUser();

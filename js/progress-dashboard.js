@@ -7,12 +7,11 @@ import {
     serverTimestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { getUserAccess, requireUser } from "./auth.js";
+import { adminAccess as access, adminUser as user, requireHubEntry } from "./admin-guard.js";
 import { db } from "./firebase.js";
 
 const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
-const user = await requireUser();
-const access = await getUserAccess(user);
+if (!requireHubEntry()) await new Promise(() => {});
 const dashboard = document.getElementById("dashboard");
 const denied = document.getElementById("denied");
 const rows = document.getElementById("progressRows");
