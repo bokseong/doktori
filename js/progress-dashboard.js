@@ -12,12 +12,12 @@ import { db } from "./firebase.js";
 
 const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
 const BOOTHS = Object.freeze([
-    { id: "booth1", name: "독토리 QR 탐색 행사" },
-    { id: "booth2", name: "마녀 물약" },
-    { id: "booth3", name: "카드 게임" },
-    { id: "booth4", name: "스퀴시 만들기" },
-    { id: "booth5", name: "부적 인형 만들기" },
-    { id: "booth6", name: "사진찍기" }
+    { id: "booth1", name: "프랑켄슈타인 박사의 도서 대출" },
+    { id: "booth2", name: "물약을 완성하라!" },
+    { id: "booth3", name: "잭오랜턴 부적 인형 만들기" },
+    { id: "booth4", name: "카드뽑기 · 상품 수령" },
+    { id: "booth5", name: "포토존" },
+    { id: "booth6", name: "방명록" }
 ]);
 if (!requireHubEntry()) await new Promise(() => {});
 const dashboard = document.getElementById("dashboard");
@@ -107,6 +107,7 @@ function render() {
     filtered.forEach((record) => {
         const row = document.createElement("tr");
         const nameCell = document.createElement("td");
+        nameCell.className = "member-cell";
         const memberButton = document.createElement("button");
         memberButton.type = "button";
         memberButton.className = "member-button";
