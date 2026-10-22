@@ -19,18 +19,18 @@
         .builder-controls, .qr-box { padding: clamp(22px, 4vw, 34px); }
         .builder-controls h2, .qr-box h2 { margin: 0 0 16px; font-size: 1.55rem; font-weight: 800; line-height: 1.35; }
         .preset-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-bottom: 24px; }
-        .preset-grid button { min-width: 0; background: var(--paper-strong); }
+        .preset-grid button { min-width: 0; color: var(--cream); background: var(--paper-strong); }
         .preset-grid button[aria-pressed="true"] { background: var(--lime); transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
         .field { display: grid; gap: 8px; }
         .field label { font-weight: 700; }
-        .field input { width: 100%; padding: 13px; border: 2px solid var(--ink); background: white; }
+        .field input { width: 100%; padding: 13px; border: 2px solid var(--line); color: var(--cream); background: var(--paper); }
         .field small { color: var(--muted); line-height: 1.5; }
         .builder-actions, .qr-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
         .builder-actions > *, .qr-actions > * { flex: 1 1 150px; }
         .qr-box { text-align: center; }
         #qrCode { min-height: 224px; display: grid; place-items: center; }
         #qrCode canvas, #qrCode img { max-width: 100%; padding: 10px; border: 2px solid var(--ink); background: white; }
-        #builderStatus { min-height: 1.5em; margin: 16px 0 0; color: #94321f; font-weight: 700; }
+        #builderStatus { min-height: 1.5em; margin: 16px 0 0; color: var(--danger); font-weight: 700; }
         #printSheet { display: none; }
         @media print {
             body > :not(#printSheet) { display: none !important; }

@@ -22,7 +22,7 @@
 .detail-steps b { color: var(--coral); font: 2rem/1 "Black Han Sans", sans-serif; }
 .detail-steps h3 { margin: 0 0 6px; font-size: 1.2rem; }
 .detail-steps p { margin: 0; color: var(--muted); }
-.detail-notice { margin-top: 42px; padding: 20px 24px; border: 2px solid var(--ink); color: white; background: var(--blue); box-shadow: 5px 5px 0 var(--ink); }
+.detail-notice { margin-top: 42px; padding: 20px 24px; border: 2px solid var(--ink); color: var(--cream); background: var(--violet-surface); box-shadow: 5px 5px 0 var(--ink); }
 .detail-notice strong { margin-right: 10px; }
 @media (max-width: 720px) { .booth-detail__hero, .mode-detail-grid { grid-template-columns: 1fr; } .detail-pass { transform: none; } }
 @media (max-width: 520px) { .detail-steps li { grid-template-columns: 1fr; gap: 9px; } .detail-pass strong { font-size: 4.5rem; } }

@@ -24,7 +24,7 @@
         .admin-panel h2 { margin-bottom: 18px; }
         .config-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .config-grid label { display: grid; gap: 7px; font-weight: 700; }
-        .config-grid input, .config-grid textarea { width: 100%; padding: 11px; border: 2px solid var(--ink); background: white; }
+        .config-grid input, .config-grid textarea { width: 100%; padding: 11px; border: 2px solid var(--line); color: var(--cream); background: var(--paper); }
         .config-grid textarea { min-height: 88px; resize: vertical; }
         .wide { grid-column: 1 / -1; }
         .qr-state-grid, .quiz-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
@@ -42,10 +42,10 @@
         .email { color: var(--muted); font-size: .84rem; } .progress { min-width: 160px; }
         .bar { height: 10px; margin-top: 7px; border: 2px solid var(--ink); background: var(--paper); overflow: hidden; }
         .bar span { display: block; height: 100%; background: var(--coral); }
-        select { min-width: 100px; padding: 9px; border: 2px solid var(--ink); background: white; }
+        select { min-width: 100px; padding: 9px; border: 2px solid var(--line); color: var(--cream); background: var(--paper); }
         .role-controls, .status-controls { display: flex; gap: 8px; align-items: center; } .small { min-height: 40px; padding: 7px 10px; box-shadow: 3px 3px 0 var(--ink); }
         .account-badge { display: inline-block; padding: 4px 8px; border: 2px solid var(--ink); background: var(--lime); font-weight: 800; white-space: nowrap; }
-        .account-badge--blocked { color: white; background: var(--coral); }
+        .account-badge--blocked { color: var(--ink); background: var(--coral); }
         .block-reason { max-width: 220px; margin-top: 6px; color: var(--muted); font-size: .84rem; line-height: 1.45; }
         .blocked-row { background: rgba(255, 107, 74, .09); }
         #denied { width: min(520px, calc(100% - 32px)); margin: 12vh auto; padding: 38px; text-align: center; }

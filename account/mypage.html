@@ -13,7 +13,7 @@
         body { visibility: hidden; }
         .mypage-hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(250px, .8fr); gap: 24px; align-items: end; margin-bottom: 28px; }
         .mypage-hero h1 { margin: 14px 0 8px; font: clamp(2.8rem, 7vw, 4.8rem)/1.08 "Black Han Sans", sans-serif; letter-spacing: -.025em; }
-        .identity-card { padding: 24px; background: var(--lime); }
+        .identity-card { padding: 24px; color: var(--ink); background: var(--lime); }
         .identity-card strong { display: block; margin-bottom: 8px; font-size: 1.55rem; font-weight: 800; line-height: 1.35; }
         .content-grid { display: grid; gap: 24px; }
         .info-panel { padding: clamp(22px, 4vw, 36px); }
@@ -24,7 +24,7 @@
         .progress-track span { display: block; width: 0; height: 100%; background: var(--coral); transition: width .25s ease; }
         .progress-items { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
         .progress-item { padding: 13px 8px; border: 2px solid var(--ink); background: var(--paper); text-align: center; font-weight: 800; }
-        .progress-item.completed { background: var(--lime); }
+        .progress-item.completed { color: var(--ink); background: var(--lime); }
         .story-record { margin-top: 20px; padding-top: 18px; border-top: 2px solid var(--ink); }
         .story-record h3 { margin: 0 0 7px; font-size: 1.25rem; }
         .story-record > p { margin: 0 0 14px; color: var(--muted); }
@@ -32,7 +32,7 @@
         .story-record__item { padding: 12px 14px; border: 2px solid var(--ink); background: var(--paper); }
         .story-record__item strong { display: block; }
         .story-record__item p { margin: 4px 0 0; color: var(--muted); font-size: .93rem; line-height: 1.55; }
-        .story-record__item.completed { background: #e9efff; }
+        .story-record__item.completed { background: #2b2032; }
         .progress-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
         .site-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 2px; background: var(--ink); }
         .site-facts article { padding: 22px; background: var(--paper-strong); }
@@ -42,17 +42,17 @@
         .terms-list { padding-left: 22px; }
         .terms-list li + li { margin-top: 10px; }
         .privacy-grid { display: grid; grid-template-columns: 130px 1fr; gap: 10px 16px; margin: 20px 0 0; }
-        .privacy-grid dt { color: var(--ink); font-weight: 800; }
+        .privacy-grid dt { color: var(--cream); font-weight: 800; }
         .privacy-grid dd { margin: 0; }
         .consent-state { margin-top: 20px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper); font-weight: 800; }
         .admin-profile-form { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 12px; align-items: end; margin-top: 20px; }
         .admin-profile-form label { display: grid; gap: 7px; font-weight: 800; }
-        .admin-profile-form input { min-height: 48px; padding: 9px 11px; border: 2px solid var(--ink); background: white; }
+        .admin-profile-form input { min-height: 48px; padding: 9px 11px; border: 2px solid var(--line); color: var(--cream); background: var(--paper); }
         .danger-zone { border-color: #9b321e; }
         .danger-zone .label { background: #9b321e; }
         .danger-copy { color: var(--muted); line-height: 1.75; }
         .withdraw-check { display: flex; gap: 10px; align-items: flex-start; margin: 20px 0 14px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper); font-weight: 700; cursor: pointer; }
-        .withdraw-check:has(input:checked) { background: #ffd8cf; }
+        .withdraw-check:has(input:checked) { color: var(--ink); background: #ffc5b3; }
         .withdraw-check input { width: 21px; height: 21px; margin-top: 2px; flex: 0 0 auto; }
         .withdraw-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
         #withdrawButton { color: white; background: #9b321e; }

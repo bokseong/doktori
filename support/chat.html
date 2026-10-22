@@ -9,23 +9,23 @@
         .chat-shell { width: min(900px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 70px; }
         .chat-head { display: flex; justify-content: space-between; gap: 18px; align-items: end; margin-bottom: 20px; }
         .chat-head h1 { margin: 12px 0 6px; font: clamp(2.5rem, 7vw, 4.6rem)/1.05 "Black Han Sans", sans-serif; }
-        .chat-notice { padding: 14px 16px; border: 2px solid var(--ink); background: var(--lime); line-height: 1.6; }
+        .chat-notice { padding: 14px 16px; border: 2px solid var(--ink); color: var(--ink); background: var(--lime); line-height: 1.6; }
         .conversation-picker { display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; gap: 12px; align-items: center; margin-top: 18px; padding: 14px 16px; border: 2px solid var(--ink); background: var(--paper-strong); }
         .conversation-picker[hidden] { display: none; }
         .conversation-picker label { font-weight: 800; }
-        .conversation-picker select { width: 100%; min-height: 46px; padding: 8px 10px; border: 2px solid var(--ink); background: white; }
-        .admin-identity-settings { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; gap: 10px; align-items: center; margin-top: 18px; padding: 14px 16px; border: 2px solid var(--ink); background: #dfe8ff; }
+        .conversation-picker select { width: 100%; min-height: 46px; padding: 8px 10px; border: 2px solid var(--line); color: var(--cream); background: var(--paper); }
+        .admin-identity-settings { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; gap: 10px; align-items: center; margin-top: 18px; padding: 14px 16px; border: 2px solid var(--line); background: #2b2032; }
         .admin-identity-settings[hidden] { display: none; }
         .admin-identity-settings label { font-weight: 800; }
-        .admin-identity-settings input { min-height: 46px; padding: 8px 10px; border: 2px solid var(--ink); background: white; }
+        .admin-identity-settings input { min-height: 46px; padding: 8px 10px; border: 2px solid var(--line); color: var(--cream); background: var(--paper); }
         #conversationTitle { margin: 18px 0 0; font-size: 1.05rem; }
         .messages { height: min(58vh, 620px); min-height: 360px; margin-top: 18px; padding: 18px; overflow-y: auto; border: 2px solid var(--ink); background: var(--paper-strong); box-shadow: var(--shadow); }
         .message-row { display: grid; gap: 5px; max-width: 78%; margin-bottom: 14px; }
         .message-row.mine { margin-left: auto; }
         .message-meta { color: var(--muted); font-size: .78rem; }
-        .message-bubble { padding: 11px 13px; border: 2px solid var(--ink); background: white; white-space: pre-wrap; overflow-wrap: anywhere; }
-        .message-row.mine .message-bubble { background: var(--lime); }
-        .message-row.admin .message-bubble { background: #dfe8ff; }
+        .message-bubble { padding: 11px 13px; border: 2px solid #403347; color: var(--cream); background: var(--paper); white-space: pre-wrap; overflow-wrap: anywhere; }
+        .message-row.mine .message-bubble { color: var(--ink); background: var(--lime); }
+        .message-row.admin .message-bubble { background: #2b2032; }
         .chat-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 16px; }
         .chat-form textarea { min-height: 72px; padding: 12px; border: 2px solid var(--ink); resize: vertical; }
         .chat-form button { min-width: 120px; }
