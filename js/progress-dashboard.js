@@ -11,6 +11,14 @@ import { adminAccess as access, adminUser as user, requireHubEntry } from "./adm
 import { db } from "./firebase.js";
 
 const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
+const BOOTHS = Object.freeze([
+    { id: "booth1", name: "독토리 QR 탐색 행사" },
+    { id: "booth2", name: "마녀 물약" },
+    { id: "booth3", name: "카드 게임" },
+    { id: "booth4", name: "스퀴시 만들기" },
+    { id: "booth5", name: "부적 인형 만들기" },
+    { id: "booth6", name: "사진찍기" }
+]);
 if (!requireHubEntry()) await new Promise(() => {});
 const dashboard = document.getElementById("dashboard");
 const denied = document.getElementById("denied");
@@ -18,8 +26,11 @@ const rows = document.getElementById("progressRows");
 const status = document.getElementById("dashboardStatus");
 const search = document.getElementById("searchInput");
 let records = [];
+let selectedMemberId = null;
+const memberDetail = document.getElementById("memberDetail");
+const boothStatusGrid = document.getElementById("boothStatusGrid");
 
-if (!access.isAdmin) {
+if (!access.isGrade1) {
     denied.hidden = false;
     document.body.style.visibility = "visible";
     await new Promise(() => {});
@@ -32,6 +43,30 @@ function createCell(value) {
     const cell = document.createElement("td");
     cell.textContent = value;
     return cell;
+}
+
+function displayStudentNumber(record) {
+    return ["admin", "grade1", "grade2"].includes(record.role) ? "관리자" : (record.studentNumber || "-");
+}
+
+function showMemberDetail(record, scroll = true) {
+    selectedMemberId = record.id;
+    document.getElementById("memberDetailTitle").textContent = record.studentName || record.displayName || "이름 미등록";
+    document.getElementById("memberDetailMeta").textContent = `${displayStudentNumber(record)} · ${record.email || "이메일 없음"} · QR ${record.found.length}/6`;
+    boothStatusGrid.replaceChildren();
+    BOOTHS.forEach((booth, index) => {
+        const state = record.booths[booth.id] || { participated: false, rank: null };
+        const card = document.createElement("article");
+        card.className = `booth-status-card${state.participated ? " yes" : ""}`;
+        const title = document.createElement("strong");
+        const summary = document.createElement("span");
+        title.textContent = `${String(index + 1).padStart(2, "0")} · ${booth.name}`;
+        summary.textContent = `${state.participated ? "참여" : "미참여"}${Number.isInteger(state.rank) ? ` · ${state.rank}등` : " · 등수 없음"}`;
+        card.append(title, summary);
+        boothStatusGrid.append(card);
+    });
+    memberDetail.hidden = false;
+    if (scroll) memberDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 async function setPrizeReceived(record, received) {
@@ -71,40 +106,51 @@ function render() {
     rows.replaceChildren();
     filtered.forEach((record) => {
         const row = document.createElement("tr");
-        row.append(createCell(record.studentName || "이름 미등록"), createCell(record.studentNumber || "-"), createCell(record.email || "-"));
+        const nameCell = document.createElement("td");
+        const memberButton = document.createElement("button");
+        memberButton.type = "button";
+        memberButton.className = "member-button";
+        memberButton.textContent = record.studentName || "이름 미등록";
+        memberButton.addEventListener("click", () => showMemberDetail(record));
+        nameCell.append(memberButton);
+        row.append(nameCell, createCell(displayStudentNumber(record)), createCell(record.email || "-"));
         const participation = document.createElement("td");
         const participationBadge = document.createElement("span");
         participationBadge.className = `badge${record.found.length ? " yes" : ""}`;
         participationBadge.textContent = record.found.length ? "참여" : "미참여";
         participation.append(participationBadge);
-        row.append(participation, createCell(`${record.found.length} / 6`), createCell(record.found.length ? record.found.map((id) => id.toUpperCase()).join(", ") : "-"));
-        const eligible = record.found.length === QR_IDS.length;
-        row.append(createCell(eligible ? "대상" : "미완주"), createCell(record.received ? "수령 완료" : "미수령"));
+        const boothCount = Object.values(record.booths).filter((item) => item.participated === true).length;
+        row.append(participation, createCell(`${record.found.length} / 6`), createCell(`${boothCount} / ${BOOTHS.length}`));
+        const rankedBooths = Object.values(record.booths).filter((item) => Number.isInteger(item.rank)).length;
+        const prizeBasis = record.found.length === QR_IDS.length ? "QR 완주" : rankedBooths ? `등수 기록 ${rankedBooths}개` : boothCount ? `부스 참여 ${boothCount}개` : "기록 없음";
+        row.append(createCell(prizeBasis), createCell(record.received ? "수령 완료" : "미수령"));
         const actionCell = document.createElement("td");
         const button = document.createElement("button");
         button.type = "button";
         button.className = "receipt-button";
         button.textContent = record.received ? "수령 취소" : "수령 완료";
-        button.disabled = !eligible && !record.received;
         button.addEventListener("click", () => setPrizeReceived(record, !record.received));
         actionCell.append(button);
         row.append(actionCell);
         rows.append(row);
     });
     document.getElementById("registeredCount").textContent = String(records.length);
-    document.getElementById("startedCount").textContent = String(records.filter((record) => record.found.length > 0).length);
+    document.getElementById("startedCount").textContent = String(records.filter((record) => record.found.length > 0 || Object.values(record.booths).some((item) => item.participated === true)).length);
     document.getElementById("completedCount").textContent = String(records.filter((record) => record.found.length === QR_IDS.length).length);
     document.getElementById("receivedCount").textContent = String(records.filter((record) => record.received).length);
     status.textContent = `${filtered.length}명을 표시하고 있습니다.`;
+    const selected = records.find((record) => record.id === selectedMemberId);
+    if (selected) showMemberDetail(selected, false);
 }
 
 async function loadRecords() {
     status.textContent = "전체 진행률을 불러오는 중...";
     try {
-        const [usersSnapshot, progressSnapshot, claimsSnapshot] = await Promise.all([
+        const [usersSnapshot, progressSnapshot, claimsSnapshot, boothSnapshot] = await Promise.all([
             getDocs(collection(db, "users")),
             getDocs(collectionGroup(db, "progress")),
-            getDocs(collection(db, "prizeClaims"))
+            getDocs(collection(db, "prizeClaims")),
+            getDocs(collectionGroup(db, "boothParticipation"))
         ]);
         const progressByUser = new Map();
         progressSnapshot.docs.forEach((item) => {
@@ -115,8 +161,16 @@ async function loadRecords() {
             progressByUser.set(uid, found);
         });
         const claims = new Map(claimsSnapshot.docs.map((item) => [item.id, item.data()]));
+        const boothsByUser = new Map();
+        boothSnapshot.docs.forEach((item) => {
+            const uid = item.ref.parent.parent?.id;
+            if (!uid) return;
+            const boothRecords = boothsByUser.get(uid) || {};
+            boothRecords[item.id] = item.data();
+            boothsByUser.set(uid, boothRecords);
+        });
         records = usersSnapshot.docs
-            .map((item) => ({ id: item.id, ...item.data(), found: (progressByUser.get(item.id) || []).sort(), received: claims.get(item.id)?.received === true }))
+            .map((item) => ({ id: item.id, ...item.data(), found: (progressByUser.get(item.id) || []).sort(), booths: boothsByUser.get(item.id) || {}, received: claims.get(item.id)?.received === true, receivedBy: claims.get(item.id)?.receivedBy || "" }))
             .filter((record) => record.role !== "withdrawn")
             .sort((a, b) => (a.studentName || a.email || "").localeCompare(b.studentName || b.email || "", "ko"));
         render();
@@ -127,8 +181,8 @@ async function loadRecords() {
 }
 
 function exportCsv() {
-    const header = ["이름", "학번", "이메일", "참여 여부", "완료 수", "찾은 QR", "상품 대상", "상품 수령"];
-    const values = records.map((record) => [record.studentName || "", record.studentNumber || "", record.email || "", record.found.length ? "참여" : "미참여", record.found.length, record.found.join(" "), record.found.length === 6 ? "대상" : "미완주", record.received ? "수령 완료" : "미수령"]);
+    const header = ["이름", "학번", "이메일", "QR 참여 여부", "QR 완료 수", "찾은 QR", ...BOOTHS.flatMap((booth) => [`${booth.name} 참여`, `${booth.name} 등수`]), "상품 수령", "수령 처리자"];
+    const values = records.map((record) => [record.studentName || "", displayStudentNumber(record), record.email || "", record.found.length ? "참여" : "미참여", record.found.length, record.found.join(" "), ...BOOTHS.flatMap((booth) => { const state = record.booths[booth.id] || {}; return [state.participated === true ? "참여" : "미참여", Number.isInteger(state.rank) ? state.rank : ""]; }), record.received ? "수령 완료" : "미수령", record.receivedBy || ""]);
     const csv = [header, ...values].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
@@ -139,8 +193,10 @@ function exportCsv() {
 }
 
 search.addEventListener("input", render);
+document.getElementById("closeMemberDetail").addEventListener("click", () => { selectedMemberId = null; memberDetail.hidden = true; });
 document.getElementById("exportButton").addEventListener("click", exportCsv);
 await loadRecords();
 onSnapshot(collection(db, "prizeClaims"), loadRecords, () => {});
 onSnapshot(collection(db, "users"), loadRecords, () => {});
 onSnapshot(collectionGroup(db, "progress"), loadRecords, () => {});
+onSnapshot(collectionGroup(db, "boothParticipation"), loadRecords, () => {});

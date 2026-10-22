@@ -109,7 +109,7 @@ async function loadUserOptions() {
     userSelect.replaceChildren();
     snapshot.docs
         .map((item) => ({ id: item.id, ...item.data() }))
-        .filter((record) => (record.role || "participant") === "participant")
+        .filter((record) => ["participant", "member"].includes(record.role || "member"))
         .sort((a, b) => (a.studentName || a.email || "").localeCompare(b.studentName || b.email || "", "ko"))
         .forEach((record) => userSelect.append(new Option(`${record.studentName || "이름 미등록"} · ${record.studentNumber || record.email || record.id}`, record.id)));
     if ([...userSelect.options].some((option) => option.value === previous)) userSelect.value = previous;
@@ -251,7 +251,7 @@ async function anonymizeExpiredUsers() {
         return;
     }
     const users = await getDocs(collection(db, "users"));
-    const targets = users.docs.filter((item) => (item.data().role || "participant") === "participant" && item.data().privacyConsent === true);
+    const targets = users.docs.filter((item) => ["participant", "member"].includes(item.data().role || "member") && item.data().privacyConsent === true);
     if (!targets.length) { configMessage.textContent = "익명화할 참여자가 없습니다."; return; }
     if (!window.confirm(`${targets.length}명의 이름·학번·이메일을 익명화하고 QR 진행 기록을 삭제합니다. 이 작업은 되돌리기 어렵습니다. 실행할까요?`)) return;
     configMessage.textContent = "개인정보를 익명화하는 중...";

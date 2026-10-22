@@ -96,7 +96,7 @@
         import { adminAccess as access, adminUser as currentUser, requireHubEntry } from "../js/admin-guard.js";
 
         if (!requireHubEntry()) await new Promise(() => {});
-        if (!access.isAdmin) {
+        if (!access.isGrade1) {
             location.replace(new URL("../index.html", location.href));
             await new Promise(() => {});
         }

@@ -69,7 +69,7 @@
         <section class="shortcut-panel panel" data-admin-view="event" aria-labelledby="shortcutTitle">
             <div class="shortcut-head">
                 <div class="shortcut-title"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
-                <div class="actions" style="margin-top:0"><a class="button" data-admin-page href="./member-management.html">회원 담당</a><a class="button" data-admin-page href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" data-admin-page href="../game/roulette.html">룰렛 게임</a><a class="button button--paper" data-admin-page href="../game/Ladder.html">사다리 게임</a><a class="button button--paper" href="../support/chat.html?admin=1">1:1 도움 채팅</a><a id="qrBuilderLink" class="button button--coral" data-admin-page href="./QR.html">QR 생성기</a></div>
+                <div class="actions" style="margin-top:0"><a class="button" data-admin-page href="./member-management.html">회원 담당</a><a class="button" data-admin-page href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button" data-admin-page href="./booths/">부스 참여 관리</a><a class="button button--paper" data-admin-page href="../game/roulette.html">룰렛 게임</a><a class="button button--paper" data-admin-page href="../game/Ladder.html">사다리 게임</a><a class="button button--paper" href="../support/chat.html?admin=1">1:1 도움 채팅</a><a id="qrBuilderLink" class="button button--coral" data-admin-page href="./QR.html">QR 생성기</a></div>
             </div>
             <div class="qr-shortcuts">
                 <a class="button" href="../qr/299az81a68c.html">QR 01</a><a class="button" href="../qr/hq1bq8pg1c.html">QR 02</a><a class="button" href="../qr/iq1bz5iutx.html">QR 03</a><a class="button" href="../qr/qrxc7ij88f.html">QR 04</a><a class="button" href="../qr/eq4bunq5v.html">QR 05</a><a class="button" href="../qr/jk1ba63db.html">QR 06</a>
@@ -150,7 +150,7 @@
             sessionStorage.setItem("doktori-admin-hub-entry", JSON.stringify({ path: new URL(link.href).pathname, issuedAt: Date.now(), uid: currentUser.uid }));
         }));
 
-        if (!access.isAdmin) {
+        if (!access.isGrade1) {
             denied.hidden = false;
             document.body.style.visibility = "visible";
         } else {
@@ -180,9 +180,9 @@
                 loadedRecords = records;
                 renderRecords();
                 document.getElementById("totalUsers").textContent = String(records.length);
-                document.getElementById("adminUsers").textContent = String(records.filter((item) => item.role === "admin").length);
+                document.getElementById("adminUsers").textContent = String(records.filter((item) => ["admin", "grade1", "grade2"].includes(item.role)).length);
                 document.getElementById("completedUsers").textContent = String(records.filter((item) => item.found.length === QR_IDS.length).length);
-                document.getElementById("participantUsers").textContent = String(records.filter((item) => item.role === "participant").length);
+                document.getElementById("participantUsers").textContent = String(records.filter((item) => [undefined, "participant", "member"].includes(item.role)).length);
                 document.getElementById("blockedUsers").textContent = String(records.filter((item) => item.accountStatus === "blocked").length);
                 message.textContent = records.length ? `총 ${records.length}명의 정보를 불러왔습니다.` : "등록된 사용자가 없습니다.";
             } catch (error) {
@@ -203,7 +203,7 @@
 
         function exportCsv() {
             const header = ["이름", "학번", "이메일", "권한", "계정상태", "차단사유", "완료수", "찾은QR", "개인정보동의"];
-            const values = loadedRecords.map((record) => [record.studentName || "", record.studentNumber || "", record.email || "", record.role || "participant", record.accountStatus === "blocked" ? "차단" : "정상", record.blockReason || "", record.found.length, record.found.join(" "), record.privacyConsent === true ? "동의" : "미동의"]);
+            const values = loadedRecords.map((record) => [record.studentName || "", ["admin", "grade1", "grade2"].includes(record.role) ? "관리자" : (record.studentNumber || ""), record.email || "", record.role || "member", record.accountStatus === "blocked" ? "차단" : "정상", record.blockReason || "", record.found.length, record.found.join(" "), record.privacyConsent === true ? "동의" : "미동의"]);
             const csv = [header, ...values].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\r\n");
             const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" })); link.download = `doktori-users-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(link.href);
         }
@@ -221,21 +221,26 @@
             const email = document.createElement("div");
             name.textContent = record.studentName || record.displayName || "이름 미등록";
             email.className = "email"; email.textContent = record.email || "이메일 없음"; identityCell.append(name, email);
-            const numberCell = document.createElement("td"); numberCell.textContent = record.studentNumber || "미등록";
+            const numberCell = document.createElement("td"); numberCell.textContent = ["admin", "grade1", "grade2"].includes(record.role) ? "관리자" : (record.studentNumber || "미등록");
             const consentCell = document.createElement("td");
             consentCell.textContent = record.privacyConsent === true
                 ? `동의 · ${formatDate(record.privacyConsentAt)}`
                 : "미동의";
             const roleCell = document.createElement("td");
             const controls = document.createElement("div"); controls.className = "role-controls";
-            const select = document.createElement("select"); select.append(new Option("참여자", "participant"), new Option("관리자", "admin")); select.value = record.role || "participant";
+            const select = document.createElement("select"); select.append(new Option("일반회원", "member"), new Option("2급 관리자", "grade2"), new Option("1급 관리자", "grade1")); select.value = record.role === "admin" ? "grade1" : record.role === "participant" || !record.role ? "member" : record.role;
             const save = document.createElement("button"); save.type = "button"; save.className = "small"; save.textContent = "저장";
             const master = (record.email || "").toLowerCase() === MASTER_ADMIN_EMAIL;
-            select.disabled = master || blocked; save.disabled = master || blocked; if (master) save.textContent = "마스터"; else if (blocked) save.textContent = "차단됨";
+            const ownAccount = record.id === currentUser.uid;
+            select.disabled = master || blocked || ownAccount;
+            save.disabled = master || blocked || ownAccount;
+            if (master) save.textContent = "마스터";
+            else if (ownAccount) save.textContent = "내 계정";
+            else if (blocked) save.textContent = "차단됨";
             save.addEventListener("click", async () => {
                 save.disabled = true; message.textContent = `${record.email || record.studentName} 권한을 저장하는 중...`;
                 try {
-                    const previousRole = record.role || "participant";
+                    const previousRole = record.role || "member";
                     const batch = writeBatch(db);
                     batch.update(doc(db, "users", record.id), { role: select.value });
                     batch.set(doc(collection(db, "auditLogs")), { actorUid: currentUser.uid, actorEmail: currentUser.email || "", action: "role-updated", targetUid: record.id, qrId: "", details: JSON.stringify({ from: previousRole, to: select.value }), createdAt: serverTimestamp() });
@@ -244,7 +249,7 @@
                     message.textContent = "권한을 변경했습니다.";
                 }
                 catch (error) { console.error(error); message.textContent = "권한을 변경하지 못했습니다."; }
-                finally { save.disabled = master || blocked; }
+                finally { save.disabled = master || blocked || ownAccount; }
             });
             controls.append(select, save); roleCell.append(controls);
             const statusCell = document.createElement("td");
@@ -264,7 +269,6 @@
             const blockButton = document.createElement("button");
             blockButton.type = "button";
             blockButton.className = `small ${blocked ? "button--paper" : "button--coral"}`;
-            const ownAccount = record.id === currentUser.uid;
             blockButton.textContent = master ? "보호됨" : ownAccount ? "내 계정" : blocked ? "차단 해제" : "계정 차단";
             blockButton.disabled = master || ownAccount;
             blockButton.addEventListener("click", async () => {

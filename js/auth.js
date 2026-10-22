@@ -26,6 +26,13 @@ export const PRIVACY_CONSENT_VERSION = "2026-10-19-v2";
 const STUDENT_NUMBER_PATTERN = /^[0-9]{4,20}$/;
 const STUDENT_NAME_PATTERN = /^[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}$/u;
 const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
+const BOOTH_IDS = Array.from({ length: 6 }, (_, index) => `booth${index + 1}`);
+
+export function normalizeRole(role) {
+    if (role === "admin") return "grade1";
+    if (role === "participant") return "member";
+    return role || "member";
+}
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
@@ -162,9 +169,9 @@ export async function registerMember(user, studentNumber, studentName, privacyCo
     if (!snapshot.exists()) {
         profile.createdAt = serverTimestamp();
         profile.registeredAt = serverTimestamp();
-        profile.role = isMasterAdmin(user) ? "admin" : "participant";
-    } else if (isMasterAdmin(user) && snapshot.data().role !== "admin") {
-        profile.role = "admin";
+        profile.role = isMasterAdmin(user) ? "grade1" : "member";
+    } else if (isMasterAdmin(user) && normalizeRole(snapshot.data().role) !== "grade1") {
+        profile.role = "grade1";
     }
 
     await setDoc(reference, profile, { merge: true });
@@ -182,19 +189,21 @@ export async function touchMemberProfile(user) {
         displayName: user.displayName || "",
         lastLoginAt: serverTimestamp()
     };
-    if (isMasterAdmin(user) && profile.role !== "admin") update.role = "admin";
+    if (isMasterAdmin(user) && normalizeRole(profile.role) !== "grade1") update.role = "grade1";
     await setDoc(doc(db, "users", user.uid), update, { merge: true });
     return { ...profile, ...update };
 }
 
 export async function getUserAccess(user = auth.currentUser) {
-    if (!user) return { role: null, isAdmin: false, isBlocked: false };
-    if (isMasterAdmin(user)) return { role: "admin", isAdmin: true, isBlocked: false };
+    if (!user) return { role: null, isAdmin: false, isGrade1: false, isGrade2: false, canManageBooths: false, isBlocked: false };
+    if (isMasterAdmin(user)) return { role: "grade1", isAdmin: true, isGrade1: true, isGrade2: false, canManageBooths: true, isBlocked: false };
 
     const profile = await getMemberProfile(user);
-    const role = profile?.role || "participant";
+    const role = normalizeRole(profile?.role);
     const isBlocked = isAccountBlocked(profile);
-    return { role, isAdmin: role === "admin" && !isBlocked, isBlocked };
+    const isGrade1 = role === "grade1" && !isBlocked;
+    const isGrade2 = role === "grade2" && !isBlocked;
+    return { role, isAdmin: isGrade1 || isGrade2, isGrade1, isGrade2, canManageBooths: isGrade1 || isGrade2, isBlocked };
 }
 
 export async function logout() {
@@ -230,6 +239,7 @@ export async function deleteMemberAccount(user = auth.currentUser) {
         profileBatch.delete(doc(db, "users", user.uid, "progress", qrId));
         profileBatch.delete(doc(db, "answerAttempts", `${user.uid}_${qrId}`));
     });
+    BOOTH_IDS.forEach((boothId) => profileBatch.delete(doc(db, "users", user.uid, "boothParticipation", boothId)));
     profileBatch.delete(doc(db, "chatRateLimits", user.uid));
     profileBatch.set(doc(db, "users", user.uid), {
         uid: user.uid,

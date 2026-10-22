@@ -22,16 +22,27 @@
         .badge { display: inline-block; padding: 4px 7px; border: 2px solid var(--ink); background: var(--paper); font-weight: 800; }
         .badge.yes { color: var(--ink); background: var(--lime); }
         .receipt-button { min-height: 38px; padding: 6px 10px; box-shadow: 3px 3px 0 var(--ink); }
-        @media (max-width: 720px) { .dashboard-head { align-items: stretch; flex-direction: column; } .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+        .member-button { padding: 0; border: 0; color: var(--blue); background: transparent; box-shadow: none; text-align: left; text-decoration: underline; }
+        .member-button:hover { color: var(--lime); }
+        .member-detail { margin: 20px 0; padding: 22px; }
+        .member-detail[hidden] { display: none; }
+        .member-detail__head { display: flex; align-items: start; justify-content: space-between; gap: 14px; }
+        .booth-status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+        .booth-status-card { padding: 13px; border: 2px solid var(--ink); background: var(--paper); }
+        .booth-status-card strong, .booth-status-card span { display: block; }
+        .booth-status-card span { margin-top: 7px; color: var(--muted); }
+        .booth-status-card.yes { border-color: var(--lime); }
+        @media (max-width: 720px) { .dashboard-head { align-items: stretch; flex-direction: column; } .summary-grid { grid-template-columns: repeat(2, 1fr); } .booth-status-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <header class="site-header"><div class="brand"><span class="brand-mark">P</span><span class="brand-text">독토리 전체 진행률</span></div><nav class="account"><a class="button button--paper" href="./index.html">통합 관리자</a><a class="button button--paper" href="../index.html">메인으로</a></nav></header>
     <main id="dashboard" class="dashboard" hidden>
-        <section class="dashboard-head"><div><span class="label">ADMIN ONLY</span><h1>참여·수령 현황</h1><p class="lead">참여 여부, QR 완료 수와 상품 수령 여부를 실시간으로 확인합니다.</p></div><button id="exportButton" class="button--paper" type="button">CSV 내보내기</button></section>
+        <section class="dashboard-head"><div><span class="label">ADMIN ONLY</span><h1>참여·수령 현황</h1><p class="lead">회원별 QR 진행도, 모든 부스의 참여 여부·등수와 상품 수령 여부를 실시간으로 확인합니다.</p></div><button id="exportButton" class="button--paper" type="button">CSV 내보내기</button></section>
         <section class="summary-grid"><article>등록 참여자<strong id="registeredCount">0</strong></article><article>참여 시작<strong id="startedCount">0</strong></article><article>6개 완주<strong id="completedCount">0</strong></article><article>상품 수령<strong id="receivedCount">0</strong></article></section>
         <div class="toolbar"><input id="searchInput" type="search" placeholder="이름·학번·이메일 검색"><p id="dashboardStatus" class="status" role="status"></p></div>
-        <div class="table-wrap"><table><thead><tr><th>이름</th><th>학번</th><th>이메일</th><th>참여 여부</th><th>진행률</th><th>찾은 QR</th><th>상품 대상</th><th>상품 수령</th><th>수령 처리</th></tr></thead><tbody id="progressRows"></tbody></table></div>
+        <section id="memberDetail" class="member-detail panel" hidden><div class="member-detail__head"><div><span class="label">MEMBER DETAIL</span><h2 id="memberDetailTitle" class="section-title">회원 참여 현황</h2><p id="memberDetailMeta" class="muted"></p></div><button id="closeMemberDetail" class="button--paper" type="button">닫기</button></div><div id="boothStatusGrid" class="booth-status-grid"></div></section>
+        <div class="table-wrap"><table><thead><tr><th>이름</th><th>학번</th><th>이메일</th><th>QR 참여</th><th>QR 진행률</th><th>부스 참여</th><th>상품 근거</th><th>상품 수령</th><th>수령 처리</th></tr></thead><tbody id="progressRows"></tbody></table></div>
     </main>
     <section id="denied" class="panel" style="width:min(520px,calc(100% - 32px));margin:12vh auto;padding:36px;text-align:center" hidden><h1 class="section-title">접근 권한이 없습니다</h1><p>관리자만 전체 진행률과 상품 수령 현황을 확인할 수 있습니다.</p><a class="button" href="../index.html">메인으로</a></section>
     <footer class="site-footer"><div class="site-footer__identity"><strong>복성고 도서부 · 독토리</strong><span>학교 곳곳의 단서를 찾는 QR 미션</span></div><div class="site-footer__meta"><a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal">

@@ -79,7 +79,7 @@ function startAdminChatAlerts() {
         if (!user || /\/chat\.html$/i.test(location.pathname)) return;
         try {
             const access = await getUserAccess(user);
-            if (!access.isAdmin) return;
+            if (!access.isGrade1) return;
             let initialSnapshotReceived = false;
             const latestMessage = query(collection(db, "chatMessages"), orderBy("createdAt", "desc"), limit(1));
             stopChatAlerts = onSnapshot(latestMessage, (snapshot) => {

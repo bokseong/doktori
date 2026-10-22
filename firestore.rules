@@ -25,12 +25,42 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
-    function isAdmin() {
+    function isGrade1() {
       return isMasterAdmin()
         || (isSignedIn()
           && exists(/databases/$(database)/documents/users/$(request.auth.uid))
           && isAccountActive(request.auth.uid)
-          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "participant") == "admin");
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "member") in ["grade1", "admin"]);
+    }
+
+    function isGrade2() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && isAccountActive(request.auth.uid)
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "member") == "grade2";
+    }
+
+    function isAdmin() {
+      return isGrade1() || isGrade2();
+    }
+
+    function isMemberAccount() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && isAccountActive(request.auth.uid)
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "member") in ["participant", "member"];
+    }
+
+    function isValidBoothParticipation(data, boothId) {
+      return boothId in ["booth1", "booth2", "booth3", "booth4", "booth5", "booth6"]
+        && data.keys().hasOnly(["boothId", "participated", "rank", "updatedAt", "updatedBy"])
+        && data.boothId == boothId
+        && data.participated is bool
+        && (data.rank == null
+          || (data.rank is int && data.rank >= 1 && data.rank <= 9999))
+        && (data.participated == true || data.rank == null)
+        && data.updatedAt == request.time
+        && data.updatedBy == request.auth.uid;
     }
 
     function isCorrectAnswer(qrId, answer) {
@@ -115,7 +145,7 @@ service cloud.firestore {
         && data.get("adminChatName", "") is string
         && (!data.keys().hasAny(["adminChatName"])
           || data.adminChatName.matches('^[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.\\-]{0,29}$'))
-        && (data.get("role", "participant") == "admin" || data.get("adminChatName", "") == "")
+        && (data.get("role", "member") in ["admin", "grade1", "grade2"] || data.get("adminChatName", "") == "")
         && data.get("storyMode", "normal") in ["normal", "story"]
         && data.get("accountStatus", "active") in ["active", "blocked"]
         && data.get("blockReason", "") is string
@@ -160,8 +190,8 @@ service cloud.firestore {
           "accountStatus", "blockReason", "accountStatusAt", "accountStatusBy"
         ])
         && request.resource.data.privacyConsentAt == request.time
-        && request.resource.data.get("role", "participant")
-          == (isMasterAdmin() ? "admin" : "participant");
+        && request.resource.data.get("role", "member")
+          == (isMasterAdmin() ? "grade1" : "member");
 
       allow update: if (
           isOwner(userId)
@@ -193,17 +223,17 @@ service cloud.firestore {
             )
           )
           && (
-            request.resource.data.get("role", "participant")
-              == resource.data.get("role", "participant")
-            || (isMasterAdmin() && request.resource.data.role == "admin")
+            request.resource.data.get("role", "member")
+              == resource.data.get("role", "member")
+            || (isMasterAdmin() && request.resource.data.role == "grade1")
           )
         ) || (
-          isAdmin()
+          isGrade1()
           && resource.data.get("email", "") != "github.jwastro09@gmail.com"
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["role"])
-          && request.resource.data.role in ["participant", "admin"]
+          && request.resource.data.role in ["member", "grade2", "grade1"]
         ) || (
-          isAdmin()
+          isGrade1()
           && userId != request.auth.uid
           && resource.data.get("email", "") != "github.jwastro09@gmail.com"
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -229,13 +259,13 @@ service cloud.firestore {
         ) || (
           isOwner(userId)
           && !isMasterAdmin()
-          && resource.data.get("role", "participant") in ["participant", "admin", "withdrawn"]
+          && resource.data.get("role", "member") in ["participant", "admin", "member", "grade2", "grade1", "withdrawn"]
           && isValidWithdrawalProfile(request.resource.data, userId)
         );
       allow delete: if false;
 
       match /progress/{qrId} {
-        allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
+        allow read: if (isOwner(userId) && isAccountActive(userId)) || isGrade1();
         allow create: if (
             isOwner(userId)
             && hasCurrentConsent(userId)
@@ -250,7 +280,7 @@ service cloud.firestore {
             && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.uid == userId
             && getAfter(/databases/$(database)/documents/answerAttempts/$(userId + "_" + qrId)).data.qrId == qrId
           ) || (
-            isAdmin()
+            isGrade1()
             && qrId in ["qr1", "qr2", "qr3", "qr4", "qr5", "qr6"]
             && request.resource.data.keys().hasOnly(["qrId", "found", "completedAt", "manualBy"])
             && request.resource.data.qrId == qrId
@@ -259,13 +289,35 @@ service cloud.firestore {
             && request.resource.data.manualBy == request.auth.uid
           );
         allow update: if false;
-        allow delete: if isAdmin() || (isOwner(userId) && isAccountActive(userId) && !isMasterAdmin());
+        allow delete: if isGrade1() || (isOwner(userId) && isAccountActive(userId) && !isMasterAdmin());
+      }
+
+      match /boothParticipation/{boothId} {
+        allow read: if isAdmin();
+        allow create: if isAdmin()
+          && isValidBoothParticipation(request.resource.data, boothId)
+          && (isGrade1() || request.resource.data.rank == null);
+        allow update: if isAdmin()
+          && isValidBoothParticipation(request.resource.data, boothId)
+          && (isGrade1()
+            || (isGrade2()
+              && (
+                (request.resource.data.participated == true
+                  && request.resource.data.rank == resource.data.get("rank", null))
+                || (request.resource.data.participated == false
+                  && request.resource.data.rank == null)
+              )));
+        allow delete: if isGrade1() || (isOwner(userId) && isAccountActive(userId) && !isMasterAdmin());
       }
     }
 
     // 관리자 전체 현황에서 사용하는 collectionGroup("progress") 조회입니다.
     // 개별 사용자의 진행 기록 접근은 위의 소유자 규칙으로 계속 제한합니다.
     match /{documentPath=**}/progress/{qrId} {
+      allow read: if isGrade1();
+    }
+
+    match /{documentPath=**}/boothParticipation/{boothId} {
       allow read: if isAdmin();
     }
 
@@ -300,7 +352,7 @@ service cloud.firestore {
 
     match /eventConfig/{configId} {
       allow read: if configId == "current";
-      allow create, update: if isAdmin()
+      allow create, update: if isGrade1()
         && configId == "current"
         && request.resource.data.keys().hasOnly(["notice", "participationEnabled", "startAt", "endAt", "retentionAt", "qrStatus", "updatedAt", "updatedBy"])
         && request.resource.data.notice is string
@@ -320,7 +372,7 @@ service cloud.firestore {
     }
 
     match /auditLogs/{logId} {
-      allow read: if isAdmin();
+      allow read: if isGrade1();
       allow create: if isAdmin()
         && request.resource.data.keys().hasOnly(["actorUid", "actorEmail", "action", "targetUid", "qrId", "details", "createdAt"])
         && request.resource.data.actorUid == request.auth.uid
@@ -331,7 +383,7 @@ service cloud.firestore {
     }
 
     match /quizTelemetry/{eventId} {
-      allow read: if isAdmin() || (isSignedIn() && isAccountActive(request.auth.uid) && resource.data.uid == request.auth.uid);
+      allow read: if isGrade1() || (isSignedIn() && isAccountActive(request.auth.uid) && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn()
         && isAccountActive(request.auth.uid)
         && request.resource.data.keys().hasOnly(["uid", "qrId", "outcome", "createdAt"])
@@ -344,7 +396,7 @@ service cloud.firestore {
     }
 
     match /clientErrors/{errorId} {
-      allow read: if isAdmin() || (isSignedIn() && isAccountActive(request.auth.uid) && resource.data.uid == request.auth.uid);
+      allow read: if isGrade1() || (isSignedIn() && isAccountActive(request.auth.uid) && resource.data.uid == request.auth.uid);
       allow create: if isSignedIn()
         && isAccountActive(request.auth.uid)
         && request.resource.data.keys().hasOnly(["uid", "code", "context", "path", "online", "createdAt"])
@@ -359,7 +411,7 @@ service cloud.firestore {
 
     match /announcements/{announcementId} {
       allow read: if announcementId == "current";
-      allow create, update: if isAdmin()
+      allow create, update: if isGrade1()
         && announcementId == "current"
         && request.resource.data.keys().hasOnly(["title", "message", "active", "severity", "updatedAt", "updatedBy"])
         && request.resource.data.title is string
@@ -375,8 +427,8 @@ service cloud.firestore {
     }
 
     match /prizeClaims/{userId} {
-      allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
-      allow create, update: if isAdmin()
+      allow read: if (isOwner(userId) && isAccountActive(userId)) || isGrade1();
+      allow create, update: if isGrade1()
         && request.resource.data.keys().hasOnly(["uid", "received", "receivedAt", "receivedBy", "updatedAt"])
         && request.resource.data.uid == userId
         && request.resource.data.received is bool
@@ -385,7 +437,7 @@ service cloud.firestore {
         && (
           (request.resource.data.received == true
             && request.resource.data.receivedAt == request.time
-            && hasCompletedAllMissions(userId))
+          )
           || (request.resource.data.received == false
             && request.resource.data.receivedAt == null)
         );
@@ -393,37 +445,38 @@ service cloud.firestore {
     }
 
     match /chatMessages/{messageId} {
-      allow read: if isAdmin()
-        || (isSignedIn()
+      allow read: if isGrade1()
+        || (isMemberAccount()
           && hasValidConsent(request.auth.uid)
           && (resource.data.get("conversationUid", "") == request.auth.uid
             || resource.data.get("uid", "") == request.auth.uid));
       allow create: if isSignedIn()
         && hasValidConsent(request.auth.uid)
         && request.resource.data.keys().hasOnly(["conversationUid", "senderUid", "studentNumber", "studentName", "senderEmail", "text", "senderRole", "createdAt"])
+        && (isGrade1() || isMemberAccount())
         && request.resource.data.senderUid == request.auth.uid
         && request.resource.data.senderEmail is string
         && request.resource.data.senderEmail == request.auth.token.email
         && (
-          (isAdmin()
+          (isGrade1()
             && request.resource.data.studentNumber == "관리자"
             && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get(
               "adminChatName",
               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName
             ))
-          || (!isAdmin()
+          || (isMemberAccount()
             && request.resource.data.studentNumber == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentNumber
             && request.resource.data.studentName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName)
         )
         && request.resource.data.text is string
         && request.resource.data.text.size() >= 1
         && request.resource.data.text.size() <= 300
-        && request.resource.data.senderRole == (isAdmin() ? "admin" : "participant")
+        && request.resource.data.senderRole == (isGrade1() ? "admin" : "participant")
         && (
-          (!isAdmin() && request.resource.data.conversationUid == request.auth.uid)
-          || (isAdmin()
+          (isMemberAccount() && request.resource.data.conversationUid == request.auth.uid)
+          || (isGrade1()
             && exists(/databases/$(database)/documents/users/$(request.resource.data.conversationUid))
-            && get(/databases/$(database)/documents/users/$(request.resource.data.conversationUid)).data.role == "participant"
+            && get(/databases/$(database)/documents/users/$(request.resource.data.conversationUid)).data.get("role", "member") in ["participant", "member"]
             && hasValidConsent(request.resource.data.conversationUid))
         )
         && request.resource.data.createdAt == request.time
@@ -437,8 +490,9 @@ service cloud.firestore {
     }
 
     match /chatRateLimits/{userId} {
-      allow read: if (isOwner(userId) && hasValidConsent(userId)) || isAdmin();
+      allow read: if (isOwner(userId) && isMemberAccount() && hasValidConsent(userId)) || isGrade1();
       allow create: if isOwner(userId)
+        && isMemberAccount()
         && hasValidConsent(userId)
         && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
         && request.resource.data.uid == userId
@@ -447,6 +501,7 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
         && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
       allow update: if isOwner(userId)
+        && isMemberAccount()
         && hasValidConsent(userId)
         && request.resource.data.keys().hasOnly(["uid", "lastMessageId", "lastSentAt"])
         && request.resource.data.uid == userId
@@ -455,7 +510,7 @@ service cloud.firestore {
         && request.time >= resource.data.lastSentAt + duration.value(3, "s")
         && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
         && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
-      allow delete: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
+      allow delete: if (isOwner(userId) && isMemberAccount()) || isGrade1();
     }
 
     // 기존 축전 사이트의 공개 운세 읽기 규칙은 그대로 유지합니다.

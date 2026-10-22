@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#101014">
-    <title>행사 운영 공통 관리 · 독토리</title>
+    <title>관리자 화면 · 독토리</title>
     <link rel="stylesheet" href="../css/theme.css">
     <link rel="stylesheet" href="../css/footer.css">
 </head>
@@ -12,7 +12,7 @@
     <main class="page-shell" style="min-height:70vh;display:grid;place-items:center;text-align:center">
         <section class="panel" style="padding:32px">
             <span class="label">ADMIN ONLY</span>
-            <h1 class="section-title">행사 운영 공통 관리로 이동 중</h1>
+            <h1 class="section-title">관리자 화면으로 이동 중</h1>
             <p class="muted">관리자 권한을 확인하고 있습니다.</p>
         </section>
     </main>
@@ -21,9 +21,9 @@
         <div class="site-footer__meta"><a class="site-footer__link" href="../support/info.html">사이트 안내 · 이용약관</a><div class="site-footer__legal"><small>© 2026 복성고등학교 도서부</small><small class="site-footer__credit">Designed by <a href="https://github.com/jw-astro09" target="_blank" rel="noopener noreferrer">jw-astro09</a>(<a href="https://bokseong.github.io/DEEPSKY/" target="_blank" rel="noopener noreferrer">DEEP SKY</a>)</small></div></div>
     </footer>
     <script type="module">
-        import { adminUser } from "../js/admin-guard.js";
+        import { adminAccess, adminUser } from "../js/admin-guard.js";
 
-        const destination = new URL("./event-operations.html", location.href);
+        const destination = new URL(adminAccess.isGrade1 ? "./event-operations.html" : "./booths/", location.href);
         sessionStorage.setItem("doktori-admin-hub-entry", JSON.stringify({
             path: destination.pathname,
             issuedAt: Date.now(),
