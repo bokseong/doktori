@@ -25,6 +25,16 @@
         .progress-items { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
         .progress-item { padding: 13px 8px; border: 2px solid var(--ink); background: var(--paper); text-align: center; font-weight: 800; }
         .progress-item.completed { color: var(--ink); background: var(--lime); }
+        .booth-progress { margin-top: 26px; padding-top: 22px; border-top: 2px solid var(--ink); }
+        .booth-progress__head { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+        .booth-progress__head h3 { margin: 6px 0 0; font-size: 1.3rem; }
+        .booth-progress__score { color: var(--blue); font: 1.7rem/1 "Black Han Sans", sans-serif; }
+        .booth-progress__items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+        .booth-progress__item { padding: 14px; border: 2px solid var(--ink); background: var(--paper); }
+        .booth-progress__item strong { display: block; }
+        .booth-progress__item span { display: block; margin-top: 5px; color: var(--muted); font-size: .93rem; }
+        .booth-progress__item.completed { background: var(--lime); }
+        .booth-progress__item.completed span { color: var(--ink); }
         .story-record { margin-top: 20px; padding-top: 18px; border-top: 2px solid var(--ink); }
         .story-record h3 { margin: 0 0 7px; font-size: 1.25rem; }
         .story-record > p { margin: 0 0 14px; color: var(--muted); }
@@ -79,6 +89,11 @@
                 <div id="progressTrack" class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
                 <div id="progressItems" class="progress-items" aria-live="polite"></div>
                 <section id="storyRecord" class="story-record" hidden aria-labelledby="storyRecordTitle"><h3 id="storyRecordTitle">BS-001 탐색 카드</h3><p id="storyRecordMessage"></p><div id="storyRecordItems" class="story-record__items"></div></section>
+                <section class="booth-progress" aria-labelledby="boothProgressTitle">
+                    <div class="booth-progress__head"><div><span class="label">BOOTH PARTICIPATION</span><h3 id="boothProgressTitle">부스 참여 현황</h3></div><strong id="boothProgressScore" class="booth-progress__score">0 / 6</strong></div>
+                    <div id="boothProgressItems" class="booth-progress__items" aria-live="polite"></div>
+                    <p id="boothProgressMessage" class="status" role="status"></p>
+                </section>
                 <div class="progress-actions"><p id="progressMessage" class="status" role="status"></p></div>
             </section>
 
@@ -151,6 +166,14 @@
         import { isStoryMode, STORY_STAGES } from "../js/story-mode.js";
 
         const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
+        const BOOTHS = Object.freeze([
+            { id: "booth1", name: "프랑켄슈타인 박사의 도서 대출" },
+            { id: "booth2", name: "물약을 완성하라!" },
+            { id: "booth3", name: "잭오랜턴 부적 인형 만들기" },
+            { id: "booth4", name: "카드뽑기 · 상품 수령" },
+            { id: "booth5", name: "포토존" },
+            { id: "booth6", name: "방명록" }
+        ]);
         const user = await requireUser();
         const profile = await getMemberProfile(user);
         const access = await getUserAccess(user);
@@ -162,7 +185,10 @@
         const storyRecord = document.getElementById("storyRecord");
         const storyRecordMessage = document.getElementById("storyRecordMessage");
         const storyRecordItems = document.getElementById("storyRecordItems");
+        const boothProgressItems = document.getElementById("boothProgressItems");
+        const boothProgressMessage = document.getElementById("boothProgressMessage");
         let stopProgressListener = () => {};
+        let stopBoothProgressListener = () => {};
 
         function formatDate(value) {
             const date = value?.toDate?.();
@@ -200,6 +226,30 @@
                 });
             }
             progressMessage.textContent = remaining === 0 ? "모든 QR 미션을 완료했습니다." : `완료까지 ${remaining}개의 QR이 남았습니다.`;
+        }
+
+        function renderBoothProgress(documents) {
+            const records = new Map(documents.map((item) => [item.id, item.data()]));
+            const participatedCount = BOOTHS.filter((booth) => records.get(booth.id)?.participated === true).length;
+            document.getElementById("boothProgressScore").textContent = `${participatedCount} / ${BOOTHS.length}`;
+            boothProgressItems.replaceChildren();
+            BOOTHS.forEach((booth) => {
+                const record = records.get(booth.id);
+                const participated = record?.participated === true;
+                const item = document.createElement("article");
+                item.className = `booth-progress__item${participated ? " completed" : ""}`;
+                const title = document.createElement("strong");
+                const state = document.createElement("span");
+                title.textContent = booth.name;
+                state.textContent = participated
+                    ? (Number.isInteger(record.rank) ? `참여 완료 · ${record.rank}등` : "참여 완료")
+                    : "미참여";
+                item.append(title, state);
+                boothProgressItems.append(item);
+            });
+            boothProgressMessage.textContent = participatedCount === BOOTHS.length
+                ? "모든 현장 부스 참여가 기록되었습니다."
+                : `현재 ${participatedCount}개 부스의 참여가 기록되었습니다.`;
         }
 
         function currentAdminName() {
@@ -271,6 +321,7 @@
                 try {
                     await deleteMemberAccount(user);
                     stopProgressListener();
+                    stopBoothProgressListener();
                     for (let index = localStorage.length - 1; index >= 0; index -= 1) {
                         const key = localStorage.key(index);
                         if (key?.startsWith("doktori-")) localStorage.removeItem(key);
@@ -296,6 +347,12 @@
         stopProgressListener = onSnapshot(collection(db, "users", user.uid, "progress"), (snapshot) => renderProgress(snapshot.docs), (error) => {
             console.error(error);
             progressMessage.textContent = "진행률을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+        });
+        stopBoothProgressListener = onSnapshot(collection(db, "users", user.uid, "boothParticipation"), (snapshot) => renderBoothProgress(snapshot.docs), (error) => {
+            console.error(error);
+            boothProgressMessage.textContent = error.code === "permission-denied"
+                ? "부스 참여 기록 권한을 확인하지 못했습니다. Firestore 보안 규칙 배포 상태를 확인해 주세요."
+                : "부스 참여 현황을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
         });
         document.body.style.visibility = "visible";
     </script>

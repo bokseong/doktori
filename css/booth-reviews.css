@@ -1,0 +1,20 @@
+.booth-reviews { margin-top: 52px; padding: clamp(24px, 5vw, 40px); }
+.booth-reviews__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+.booth-reviews__head h2 { margin: 12px 0 0; }
+.booth-reviews__count { color: var(--blue); font: 2.4rem/1 "Black Han Sans", sans-serif; }
+.booth-review-form { display: grid; gap: 12px; margin-top: 24px; }
+.booth-review-form label { display: grid; gap: 7px; font-weight: 800; }
+.booth-review-form textarea { min-height: 112px; resize: vertical; padding: 13px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: var(--cream); font: inherit; line-height: 1.6; }
+.booth-review-form__options { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.booth-review-form__anonymous { display: flex; align-items: center; gap: 9px; font-weight: 800; cursor: pointer; }
+.booth-review-form__anonymous input { width: 20px; height: 20px; }
+.booth-review-form__notice { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.55; }
+.booth-review-status { min-height: 1.5em; margin: 12px 0 0; color: var(--muted); font-weight: 700; }
+.booth-review-list { display: grid; gap: 10px; margin: 24px 0 0; padding: 0; list-style: none; }
+.booth-review { padding: 16px; border: 2px solid var(--ink); background: var(--paper); }
+.booth-review__meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .9rem; }
+.booth-review__author { color: var(--ink); font-weight: 900; }
+.booth-review__content { margin: 12px 0 0; white-space: pre-wrap; line-height: 1.65; overflow-wrap: anywhere; }
+.booth-review__delete { margin-top: 14px; padding: 8px 11px; color: var(--cream); background: #9b321e; font-size: .9rem; }
+.booth-reviews__empty { margin: 24px 0 0; padding: 18px; border: 2px dashed var(--line); color: var(--muted); text-align: center; }
+@media (max-width: 520px) { .booth-reviews__head { align-items: flex-start; flex-direction: column; } .booth-review-form__options > button { width: 100%; } }

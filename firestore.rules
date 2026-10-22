@@ -63,6 +63,24 @@ service cloud.firestore {
         && data.updatedBy == request.auth.uid;
     }
 
+    function currentReviewAuthorName() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("adminChatName", "") != ""
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.adminChatName
+        : get(/databases/$(database)/documents/users/$(request.auth.uid)).data.studentName;
+    }
+
+    function isValidBoothReview(data) {
+      return data.keys().hasOnly(["boothId", "authorUid", "authorName", "anonymous", "content", "createdAt"])
+        && data.boothId in ["qr-exploration", "booth1", "booth2", "booth3", "booth4", "booth5", "booth6", "prize-lottery"]
+        && data.authorUid == request.auth.uid
+        && data.authorName == currentReviewAuthorName()
+        && data.anonymous is bool
+        && data.content is string
+        && data.content.size() >= 1
+        && data.content.size() <= 400
+        && data.createdAt == request.time;
+    }
+
     function isCorrectAnswer(qrId, answer) {
       return exists(/databases/$(database)/documents/quizSecrets/$(qrId))
         && answer in get(/databases/$(database)/documents/quizSecrets/$(qrId)).data.answers;
@@ -293,7 +311,7 @@ service cloud.firestore {
       }
 
       match /boothParticipation/{boothId} {
-        allow read: if isAdmin();
+        allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
         allow create: if isAdmin()
           && isValidBoothParticipation(request.resource.data, boothId)
           && (isGrade1() || request.resource.data.rank == null);
@@ -319,6 +337,18 @@ service cloud.firestore {
 
     match /{documentPath=**}/boothParticipation/{boothId} {
       allow read: if isAdmin();
+    }
+
+    match /boothReviews/{reviewId} {
+      allow read: if isSignedIn() && isAccountActive(request.auth.uid);
+      allow create: if hasCurrentConsent(request.auth.uid)
+        && isValidBoothReview(request.resource.data);
+      allow update: if false;
+      allow delete: if isAdmin() || (
+        isSignedIn()
+        && isAccountActive(request.auth.uid)
+        && resource.data.authorUid == request.auth.uid
+      );
     }
 
     match /answerAttempts/{attemptId} {

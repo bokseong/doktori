@@ -161,6 +161,10 @@ createChatShortcut();
 startAdminChatAlerts();
 createAnnouncementPopup();
 
+if (document.body.dataset.boothReview) {
+    import("./booth-reviews.js").catch((error) => reportError(error, "booth-reviews"));
+}
+
 if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register(new URL("../sw.js", import.meta.url)).catch((error) => reportError(error, "service-worker"));
 }

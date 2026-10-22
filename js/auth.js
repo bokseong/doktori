@@ -212,11 +212,11 @@ export async function logout() {
     location.replace(new URL("../account/signin.html", import.meta.url));
 }
 
-async function deleteOwnedDocuments(collectionName, uid) {
+async function deleteOwnedDocuments(collectionName, uid, ownerField = "uid") {
     while (true) {
         const snapshot = await getDocs(query(
             collection(db, collectionName),
-            where("uid", "==", uid),
+            where(ownerField, "==", uid),
             limit(300)
         ));
         if (snapshot.empty) return;
@@ -234,6 +234,7 @@ export async function deleteMemberAccount(user = auth.currentUser) {
     await reauthenticateWithPopup(user, provider);
     await deleteOwnedDocuments("quizTelemetry", user.uid);
     await deleteOwnedDocuments("clientErrors", user.uid);
+    await deleteOwnedDocuments("boothReviews", user.uid, "authorUid");
     const profileBatch = writeBatch(db);
     QR_IDS.forEach((qrId) => {
         profileBatch.delete(doc(db, "users", user.uid, "progress", qrId));
