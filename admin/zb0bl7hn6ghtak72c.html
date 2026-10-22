@@ -48,6 +48,7 @@
         .account-badge--blocked { color: var(--ink); background: var(--coral); }
         .block-reason { max-width: 220px; margin-top: 6px; color: var(--muted); font-size: .84rem; line-height: 1.45; }
         .blocked-row { background: rgba(255, 107, 74, .09); }
+        [data-admin-view][hidden] { display: none !important; }
         #denied { width: min(520px, calc(100% - 32px)); margin: 12vh auto; padding: 38px; text-align: center; }
         @media (max-width: 760px) { .admin-intro { align-items: flex-start; flex-direction: column; } .summary { grid-template-columns: repeat(2, 1fr); } .qr-shortcuts, .qr-state-grid, .quiz-stats { grid-template-columns: repeat(2, 1fr); } .config-grid, .manual-grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } }
     </style>
@@ -62,20 +63,20 @@
             <div><span class="label">ADMIN ONLY</span><h1>운영 현황판</h1><p class="lead">참여자의 권한과 6개 QR 진행률을 한곳에서 관리합니다.</p></div>
             <button id="refreshButton" type="button">데이터 새로고침</button>
         </section>
-        <section class="summary" aria-label="참여 현황">
+        <section class="summary" data-admin-view="members" aria-label="참여 현황">
             <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div><div class="card">참여자<strong id="participantUsers">0</strong></div><div class="card">차단 계정<strong id="blockedUsers">0</strong></div>
         </section>
-        <section class="shortcut-panel panel" aria-labelledby="shortcutTitle">
+        <section class="shortcut-panel panel" data-admin-view="event" aria-labelledby="shortcutTitle">
             <div class="shortcut-head">
                 <div class="shortcut-title"><h2 id="shortcutTitle" class="section-title">QR 페이지 바로가기</h2><span class="muted">관리자에게만 표시됩니다</span></div>
-                <div class="actions" style="margin-top:0"><a class="button" href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" href="../support/chat.html">1:1 도움 채팅</a><a class="button button--coral" href="./QR.html">QR 생성기</a></div>
+                <div class="actions" style="margin-top:0"><a class="button" data-admin-page href="./progress-dashboard.html">전체 진행률·상품 수령</a><a class="button button--paper" href="../support/chat.html?admin=1">1:1 도움 채팅</a><a id="qrBuilderLink" class="button button--coral" data-admin-page href="./QR.html">QR 생성기</a></div>
             </div>
             <div class="qr-shortcuts">
                 <a class="button" href="../qr/299az81a68c.html">QR 01</a><a class="button" href="../qr/hq1bq8pg1c.html">QR 02</a><a class="button" href="../qr/iq1bz5iutx.html">QR 03</a><a class="button" href="../qr/qrxc7ij88f.html">QR 04</a><a class="button" href="../qr/eq4bunq5v.html">QR 05</a><a class="button" href="../qr/jk1ba63db.html">QR 06</a>
             </div>
         </section>
 
-        <section class="admin-panel panel" aria-labelledby="announcementTitle">
+        <section class="admin-panel panel" data-admin-view="event" aria-labelledby="announcementTitle">
             <h2 id="announcementTitle" class="section-title">실시간 긴급 공지</h2>
             <p class="muted">게시하면 현재 사이트에 접속 중인 사용자에게 새로고침 없이 팝업으로 표시됩니다.</p>
             <div class="config-grid">
@@ -86,7 +87,7 @@
             <div class="actions"><button id="publishAnnouncement" class="button--coral" type="button">공지 게시</button><button id="disableAnnouncement" class="button--paper" type="button">현재 공지 내리기</button></div>
             <p id="announcementMessage" class="status" role="status"></p>
         </section>
-        <section class="admin-panel panel" aria-labelledby="eventConfigTitle">
+        <section class="admin-panel panel" data-admin-view="event" aria-labelledby="eventConfigTitle">
             <h2 id="eventConfigTitle" class="section-title">행사 운영 설정</h2>
             <div class="config-grid">
                 <label class="wide">메인 공지<textarea id="eventNotice" maxlength="300"></textarea></label>
@@ -98,21 +99,19 @@
             <p id="configMessage" class="status" role="status"></p>
         </section>
 
-        <section class="admin-panel panel" aria-labelledby="quizStatsTitle"><h2 id="quizStatsTitle" class="section-title">문항별 제출 통계</h2><div id="quizStats" class="quiz-stats"></div></section>
+        <section class="admin-panel panel" data-admin-view="event" aria-labelledby="quizStatsTitle"><h2 id="quizStatsTitle" class="section-title">문항별 제출 통계</h2><div id="quizStats" class="quiz-stats"></div></section>
 
-        <section class="admin-panel panel" aria-labelledby="manualTitle">
+        <section class="admin-panel panel" data-admin-view="event" aria-labelledby="manualTitle">
             <h2 id="manualTitle" class="section-title">진행도 수동 수정</h2>
             <div class="manual-grid"><label>참여자<select id="manualUser"></select></label><label>QR<select id="manualQr"></select></label><button id="manualComplete" type="button">완료 처리</button><button id="manualCancel" class="button--paper" type="button">완료 취소</button></div>
             <p id="manualMessage" class="status" role="status"></p>
         </section>
 
-        <section class="admin-panel panel" aria-labelledby="diagnosticTitle"><h2 id="diagnosticTitle" class="section-title">시스템 진단</h2><div class="actions"><button id="runDiagnostics" type="button">App Check·Firestore 진단</button></div><div id="diagnosticList" class="diagnostic-list"></div></section>
+        <section class="admin-panel panel" data-admin-view="event" aria-labelledby="diagnosticTitle"><h2 id="diagnosticTitle" class="section-title">시스템 진단</h2><div class="actions"><button id="runDiagnostics" type="button">App Check·Firestore 진단</button></div><div id="diagnosticList" class="diagnostic-list"></div></section>
 
-        <section class="admin-panel panel" aria-labelledby="auditTitle"><h2 id="auditTitle" class="section-title">최근 관리자 변경 이력</h2><div id="auditLogList" class="diagnostic-list" aria-live="polite"></div></section>
+        <section class="admin-panel panel" data-admin-view="event" aria-labelledby="auditTitle"><h2 id="auditTitle" class="section-title">최근 관리자 변경 이력</h2><div id="auditLogList" class="diagnostic-list" aria-live="polite"></div></section>
 
-        <div class="toolbar"><h2 class="section-title">사용자별 현황</h2><div class="toolbar-controls"><input id="userSearch" type="search" placeholder="이름·학번·이메일 검색"><select id="userSort"><option value="name">이름순</option><option value="progress">진행률 높은 순</option><option value="activity">최근 활동순</option></select><button id="exportCsv" class="button--paper" type="button">CSV 내보내기</button></div></div>
-        <p id="message" class="status" role="status"></p>
-        <div class="table-wrap"><table><thead><tr><th>참여자</th><th>학번</th><th>개인정보 동의</th><th>권한</th><th>계정 상태</th><th>차단 관리</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead><tbody id="userRows"></tbody></table></div>
+        <div data-admin-view="members"><div class="toolbar"><h2 class="section-title">사용자별 현황</h2><div class="toolbar-controls"><input id="userSearch" type="search" placeholder="이름·학번·이메일 검색"><select id="userSort"><option value="name">이름순</option><option value="progress">진행률 높은 순</option><option value="activity">최근 활동순</option></select><button id="exportCsv" class="button--paper" type="button">CSV 내보내기</button></div></div><p id="message" class="status" role="status"></p><div class="table-wrap"><table><thead><tr><th>참여자</th><th>학번</th><th>개인정보 동의</th><th>권한</th><th>계정 상태</th><th>차단 관리</th><th>진행률</th><th>찾은 QR</th><th>마지막 활동</th></tr></thead><tbody id="userRows"></tbody></table></div></div>
     </main>
     <section id="denied" class="panel" hidden><h2 class="section-title">접근 권한이 없습니다</h2><p>이 페이지는 관리자 계정만 이용할 수 있습니다.</p><a class="button" href="../index.html">메인으로 돌아가기</a></section>
     <footer class="site-footer">
@@ -138,9 +137,18 @@
         const rows = document.getElementById("userRows");
         const searchInput = document.getElementById("userSearch");
         const sortSelect = document.getElementById("userSort");
+        const selectedView = new URLSearchParams(location.search).get("view");
+        if (!["members", "event"].includes(selectedView)) location.replace(new URL("./index.html", location.href));
+        document.querySelectorAll("[data-admin-view]").forEach((element) => { element.hidden = element.dataset.adminView !== selectedView; });
+        document.querySelector(".brand-text").textContent = selectedView === "members" ? "회원 담당" : "행사 운영 담당";
+        document.querySelector(".admin-intro h1").textContent = selectedView === "members" ? "회원 관리" : "행사 운영";
+        document.querySelector(".admin-intro .lead").textContent = selectedView === "members" ? "회원 정보, 권한과 계정 상태를 관리합니다." : "공지, QR 이벤트 상태와 행사 운영 기록을 관리합니다.";
         let loadedRecords = [];
         document.getElementById("logoutButton").addEventListener("click", logout);
         document.getElementById("adminIdentity").textContent = currentUser.email || currentUser.displayName || "관리자";
+        document.querySelectorAll("[data-admin-page]").forEach((link) => link.addEventListener("click", () => {
+            sessionStorage.setItem("doktori-admin-hub-entry", JSON.stringify({ path: new URL(link.href).pathname, issuedAt: Date.now(), uid: currentUser.uid }));
+        }));
 
         if (!access.isAdmin) {
             denied.hidden = false;
