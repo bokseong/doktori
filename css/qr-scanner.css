@@ -4,7 +4,7 @@
     margin: auto;
     padding: 0;
     border: 0;
-    color: var(--ink);
+    color: var(--cream);
     background: transparent;
     overflow: visible;
 }
@@ -41,6 +41,7 @@
 .scanner-close {
     min-width: 44px;
     padding: 8px;
+    color: var(--cream);
     background: var(--paper-strong);
 }
 
@@ -86,7 +87,7 @@
 .scanner-status {
     min-height: 1.5em;
     margin: 14px 0 0;
-    color: #94321f;
+    color: #ffc46f;
     font-weight: 800;
     line-height: 1.55;
 }
@@ -124,6 +125,7 @@
     border: 2px solid var(--ink);
     border-radius: 50%;
     background: var(--lime);
+    color: var(--ink);
     font-size: 2rem;
 }
 

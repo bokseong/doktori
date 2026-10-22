@@ -26,21 +26,21 @@ body { visibility: hidden; }
 .mission-kicker { color: var(--blue); font-weight: 700; }
 .mission h1 { margin: 18px 0 8px; font: clamp(2.8rem, 7vw, 4.6rem)/1.08 "Black Han Sans", sans-serif; letter-spacing: -.025em; }
 .mission-copy { margin: 0 0 28px; color: var(--muted); line-height: 1.7; }
-.story-panel, .story-resolution { margin: 0 0 24px; padding: 18px; border: 2px solid var(--ink); background: #e9efff; }
+.story-panel, .story-resolution { margin: 0 0 24px; padding: 18px; border: 2px solid var(--line); background: #382154; }
 .story-panel__label { display: inline-block; margin-bottom: 8px; padding: 4px 7px; color: white; background: var(--blue); font-size: .82rem; font-weight: 800; }
 .story-panel h2 { margin: 0 0 8px; font-size: 1.35rem; line-height: 1.3; }
 .story-panel p, .story-resolution p { margin: 7px 0 0; line-height: 1.65; }
 .story-panel__location { color: var(--muted); font-size: .92rem; font-weight: 700; }
-.story-resolution { margin-top: 20px; background: #e8f7bf; }
+.story-resolution { margin-top: 20px; color: var(--ink); background: var(--lime); }
 .story-resolution strong { font-size: 1.1rem; }
 .quiz-card { border-top: 2px solid var(--ink); padding-top: 28px; }
 .quiz-card h2 { margin: 0 0 18px; font-size: clamp(1.25rem, 3vw, 1.65rem); font-weight: 800; line-height: 1.55; letter-spacing: -.015em; }
 .quiz-card form { display: grid; gap: 10px; }
 .quiz-card label { font-weight: 700; }
-.quiz-card input { width: 100%; padding: 14px; border: 2px solid var(--ink); border-radius: 0; background: white; }
+.quiz-card input { width: 100%; padding: 14px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: var(--cream); }
 .answer-help { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.55; }
 .quiz-card button { margin-top: 6px; background: var(--coral); }
-.quiz-message { min-height: 1.5em; margin: 18px 0 0; color: #94321f; font-weight: 700; line-height: 1.5; }
+.quiz-message { min-height: 1.5em; margin: 18px 0 0; color: #ffc46f; font-weight: 700; line-height: 1.5; }
 .quiz-navigation { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .quiz-navigation .button { flex: 1 1 160px; }
 @media (max-width: 720px) { .qr-grid { grid-template-columns: 1fr; } .specter { min-height: 360px; } .qr-shell { padding-top: 18px; } }
