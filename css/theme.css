@@ -19,6 +19,8 @@
     --button-text: #25112f;
     --button-text-warm: #34140d;
     --button-text-dark: #fff8df;
+    --text-on-night: #fff7e6;
+    --muted-on-night: #dfd0e8;
     --shadow: 7px 7px 0 #170d22;
 }
 
@@ -33,15 +35,15 @@ body {
     overflow-wrap: break-word;
     position: relative;
     isolation: isolate;
-    background-color: var(--paper);
+    background-color: #120818;
     background-image:
-        radial-gradient(circle at 7% 3%, rgb(255 106 42 / .25), transparent 21rem),
-        radial-gradient(circle at 86% 15%, rgb(80 38 111 / .30), transparent 30rem),
-        repeating-radial-gradient(circle at 100% 0, transparent 0 30px, rgb(42 18 63 / .10) 31px 32px, transparent 33px 58px),
-        repeating-conic-gradient(from 180deg at 100% 0, rgb(42 18 63 / .10) 0 1deg, transparent 1deg 15deg),
-        linear-gradient(180deg, #cdbad9 0, #e7dceb 24rem, #f2e8dc 58rem, #e9dfee 100%),
-        repeating-linear-gradient(90deg, rgb(42 18 63 / .045) 0 1px, transparent 1px 22px),
-        repeating-linear-gradient(0deg, rgb(42 18 63 / .04) 0 1px, transparent 1px 22px);
+        radial-gradient(circle at 7% 3%, rgb(255 106 42 / .22), transparent 22rem),
+        radial-gradient(circle at 86% 15%, rgb(117 63 156 / .34), transparent 34rem),
+        repeating-radial-gradient(circle at 100% 0, transparent 0 30px, rgb(238 222 247 / .09) 31px 32px, transparent 33px 58px),
+        repeating-conic-gradient(from 180deg at 100% 0, rgb(238 222 247 / .08) 0 1deg, transparent 1deg 15deg),
+        linear-gradient(180deg, #120818 0, #25102f 32rem, #1a0b24 70rem, #0f0715 100%),
+        repeating-linear-gradient(90deg, rgb(238 222 247 / .025) 0 1px, transparent 1px 22px),
+        repeating-linear-gradient(0deg, rgb(238 222 247 / .02) 0 1px, transparent 1px 22px);
     background-size: auto, auto, 420px 420px, 420px 420px, auto, 22px 22px, 22px 22px;
     background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat;
     background-attachment: fixed;
@@ -131,6 +133,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .account { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 .account-label { color: #fff4d5; font-size: .9rem; }
 .page-shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 80px; }
+.page-shell > section:not(.panel),
+.page-shell > .admin-intro,
+.page-shell > .info-hero { color: var(--text-on-night); }
+.page-shell > section:not(.panel) .lead,
+.page-shell > .admin-intro .lead,
+.page-shell > .info-hero .lead { color: var(--muted-on-night); }
+.page-shell :is(.card, .table-wrap, .conversation-picker, .messages, .notice, .progress-item, .booth-progress__item, .story-record__item, .consent-state, .withdraw-check, .stat-card, .diagnostic-item, .booth-status-card, .site-facts article) { color: var(--cream); }
 .label {
     display: inline-block;
     padding: 6px 10px;
@@ -153,10 +162,10 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     letter-spacing: -.025em;
 }
 .display-title .accent { color: var(--coral); text-shadow: 2px 2px 0 var(--moon), 4px 4px 0 var(--ink); }
-.lead { max-width: 680px; margin: 0; color: var(--cream); font-size: clamp(1rem, 2vw, 1.2rem); font-weight: 600; line-height: 1.75; }
+.lead { max-width: 680px; margin: 0; color: inherit; font-size: clamp(1rem, 2vw, 1.2rem); font-weight: 600; line-height: 1.75; }
 .actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 28px; }
 .status { min-height: 1.5em; color: #8b2b24; font-weight: 800; }
-.panel { border: 2px solid var(--ink); border-radius: 12px; background: linear-gradient(150deg, #fffdf7, var(--paper-strong)); box-shadow: var(--shadow); }
+.panel { border: 2px solid var(--ink); border-radius: 12px; color: var(--cream); background: linear-gradient(150deg, #fffdf7, var(--paper-strong)); box-shadow: var(--shadow); }
 .section-title { margin: 0; font-size: clamp(1.65rem, 3.5vw, 2.5rem); font-weight: 800; line-height: 1.25; letter-spacing: -.02em; }
 .muted { color: var(--muted); }
 [hidden] { display: none !important; }
