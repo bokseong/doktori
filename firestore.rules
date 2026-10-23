@@ -459,6 +459,8 @@ service cloud.firestore {
     match /prizeClaims/{userId} {
       allow read: if (isOwner(userId) && isAccountActive(userId)) || isGrade1();
       allow create, update: if isGrade1()
+        && exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.get("role", "member") in ["participant", "member"]
         && request.resource.data.keys().hasOnly(["uid", "received", "receivedAt", "receivedBy", "updatedAt"])
         && request.resource.data.uid == userId
         && request.resource.data.received is bool

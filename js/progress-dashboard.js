@@ -49,6 +49,23 @@ function displayStudentNumber(record) {
     return ["admin", "grade1", "grade2"].includes(record.role) ? "관리자" : (record.studentNumber || "-");
 }
 
+function isAdministrator(record) {
+    return ["admin", "grade1", "grade2"].includes(record.role);
+}
+
+function createMemberCell(record, value) {
+    const cell = document.createElement("td");
+    cell.className = "member-cell";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "member-button member-button--cell";
+    button.textContent = value;
+    button.setAttribute("aria-label", `${value} · 회원 참여 현황 보기`);
+    button.addEventListener("click", () => showMemberDetail(record));
+    cell.append(button);
+    return cell;
+}
+
 function showMemberDetail(record, scroll = true) {
     selectedMemberId = record.id;
     document.getElementById("memberDetailTitle").textContent = record.studentName || record.displayName || "이름 미등록";
@@ -70,6 +87,10 @@ function showMemberDetail(record, scroll = true) {
 }
 
 async function setPrizeReceived(record, received) {
+    if (isAdministrator(record)) {
+        status.textContent = "관리자 계정은 상품 수령 대상이 아닙니다.";
+        return;
+    }
     const action = received ? "수령 완료" : "수령 취소";
     if (!confirm(`${record.studentName || record.email}의 상품을 ${action} 처리할까요?`)) return;
     status.textContent = `${action} 처리 중...`;
@@ -106,15 +127,11 @@ function render() {
     rows.replaceChildren();
     filtered.forEach((record) => {
         const row = document.createElement("tr");
-        const nameCell = document.createElement("td");
-        nameCell.className = "member-cell";
-        const memberButton = document.createElement("button");
-        memberButton.type = "button";
-        memberButton.className = "member-button";
-        memberButton.textContent = record.studentName || "이름 미등록";
-        memberButton.addEventListener("click", () => showMemberDetail(record));
-        nameCell.append(memberButton);
-        row.append(nameCell, createCell(displayStudentNumber(record)), createCell(record.email || "-"));
+        row.append(
+            createMemberCell(record, record.studentName || "이름 미등록"),
+            createMemberCell(record, displayStudentNumber(record)),
+            createMemberCell(record, record.email || "이메일 없음")
+        );
         const participation = document.createElement("td");
         const participationBadge = document.createElement("span");
         participationBadge.className = `badge${record.found.length ? " yes" : ""}`;
@@ -124,14 +141,19 @@ function render() {
         row.append(participation, createCell(`${record.found.length} / 6`), createCell(`${boothCount} / ${BOOTHS.length}`));
         const rankedBooths = Object.values(record.booths).filter((item) => Number.isInteger(item.rank)).length;
         const prizeBasis = record.found.length === QR_IDS.length ? "QR 완주" : rankedBooths ? `등수 기록 ${rankedBooths}개` : boothCount ? `부스 참여 ${boothCount}개` : "기록 없음";
-        row.append(createCell(prizeBasis), createCell(record.received ? "수령 완료" : "미수령"));
+        const prizeEligible = !isAdministrator(record);
+        row.append(createCell(prizeEligible ? prizeBasis : "관리자 제외"), createCell(prizeEligible ? (record.received ? "수령 완료" : "미수령") : "대상 아님"));
         const actionCell = document.createElement("td");
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "receipt-button";
-        button.textContent = record.received ? "수령 취소" : "수령 완료";
-        button.addEventListener("click", () => setPrizeReceived(record, !record.received));
-        actionCell.append(button);
+        if (prizeEligible) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "receipt-button";
+            button.textContent = record.received ? "수령 취소" : "수령 완료";
+            button.addEventListener("click", () => setPrizeReceived(record, !record.received));
+            actionCell.append(button);
+        } else {
+            actionCell.textContent = "-";
+        }
         row.append(actionCell);
         rows.append(row);
     });
