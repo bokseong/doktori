@@ -14,7 +14,7 @@ body { visibility: hidden; }
 .booth-table th, .booth-table td { padding: 12px; border-bottom: 2px solid var(--ink); text-align: left; vertical-align: middle; }
 .booth-table th { color: white; background: var(--ink); }
 .booth-table tr:last-child td { border-bottom: 0; }
-.booth-table select, .booth-table input[type="number"] { min-height: 40px; padding: 7px 9px; border: 2px solid var(--line); color: var(--cream); background: var(--paper); }
+.booth-table select, .booth-table input[type="number"] { min-height: 40px; padding: 7px 9px; border: 2px solid var(--line); color: var(--ink); background: var(--paper); }
 .booth-table input[type="number"] { width: 100px; }
 .booth-save { min-height: 40px; padding: 7px 11px; box-shadow: 3px 3px 0 var(--ink); }
 .booth-role { color: var(--muted); font-size: .86rem; }
