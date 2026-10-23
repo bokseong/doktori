@@ -35,14 +35,15 @@ body {
     isolation: isolate;
     background-color: var(--paper);
     background-image:
-        radial-gradient(circle at 92% 4%, rgb(255 231 160 / .96) 0 4.6rem, rgb(255 196 77 / .30) 4.7rem 8rem, transparent 8.2rem),
-        radial-gradient(circle at 8% 9%, rgb(255 106 42 / .28), transparent 25rem),
-        radial-gradient(circle at 83% 64%, rgb(97 53 141 / .20), transparent 32rem),
-        linear-gradient(180deg, #d9c7e6 0, #eee5f1 19rem, #f5eadc 58rem, #eee5f1 100%),
-        linear-gradient(115deg, transparent 0 69%, rgb(42 18 63 / .05) 69% 71%, transparent 71%),
+        radial-gradient(circle at 7% 3%, rgb(255 106 42 / .25), transparent 21rem),
+        radial-gradient(circle at 86% 15%, rgb(80 38 111 / .30), transparent 30rem),
+        repeating-radial-gradient(circle at 100% 0, transparent 0 30px, rgb(42 18 63 / .10) 31px 32px, transparent 33px 58px),
+        repeating-conic-gradient(from 180deg at 100% 0, rgb(42 18 63 / .10) 0 1deg, transparent 1deg 15deg),
+        linear-gradient(180deg, #cdbad9 0, #e7dceb 24rem, #f2e8dc 58rem, #e9dfee 100%),
         repeating-linear-gradient(90deg, rgb(42 18 63 / .045) 0 1px, transparent 1px 22px),
         repeating-linear-gradient(0deg, rgb(42 18 63 / .04) 0 1px, transparent 1px 22px);
-    background-size: auto, auto, auto, auto, auto, 22px 22px, 22px 22px;
+    background-size: auto, auto, 420px 420px, 420px 420px, auto, 22px 22px, 22px 22px;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat;
     background-attachment: fixed;
 }
 body::before {
@@ -52,7 +53,7 @@ body::before {
     z-index: -1;
     height: 170px;
     pointer-events: none;
-    opacity: .78;
+    opacity: .64;
     background:
         radial-gradient(circle at 8% 15%, var(--ink) 0 2px, transparent 3px),
         radial-gradient(circle at 24% 34%, var(--ink) 0 1.5px, transparent 2.5px),

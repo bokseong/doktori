@@ -8,10 +8,10 @@
     z-index: -1;
     width: clamp(8rem, 18vw, 13rem);
     aspect-ratio: 1;
-    border: 2px solid var(--ink);
+    border: 0;
     border-radius: 50%;
-    background: radial-gradient(circle at 34% 31%, #fff6c9 0 8%, transparent 9%), radial-gradient(circle at 64% 62%, rgb(111 70 91 / .12) 0 10%, transparent 11%), var(--moon);
-    box-shadow: 0 0 0 14px rgb(255 196 77 / .13), 0 0 48px rgb(255 196 77 / .32);
+    opacity: .4;
+    background: repeating-radial-gradient(circle, transparent 0 14px, var(--violet-surface) 15px 16px, transparent 17px 29px), repeating-conic-gradient(var(--violet-surface) 0 1deg, transparent 1deg 30deg);
 }
 .hub-hero__copy { padding: clamp(20px, 5vw, 62px) 0; }
 .hub-pass { position: relative; overflow: hidden; padding: clamp(24px, 4vw, 36px); transform: rotate(1.5deg); background: linear-gradient(150deg, #fffdf7, #f4e4c8); }
