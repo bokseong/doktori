@@ -15,6 +15,6 @@
 .booth-review__meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: .9rem; }
 .booth-review__author { color: var(--ink); font-weight: 900; }
 .booth-review__content { margin: 12px 0 0; white-space: pre-wrap; line-height: 1.65; overflow-wrap: anywhere; }
-.booth-review__delete { margin-top: 14px; padding: 8px 11px; color: var(--cream); background: #9b321e; font-size: .9rem; }
+.booth-review__delete { margin-top: 14px; padding: 8px 11px; color: #fff8df; background: #8f2c1d; font-size: .9rem; }
 .booth-reviews__empty { margin: 24px 0 0; padding: 18px; border: 2px dashed var(--line); color: var(--muted); text-align: center; }
 @media (max-width: 520px) { .booth-reviews__head { align-items: flex-start; flex-direction: column; } .booth-review-form__options > button { width: 100%; } }

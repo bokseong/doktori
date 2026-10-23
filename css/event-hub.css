@@ -53,7 +53,7 @@
 .booth-card__facts { margin: 0; padding-left: 1.2rem; color: var(--cream); }
 .booth-card__facts li + li { margin-top: 8px; }
 .booth-card__actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.booth-card__detail-link { align-self: flex-start; padding: 9px 12px; border: 2px solid var(--ink); border-radius: 7px; color: var(--ink); background: var(--lime); box-shadow: 3px 3px 0 var(--ink); font-weight: 800; text-decoration: none; }
+.booth-card__detail-link { align-self: flex-start; padding: 9px 12px; border: 2px solid var(--ink); border-radius: 7px; color: var(--button-text); background: var(--lime); box-shadow: 3px 3px 0 var(--ink); font-weight: 800; text-decoration: none; }
 .hub-guide { margin-top: 62px; }
 .hub-guide__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; overflow: hidden; border: 2px solid var(--ink); border-radius: 12px; background: var(--ink); box-shadow: var(--shadow); }
 .hub-guide__steps article { padding: 24px; background: var(--paper-strong); }

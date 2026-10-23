@@ -34,7 +34,7 @@
     padding: 7px 10px;
     border: 2px solid var(--amber);
     border-radius: 999px;
-    color: var(--ink);
+    color: var(--button-text);
     background: var(--lime);
     box-shadow: 3px 3px 0 #130d1a;
     font-size: .86rem;
