@@ -16,7 +16,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { MASTER_ADMIN_EMAIL } from "./auth.js";
 import { adminUser as user, requireHubEntry } from "./admin-guard.js";
-import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js";
+import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js?v=20261023b";
 import { appCheck, db } from "./firebase.js";
 
 const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);

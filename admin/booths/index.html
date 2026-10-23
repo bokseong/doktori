@@ -23,6 +23,6 @@
         if (!requireHubEntry({ fallbackUrl: "../", level: "booth" })) await new Promise(() => {});
         document.querySelectorAll("[data-admin-page]").forEach((link) => link.addEventListener("click", () => sessionStorage.setItem("doktori-admin-hub-entry", JSON.stringify({ path: new URL(link.href).pathname, issuedAt: Date.now(), uid: adminUser.uid }))));
         document.body.style.visibility = "visible";
-    </script><script type="module" src="../../js/booth-availability-admin.js"></script>
+    </script><script type="module" src="../../js/booth-availability-admin.js?v=20261023b"></script>
 </body>
 </html>

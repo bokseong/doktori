@@ -1,6 +1,6 @@
 import { doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { adminAccess, adminUser, requireHubEntry } from "./admin-guard.js";
-import { BOOTH_IDS, DEFAULT_EVENT_CONFIG, getEventConfig, watchEventConfig } from "./event-config.js";
+import { BOOTH_IDS, DEFAULT_EVENT_CONFIG, getEventConfig, watchEventConfig } from "./event-config.js?v=20261023b";
 import { db } from "./firebase.js";
 
 const BOOTHS = Object.freeze([
