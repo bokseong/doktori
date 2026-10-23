@@ -11,12 +11,12 @@ import {
 import { getMemberProfile, getUserAccess, isAccountBlocked, isMemberProfileComplete, waitForAuth } from "./auth.js";
 import { db } from "./firebase.js";
 
-let root = document.querySelector("[data-booth-review]");
+let root = document.querySelector("[data-booth-review]:not(body)");
 
 if (!root && document.body.dataset.boothReview) {
     root = document.createElement("section");
     root.dataset.boothReview = document.body.dataset.boothReview;
-    document.querySelector("main")?.after(root);
+    document.querySelector("main")?.append(root);
 }
 
 if (root) {

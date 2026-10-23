@@ -162,7 +162,7 @@ startAdminChatAlerts();
 createAnnouncementPopup();
 
 if (document.body.dataset.boothReview) {
-    import("./booth-reviews.js").catch((error) => reportError(error, "booth-reviews"));
+    import("./booth-reviews.js?v=20261023a").catch((error) => reportError(error, "booth-reviews"));
 }
 
 if ("serviceWorker" in navigator && location.protocol === "https:") {
