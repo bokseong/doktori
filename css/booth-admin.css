@@ -6,9 +6,9 @@ body { visibility: hidden; }
 .booth-link { display: grid; gap: 12px; min-height: 190px; padding: 22px; border: 2px solid var(--ink); color: var(--cream); background: var(--paper-strong); box-shadow: var(--shadow); text-decoration: none; }
 .booth-link:hover, .booth-link:focus-visible { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--ink); }
 .booth-link strong { color: var(--blue); font-size: 1.25rem; }
-.booth-link span { color: var(--lime); font-weight: 800; }
+.booth-link span { color: #397340; font-weight: 800; }
 .booth-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 12px; flex-wrap: wrap; }
-.booth-toolbar input { min-width: min(100%, 320px); padding: 11px; border: 2px solid var(--ink); color: var(--cream); background: var(--paper-strong); }
+.booth-toolbar input { min-width: min(100%, 320px); padding: 11px; border: 2px solid var(--ink); color: var(--ink); background: var(--paper-strong); }
 .booth-table { overflow-x: auto; border: 2px solid var(--ink); background: var(--paper-strong); box-shadow: var(--shadow); }
 .booth-table table { width: 100%; min-width: 900px; border-collapse: collapse; }
 .booth-table th, .booth-table td { padding: 12px; border-bottom: 2px solid var(--ink); text-align: left; vertical-align: middle; }

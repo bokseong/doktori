@@ -4,7 +4,7 @@
 .booth-reviews__count { color: var(--blue); font: 2.4rem/1 "Black Han Sans", sans-serif; }
 .booth-review-form { display: grid; gap: 12px; margin-top: 24px; }
 .booth-review-form label { display: grid; gap: 7px; font-weight: 800; }
-.booth-review-form textarea { min-height: 112px; resize: vertical; padding: 13px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: var(--cream); font: inherit; line-height: 1.6; }
+.booth-review-form textarea { min-height: 112px; resize: vertical; padding: 13px; border: 2px solid var(--ink); border-radius: 0; color: var(--ink); background: var(--paper-strong); font: inherit; line-height: 1.6; }
 .booth-review-form__options { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .booth-review-form__anonymous { display: flex; align-items: center; gap: 9px; font-weight: 800; cursor: pointer; }
 .booth-review-form__anonymous input { width: 20px; height: 20px; }

@@ -41,7 +41,7 @@
 .scanner-close {
     min-width: 44px;
     padding: 8px;
-    color: var(--cream);
+    color: var(--ink);
     background: var(--paper-strong);
 }
 
@@ -87,7 +87,7 @@
 .scanner-status {
     min-height: 1.5em;
     margin: 14px 0 0;
-    color: #ffc46f;
+    color: #8b2b24;
     font-weight: 800;
     line-height: 1.55;
 }
