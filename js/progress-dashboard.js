@@ -194,7 +194,7 @@ async function loadRecords() {
         });
         records = usersSnapshot.docs
             .map((item) => ({ id: item.id, ...item.data(), found: (progressByUser.get(item.id) || []).sort(), booths: boothsByUser.get(item.id) || {}, received: claims.get(item.id)?.received === true, receivedBy: claims.get(item.id)?.receivedBy || "" }))
-            .filter((record) => record.role !== "withdrawn")
+            .filter((record) => record.role !== "withdrawn" && !isAdministrator(record))
             .sort((a, b) => (a.studentName || a.email || "").localeCompare(b.studentName || b.email || "", "ko"));
         render();
     } catch (error) {
