@@ -7,9 +7,11 @@
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px 20px;
     align-items: center;
+    overflow: hidden;
     border: 2px solid var(--ink);
+    border-radius: 12px;
     color: #fffdf7;
-    background: linear-gradient(105deg, var(--ink), var(--violet-surface));
+    background: radial-gradient(circle at 92% 0, rgb(255 196 77 / .22), transparent 10rem), linear-gradient(105deg, var(--ink), var(--violet-surface));
     box-shadow: 4px 4px 0 var(--coral);
     font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
     text-align: left;
@@ -31,6 +33,7 @@
     min-height: 38px;
     padding: 7px 10px;
     border: 2px solid var(--amber);
+    border-radius: 999px;
     color: var(--ink);
     background: var(--lime);
     box-shadow: 3px 3px 0 #130d1a;
