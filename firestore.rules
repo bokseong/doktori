@@ -51,6 +51,11 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "member") in ["participant", "member"];
     }
 
+    function isParticipantUser(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.get("role", "member") in ["participant", "member"];
+    }
+
     function isValidBoothParticipation(data, boothId) {
       return boothId in ["booth1", "booth2", "booth3", "booth4", "booth5", "booth6"]
         && data.keys().hasOnly(["boothId", "participated", "rank", "updatedAt", "updatedBy"])
@@ -200,7 +205,9 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId)
+        || isGrade1()
+        || (isGrade2() && isParticipantUser(userId));
 
       allow create: if isOwner(userId)
         && isValidMemberProfile(request.resource.data, userId)
@@ -311,11 +318,14 @@ service cloud.firestore {
       }
 
       match /boothParticipation/{boothId} {
-        allow read: if (isOwner(userId) && isAccountActive(userId)) || isAdmin();
+        allow read: if (isOwner(userId) && isAccountActive(userId))
+          || (isAdmin() && isParticipantUser(userId));
         allow create: if isAdmin()
+          && isParticipantUser(userId)
           && isValidBoothParticipation(request.resource.data, boothId)
           && (isGrade1() || request.resource.data.rank == null);
         allow update: if isAdmin()
+          && isParticipantUser(userId)
           && isValidBoothParticipation(request.resource.data, boothId)
           && (isGrade1()
             || (isGrade2()
@@ -323,6 +333,7 @@ service cloud.firestore {
                 (request.resource.data.participated == true
                   && request.resource.data.rank == resource.data.get("rank", null))
                 || (request.resource.data.participated == false
+                  && resource.data.get("rank", null) == null
                   && request.resource.data.rank == null)
               )));
         allow delete: if isGrade1() || (isOwner(userId) && isAccountActive(userId) && !isMasterAdmin());
@@ -333,10 +344,6 @@ service cloud.firestore {
     // 개별 사용자의 진행 기록 접근은 위의 소유자 규칙으로 계속 제한합니다.
     match /{documentPath=**}/progress/{qrId} {
       allow read: if isGrade1();
-    }
-
-    match /{documentPath=**}/boothParticipation/{boothId} {
-      allow read: if isAdmin();
     }
 
     match /boothReviews/{reviewId} {
@@ -403,7 +410,7 @@ service cloud.firestore {
 
     match /auditLogs/{logId} {
       allow read: if isGrade1();
-      allow create: if isAdmin()
+      allow create: if isGrade1()
         && request.resource.data.keys().hasOnly(["actorUid", "actorEmail", "action", "targetUid", "qrId", "details", "createdAt"])
         && request.resource.data.actorUid == request.auth.uid
         && request.resource.data.actorEmail == request.auth.token.email

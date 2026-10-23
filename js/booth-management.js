@@ -4,7 +4,9 @@ import {
     doc,
     getDocs,
     onSnapshot,
+    query,
     serverTimestamp,
+    where,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { adminAccess, adminUser, requireHubEntry } from "./admin-guard.js";
@@ -28,6 +30,7 @@ const search = document.getElementById("boothSearch");
 const status = document.getElementById("boothStatus");
 let users = [];
 let participation = new Map();
+const participantQuery = query(collection(db, "users"), where("role", "in", ["member", "participant"]));
 
 if (!adminAccess.canManageBooths || !booth) {
     location.replace(new URL("../", location.href));
@@ -55,6 +58,10 @@ function currentRecord(userId) {
 async function saveRecord(member, participatedInput, rankInput, button) {
     const participated = participatedInput.value === "true";
     const previous = currentRecord(member.id);
+    if (!adminAccess.isGrade1 && Number.isInteger(previous.rank) && participated !== previous.participated) {
+        status.textContent = "등수가 기록된 참여 여부는 1급 관리자만 변경할 수 있습니다.";
+        return;
+    }
     const rank = !participated
         ? null
         : adminAccess.isGrade1
@@ -76,15 +83,17 @@ async function saveRecord(member, participatedInput, rankInput, button) {
             updatedAt: serverTimestamp(),
             updatedBy: adminUser.uid
         });
-        batch.set(doc(collection(db, "auditLogs")), {
-            actorUid: adminUser.uid,
-            actorEmail: adminUser.email || "",
-            action: "booth-participation-updated",
-            targetUid: member.id,
-            qrId: booth.id,
-            details: JSON.stringify({ participated, rank }),
-            createdAt: serverTimestamp()
-        });
+        if (adminAccess.isGrade1) {
+            batch.set(doc(collection(db, "auditLogs")), {
+                actorUid: adminUser.uid,
+                actorEmail: adminUser.email || "",
+                action: "booth-participation-updated",
+                targetUid: member.id,
+                qrId: booth.id,
+                details: JSON.stringify({ participated, rank }),
+                createdAt: serverTimestamp()
+            });
+        }
         await batch.commit();
         status.textContent = "저장했습니다. 진행률·상품 수령 화면에도 즉시 반영됩니다.";
     } catch (error) {
@@ -130,6 +139,7 @@ function render() {
         rankInput.placeholder = "선택";
         rankInput.value = Number.isInteger(record.rank) ? String(record.rank) : "";
         rankInput.disabled = !adminAccess.isGrade1 || record.participated !== true;
+        participatedInput.disabled = !adminAccess.isGrade1 && Number.isInteger(record.rank);
         participatedInput.addEventListener("change", () => {
             rankInput.disabled = !adminAccess.isGrade1 || participatedInput.value !== "true";
             if (participatedInput.value !== "true") rankInput.value = "";
@@ -149,17 +159,16 @@ function render() {
 }
 
 async function loadUsers() {
-    const snapshot = await getDocs(collection(db, "users"));
+    const snapshot = await getDocs(participantQuery);
     users = snapshot.docs
         .map((item) => ({ id: item.id, ...item.data() }))
-        .filter((item) => item.role !== "withdrawn")
         .sort((left, right) => (left.studentName || left.email || "").localeCompare(right.studentName || right.email || "", "ko"));
     render();
 }
 
 search.addEventListener("input", render);
 await loadUsers();
-const stopUsers = onSnapshot(collection(db, "users"), () => loadUsers(), () => {});
+const stopUsers = onSnapshot(participantQuery, () => loadUsers(), () => {});
 const stopParticipation = onSnapshot(collectionGroup(db, "boothParticipation"), (snapshot) => {
     participation = new Map(snapshot.docs
         .filter((item) => item.id === booth.id)
