@@ -391,7 +391,7 @@ service cloud.firestore {
       allow read: if configId == "current";
       allow create, update: if isGrade1()
         && configId == "current"
-        && request.resource.data.keys().hasOnly(["notice", "participationEnabled", "startAt", "endAt", "retentionAt", "qrStatus", "updatedAt", "updatedBy"])
+        && request.resource.data.keys().hasOnly(["notice", "participationEnabled", "startAt", "endAt", "retentionAt", "qrStatus", "boothStatus", "updatedAt", "updatedBy"])
         && request.resource.data.notice is string
         && request.resource.data.notice.size() <= 300
         && request.resource.data.participationEnabled is bool
@@ -404,7 +404,15 @@ service cloud.firestore {
         && request.resource.data.qrStatus.qr3 in ["active", "paused", "closed"]
         && request.resource.data.qrStatus.qr4 in ["active", "paused", "closed"]
         && request.resource.data.qrStatus.qr5 in ["active", "paused", "closed"]
-        && request.resource.data.qrStatus.qr6 in ["active", "paused", "closed"];
+        && request.resource.data.qrStatus.qr6 in ["active", "paused", "closed"]
+        && request.resource.data.boothStatus.keys().hasAll(["booth1", "booth2", "booth3", "booth4", "booth5", "booth6"])
+        && request.resource.data.boothStatus.keys().hasOnly(["booth1", "booth2", "booth3", "booth4", "booth5", "booth6"])
+        && request.resource.data.boothStatus.booth1 in ["active", "paused"]
+        && request.resource.data.boothStatus.booth2 in ["active", "paused"]
+        && request.resource.data.boothStatus.booth3 in ["active", "paused"]
+        && request.resource.data.boothStatus.booth4 in ["active", "paused"]
+        && request.resource.data.boothStatus.booth5 in ["active", "paused"]
+        && request.resource.data.boothStatus.booth6 in ["active", "paused"];
       allow delete: if false;
     }
 

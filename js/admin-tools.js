@@ -67,7 +67,7 @@ function createQrStateControls() {
 }
 
 async function loadConfig() {
-    currentConfig = await getEventConfig().catch(() => ({ ...DEFAULT_EVENT_CONFIG, qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus } }));
+    currentConfig = await getEventConfig().catch(() => ({ ...DEFAULT_EVENT_CONFIG, qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus }, boothStatus: { ...DEFAULT_EVENT_CONFIG.boothStatus } }));
     document.getElementById("eventNotice").value = currentConfig.notice || DEFAULT_EVENT_CONFIG.notice;
     document.getElementById("participationEnabled").value = currentConfig.participationEnabled === false ? "false" : "true";
     document.getElementById("eventStartAt").value = toInputValue(currentConfig.startAt);
@@ -89,6 +89,7 @@ async function saveConfig() {
             endAt: fromInput("eventEndAt"),
             retentionAt: fromInput("retentionAt"),
             qrStatus,
+            boothStatus: { ...DEFAULT_EVENT_CONFIG.boothStatus, ...(currentConfig?.boothStatus || {}) },
             updatedAt: serverTimestamp(),
             updatedBy: user.uid
         });

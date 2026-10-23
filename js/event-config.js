@@ -1,5 +1,7 @@
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { db } from "./firebase.js";
+
+export const BOOTH_IDS = Object.freeze(["booth1", "booth2", "booth3", "booth4", "booth5", "booth6"]);
 
 export const DEFAULT_EVENT_CONFIG = Object.freeze({
     notice: "학교 곳곳에 숨은 QR을 찾아 6개의 미션을 완료하세요.",
@@ -7,18 +9,26 @@ export const DEFAULT_EVENT_CONFIG = Object.freeze({
     startAt: null,
     endAt: null,
     retentionAt: null,
-    qrStatus: Object.freeze({ qr1: "active", qr2: "active", qr3: "active", qr4: "active", qr5: "active", qr6: "active" })
+    qrStatus: Object.freeze({ qr1: "active", qr2: "active", qr3: "active", qr4: "active", qr5: "active", qr6: "active" }),
+    boothStatus: Object.freeze({ booth1: "active", booth2: "active", booth3: "active", booth4: "active", booth5: "active", booth6: "active" })
 });
 
-export async function getEventConfig() {
-    const snapshot = await getDoc(doc(db, "eventConfig", "current"));
-    if (!snapshot.exists()) return { ...DEFAULT_EVENT_CONFIG, qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus } };
-    const data = snapshot.data();
+function normalizeConfig(data = {}) {
     return {
         ...DEFAULT_EVENT_CONFIG,
         ...data,
-        qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus, ...(data.qrStatus || {}) }
+        qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus, ...(data.qrStatus || {}) },
+        boothStatus: { ...DEFAULT_EVENT_CONFIG.boothStatus, ...(data.boothStatus || {}) }
     };
+}
+
+export async function getEventConfig() {
+    const snapshot = await getDoc(doc(db, "eventConfig", "current"));
+    return normalizeConfig(snapshot.exists() ? snapshot.data() : {});
+}
+
+export function watchEventConfig(onChange, onError = () => {}) {
+    return onSnapshot(doc(db, "eventConfig", "current"), (snapshot) => onChange(normalizeConfig(snapshot.exists() ? snapshot.data() : {})), onError);
 }
 
 export function getMissionAvailability(config, qrId, now = new Date()) {
@@ -32,6 +42,12 @@ export function getMissionAvailability(config, qrId, now = new Date()) {
     const status = config.qrStatus?.[qrId] || "active";
     if (status === "paused") return { available: false, message: "이 QR 문제는 현재 운영자가 일시 중지했습니다." };
     if (status === "closed") return { available: false, message: "이 QR 문제는 종료되었습니다." };
+    return { available: true, message: "" };
+}
+
+export function getBoothAvailability(config, boothId) {
+    const status = config.boothStatus?.[boothId] || "active";
+    if (status === "paused") return { available: false, message: "이 부스는 현재 참여를 잠시 받고 있지 않습니다." };
     return { available: true, message: "" };
 }
 
