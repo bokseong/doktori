@@ -69,13 +69,6 @@ service cloud.firestore {
       return isGrade1() || isGrade2();
     }
 
-    function isMemberAccount() {
-      return isSignedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && isAccountActive(request.auth.uid)
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get("role", "member") in ["participant", "member"];
-    }
-
     function isMemberIdentity() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
@@ -120,15 +113,6 @@ service cloud.firestore {
     function isCorrectAnswer(qrId, answer) {
       return exists(/databases/$(database)/documents/quizSecrets/$(qrId))
         && answer in get(/databases/$(database)/documents/quizSecrets/$(qrId)).data.answers;
-    }
-
-    function hasAnyMissionProgress(userId) {
-      return exists(/databases/$(database)/documents/users/$(userId)/progress/qr1)
-        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr2)
-        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr3)
-        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr4)
-        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr5)
-        || exists(/databases/$(database)/documents/users/$(userId)/progress/qr6);
     }
 
     function hasValidConsent(userId) {
