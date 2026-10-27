@@ -8,8 +8,9 @@ import {
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { requireUser } from "./auth.js";
+import { normalizeAnswer } from "./answer-normalization.js";
 import { db } from "./firebase.js";
-import { getEventConfig, getMissionAvailability } from "./event-config.js";
+import { getEventConfig, getMissionAvailability, watchEventConfig } from "./event-config.js";
 import { QR_ROUTES } from "./event-policy.js";
 
 const QUIZZES = Object.freeze({
@@ -20,10 +21,6 @@ const QUIZZES = Object.freeze({
     qr5: { question: "할로윈 날 밤에 어두운 방에서 거울을 보면 무엇이 보인다는 미신이 있습니다. 이 미신은 무엇인가요?" },
     qr6: { question: "스티븐 킹이 1986년에 집필했으며 2017년에 영화로도 나온 책의 이름은 무엇일까요?" }
 });
-
-function normalize(value) {
-    return value.normalize("NFKC").toLowerCase().replace(/[\s.,!?·/()_-]/g, "");
-}
 
 async function recordQuizTelemetry(user, qrId, outcome) {
     try {
@@ -45,6 +42,27 @@ export async function initQuiz(qrId, pageMode = "normal") {
     if (pageMode === "story") {
         location.replace(new URL(`../qr/${QR_ROUTES[qrId]}`, import.meta.url));
         return;
+    }
+
+    let unavailableHandled = false;
+    const leaveUnavailable = (availability) => {
+        if (unavailableHandled) return;
+        unavailableHandled = true;
+        alert(`이벤트가 종료되었거나 일시 중지되었습니다.\n${availability.message}`);
+        location.replace(new URL("../index.html", import.meta.url));
+    };
+
+    try {
+        const initialAvailability = getMissionAvailability(await getEventConfig(), qrId);
+        if (!initialAvailability.available) {
+            leaveUnavailable(initialAvailability);
+            await new Promise(() => {});
+        }
+    } catch (error) {
+        console.warn("행사 설정 확인 실패", error);
+        alert("행사 운영 상태를 확인할 수 없습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.");
+        location.replace(new URL("../index.html", import.meta.url));
+        await new Promise(() => {});
     }
 
     const user = await requireUser();
@@ -95,19 +113,11 @@ export async function initQuiz(qrId, pageMode = "normal") {
     document.getElementById("quizQuestion").textContent = qrId === "qr1" && inlineInputs.length
         ? "빈칸을 채워 도서관 이용 규칙을 완성하세요."
         : quiz.question;
-    try {
-        const availability = getMissionAvailability(await getEventConfig(), qrId);
-        if (!availability.available) {
-            message.textContent = availability.message;
-            setAnswerInputsDisabled(true);
-            submit.disabled = true;
-        }
-    } catch (error) {
-        console.warn("행사 설정 확인 실패", error);
-        message.textContent = "행사 운영 상태를 확인하지 못했습니다. 네트워크를 확인한 뒤 새로고침해 주세요.";
-        setAnswerInputsDisabled(true);
-        submit.disabled = true;
-    }
+    const stopAvailabilityWatch = watchEventConfig((config) => {
+        const availability = getMissionAvailability(config, qrId);
+        if (!availability.available) leaveUnavailable(availability);
+    }, (error) => console.warn("실시간 행사 상태 확인 실패", error));
+    window.addEventListener("pagehide", () => stopAvailabilityWatch(), { once: true });
     const existing = await getDoc(progressReference);
     if (existing.exists()) {
         message.textContent = "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
@@ -152,7 +162,7 @@ export async function initQuiz(qrId, pageMode = "normal") {
                 batch.set(attemptReference, {
                     uid: user.uid,
                     qrId,
-                    answer: normalize(submittedAnswer()),
+                    answer: normalizeAnswer(submittedAnswer()),
                     submittedAt: serverTimestamp()
                 });
                 batch.set(progressReference, {

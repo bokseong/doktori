@@ -1,7 +1,8 @@
-const CACHE_NAME = "doktori-static-v47";
+const CACHE_NAME = "doktori-static-v48";
 const STATIC_FILES = [
     "./", "./index.html", "./account/signin.html", "./account/register.html", "./account/blocked.html", "./css/theme.css", "./css/footer.css", "./css/qr-scanner.css", "./js/qr-scanner.js",
-    "./js/auth.js", "./js/firebase.js", "./js/app-ui.js", "./js/event-config.js", "./js/event-policy.js", "./js/chat.js", "./js/admin-guard.js", "./js/auth.js?v=27", "./js/app-ui.js?v=27", "./js/chat.js?v=27", "./account/mypage.html", "./support/info.html", "./support/chat.html", "./support/chat.html?access=blocked&v=27", "./admin/index.html", "./offline.html", "./icon.svg"
+    "./js/auth.js", "./js/firebase.js", "./js/app-ui.js", "./js/event-config.js", "./js/event-policy.js", "./js/answer-normalization.js", "./js/chat.js", "./js/admin-guard.js", "./js/auth.js?v=27", "./js/app-ui.js?v=27", "./js/chat.js?v=27", "./account/mypage.html", "./support/info.html", "./support/chat.html", "./support/chat.html?access=blocked&v=27", "./admin/index.html", "./offline.html", "./icon.svg",
+    "./assets/qr/qr1-library-loan.webp", "./assets/qr/qr2-traveler-fox.webp", "./assets/qr/qr3-samhain-bonfire.webp", "./assets/qr/qr4-trick-or-treat.webp", "./assets/qr/qr5-mirror-future.webp", "./assets/qr/qr6-red-balloon.webp"
 ];
 
 self.addEventListener("install", (event) => {

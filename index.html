@@ -125,6 +125,22 @@
         const logoutButton = document.getElementById("logoutButton");
         const adminButton = document.getElementById("adminButton");
         const statusMessage = document.getElementById("statusMessage");
+        const qrBoothCard = document.getElementById("doktoriParticipationStatus").closest("a.booth-card");
+        const managedBoothCards = [...document.querySelectorAll("[data-booth-availability]")].map((status) => status.closest("a.booth-card"));
+        [qrBoothCard, ...managedBoothCards].forEach((card) => {
+            card.dataset.available = "false";
+            card.dataset.unavailableMessage = "운영 상태를 확인하고 있습니다. 잠시 후 다시 눌러 주세요.";
+        });
+
+        function guardUnavailableCard(card) {
+            card?.addEventListener("click", (event) => {
+                if (card.dataset.available !== "false") return;
+                event.preventDefault();
+                alert(card.dataset.unavailableMessage || "현재 참여할 수 없습니다.");
+            });
+        }
+        guardUnavailableCard(qrBoothCard);
+        managedBoothCards.forEach(guardUnavailableCard);
 
         const stopEventConfig = watchEventConfig((config) => {
             document.getElementById("eventNoticeText").textContent = config.notice || DEFAULT_EVENT_CONFIG.notice;
@@ -133,11 +149,18 @@
             status.textContent = availability.available ? (availability.partial ? "일부 QR 참여 가능" : "참여가능") : "참여 불가능";
             status.classList.toggle("booth-card__state--available", availability.available);
             status.classList.toggle("booth-card__state--unavailable", !availability.available);
+            qrBoothCard.dataset.available = String(availability.available);
+            qrBoothCard.dataset.unavailableMessage = availability.message;
+            qrBoothCard.setAttribute("aria-disabled", String(!availability.available));
             document.querySelectorAll("[data-booth-availability]").forEach((element) => {
                 const boothAvailability = getBoothAvailability(config, element.dataset.boothAvailability);
                 element.textContent = boothAvailability.available ? "참여가능" : "참여 불가능";
                 element.classList.toggle("booth-card__state--available", boothAvailability.available);
                 element.classList.toggle("booth-card__state--unavailable", !boothAvailability.available);
+                const card = element.closest("a.booth-card");
+                card.dataset.available = String(boothAvailability.available);
+                card.dataset.unavailableMessage = boothAvailability.message;
+                card.setAttribute("aria-disabled", String(!boothAvailability.available));
             });
         }, () => {
             document.getElementById("doktoriParticipationStatus").textContent = "상태 확인 불가";
@@ -145,7 +168,14 @@
                 element.textContent = "상태 확인 불가";
                 element.classList.remove("booth-card__state--available");
                 element.classList.add("booth-card__state--unavailable");
+                const card = element.closest("a.booth-card");
+                card.dataset.available = "false";
+                card.dataset.unavailableMessage = "부스 운영 상태를 확인할 수 없습니다.";
+                card.setAttribute("aria-disabled", "true");
             });
+            qrBoothCard.dataset.available = "false";
+            qrBoothCard.dataset.unavailableMessage = "QR 이벤트 운영 상태를 확인할 수 없습니다.";
+            qrBoothCard.setAttribute("aria-disabled", "true");
             statusMessage.textContent = "행사 운영 상태를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
         });
         window.addEventListener("pagehide", () => stopEventConfig(), { once: true });

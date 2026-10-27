@@ -65,6 +65,8 @@ export function getBoothAvailability(config, boothId, now = new Date()) {
     if (end && now > end) return { available: false, message: "행사가 종료되었습니다." };
     const status = config.boothStatus?.[boothId] || "active";
     if (status === "paused") return { available: false, message: "이 부스는 현재 참여를 잠시 받고 있지 않습니다." };
+    if (status === "closed") return { available: false, message: "이 부스 운영은 종료되었습니다." };
+    if (status !== "active") return { available: false, message: "이 부스는 현재 참여할 수 없습니다." };
     return { available: true, message: "" };
 }
 

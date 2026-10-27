@@ -2,10 +2,67 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.19.0/f
 import { addDoc, collection, doc, limit, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { getUserAccess } from "./auth.js";
 import { auth, db } from "./firebase.js";
+import { getBoothAvailability, getEventConfig, watchEventConfig } from "./event-config.js";
 
 let chatShortcut = null;
 let stopChatAlerts = () => {};
 let stopAccountStatusGuard = () => {};
+let stopBoothAvailabilityGuard = () => {};
+
+function homeUrl() {
+    return new URL("../index.html", import.meta.url).href;
+}
+
+function enableBrandHomeLink() {
+    document.querySelectorAll(".site-header .brand").forEach((brand) => {
+        brand.setAttribute("role", "link");
+        brand.setAttribute("tabindex", "0");
+        brand.setAttribute("aria-label", `${brand.textContent.trim()} · 메인화면으로 이동`);
+        brand.title = "메인화면으로 이동";
+        const goHome = () => { location.href = homeUrl(); };
+        brand.addEventListener("click", (event) => {
+            if (event.target.closest("a, button")) return;
+            goHome();
+        });
+        brand.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            goHome();
+        });
+    });
+}
+
+async function guardBoothDetailPage() {
+    const boothId = document.body.dataset.boothReview || "";
+    if (!/^booth[1-6]$/.test(boothId)) return;
+
+    let leaving = false;
+    const leaveUnavailable = (availability) => {
+        if (leaving) return;
+        leaving = true;
+        alert(`이 부스는 현재 이용할 수 없습니다.\n${availability.message}`);
+        location.replace(homeUrl());
+    };
+
+    try {
+        const availability = getBoothAvailability(await getEventConfig(), boothId);
+        if (!availability.available) {
+            leaveUnavailable(availability);
+            await new Promise(() => {});
+        }
+    } catch (error) {
+        console.warn("부스 운영 상태 확인 실패", error);
+        alert("부스 운영 상태를 확인할 수 없습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요.");
+        location.replace(homeUrl());
+        await new Promise(() => {});
+    }
+
+    stopBoothAvailabilityGuard = watchEventConfig((config) => {
+        const availability = getBoothAvailability(config, boothId);
+        if (!availability.available) leaveUnavailable(availability);
+    }, (error) => console.warn("실시간 부스 상태 확인 실패", error));
+    window.addEventListener("pagehide", () => stopBoothAvailabilityGuard(), { once: true });
+}
 
 function startAccountStatusGuard() {
     onAuthStateChanged(auth, (user) => {
@@ -161,6 +218,8 @@ async function reportError(error, context) {
 window.addEventListener("error", (event) => reportError(event.error || { name: "window-error" }, "window-error"));
 window.addEventListener("unhandledrejection", (event) => reportError(event.reason || { name: "unhandled-rejection" }, "unhandled-rejection"));
 
+await guardBoothDetailPage();
+enableBrandHomeLink();
 createNetworkBanner();
 startAccountStatusGuard();
 createChatShortcut();
