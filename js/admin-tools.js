@@ -17,7 +17,7 @@ import {
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { MASTER_ADMIN_EMAIL } from "./auth.js";
-import { adminUser as user, requireHubEntry } from "./admin-guard.js";
+import { adminUser as user, clearAdminError, isAdminWriteBlocked, reportAdminError, requireHubEntry } from "./admin-guard.js";
 import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js?v=20261023b";
 import { BOOTH_IDS, DATA_RETENTION_END, QR_IDS } from "./event-policy.js";
 import { appCheck, db } from "./firebase.js";
@@ -69,7 +69,13 @@ function createQrStateControls() {
 }
 
 async function loadConfig() {
-    currentConfig = await getEventConfig().catch(() => ({ ...DEFAULT_EVENT_CONFIG, qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus }, boothStatus: { ...DEFAULT_EVENT_CONFIG.boothStatus } }));
+    try {
+        currentConfig = await getEventConfig();
+        clearAdminError();
+    } catch (error) {
+        currentConfig = { ...DEFAULT_EVENT_CONFIG, qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus }, boothStatus: { ...DEFAULT_EVENT_CONFIG.boothStatus } };
+        reportAdminError(error, configMessage, "운영 설정을 불러오지 못했습니다.");
+    }
     document.getElementById("eventNotice").value = currentConfig.notice || DEFAULT_EVENT_CONFIG.notice;
     document.getElementById("participationEnabled").value = currentConfig.participationEnabled === false ? "false" : "true";
     document.getElementById("eventStartAt").value = toInputValue(currentConfig.startAt);
@@ -97,11 +103,12 @@ async function saveConfig() {
         await audit("event-config-updated", { participationEnabled: document.getElementById("participationEnabled").value === "true", qrStatus });
         await loadConfig();
         configMessage.textContent = "운영 설정을 저장했습니다.";
+        clearAdminError();
     } catch (error) {
         console.error(error);
-        configMessage.textContent = "설정을 저장하지 못했습니다. 배포된 보안 규칙을 확인하세요.";
+        reportAdminError(error, configMessage, "설정을 저장하지 못했습니다.");
     } finally {
-        button.disabled = false;
+        button.disabled = isAdminWriteBlocked();
     }
 }
 
@@ -145,10 +152,11 @@ async function setManualProgress(completed) {
         });
         await batch.commit();
         manualMessage.textContent = `${action}했습니다.`;
+        clearAdminError();
         document.getElementById("refreshButton").click();
     } catch (error) {
         console.error(error);
-        manualMessage.textContent = `${action}하지 못했습니다. 배포된 보안 규칙을 확인하세요.`;
+        reportAdminError(error, manualMessage, `${action}하지 못했습니다.`);
     }
 }
 
@@ -229,9 +237,10 @@ async function saveAnnouncement(active) {
         });
         await audit(active ? "announcement-published" : "announcement-disabled", { severity });
         message.textContent = active ? "실시간 공지를 게시했습니다." : "현재 공지를 내렸습니다.";
+        clearAdminError();
     } catch (error) {
         console.error(error);
-        message.textContent = "공지를 저장하지 못했습니다. 권한과 배포된 규칙을 확인하세요.";
+        reportAdminError(error, message, "공지를 저장하지 못했습니다.");
     }
 }
 
@@ -292,9 +301,10 @@ async function deleteExpiredUsers() {
         }
         await commitDeletes(references);
         configMessage.textContent = `${targets.length}명의 Firestore 회원정보와 관련 행사 기록을 영구 삭제했습니다.`;
+        clearAdminError();
     } catch (error) {
         console.error(error);
-        configMessage.textContent = "영구 삭제를 완료하지 못했습니다. 권한과 로그를 확인한 뒤 다시 실행하세요.";
+        reportAdminError(error, configMessage, "영구 삭제를 완료하지 못했습니다.");
     }
 }
 
@@ -310,8 +320,8 @@ document.getElementById("deleteExpired").addEventListener("click", deleteExpired
 if ((user.email || "").toLowerCase() !== MASTER_ADMIN_EMAIL) document.getElementById("deleteExpired").hidden = true;
 
 await Promise.all([loadConfig(), loadUserOptions()]);
-onSnapshot(collection(db, "quizTelemetry"), (snapshot) => renderStats(snapshot.docs), (error) => console.warn("문항 통계 실시간 갱신 실패", error));
-onSnapshot(collection(db, "users"), loadUserOptions, () => {});
-onSnapshot(doc(db, "announcements", "current"), loadAnnouncement, (error) => console.warn("공지 상태 갱신 실패", error));
-onSnapshot(query(collection(db, "auditLogs"), orderBy("createdAt", "desc"), limit(20)), (snapshot) => renderAuditLogs(snapshot.docs), (error) => console.warn("감사 로그 갱신 실패", error));
+onSnapshot(collection(db, "quizTelemetry"), (snapshot) => renderStats(snapshot.docs), (error) => reportAdminError(error, configMessage, "문항 통계를 갱신하지 못했습니다."));
+onSnapshot(collection(db, "users"), loadUserOptions, (error) => reportAdminError(error, manualMessage, "참여자 목록을 갱신하지 못했습니다."));
+onSnapshot(doc(db, "announcements", "current"), loadAnnouncement, (error) => reportAdminError(error, document.getElementById("announcementMessage"), "공지 상태를 갱신하지 못했습니다."));
+onSnapshot(query(collection(db, "auditLogs"), orderBy("createdAt", "desc"), limit(20)), (snapshot) => renderAuditLogs(snapshot.docs), (error) => reportAdminError(error, configMessage, "감사 기록을 갱신하지 못했습니다."));
 

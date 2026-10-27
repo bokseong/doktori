@@ -19,10 +19,10 @@ export function hasQrSuccess(completedCount) {
     return Number(completedCount) >= QR_SUCCESS_REQUIRED;
 }
 
-export function hasBoothSuccess(participatedCount) {
-    return Number(participatedCount) >= BOOTH_SUCCESS_REQUIRED;
+export function getMissionBoothCount(completedQrCount, participatedBoothCount) {
+    return Math.max(0, Number(participatedBoothCount) || 0) + (hasQrSuccess(completedQrCount) ? 1 : 0);
 }
 
 export function hasEventSuccess(completedQrCount, participatedBoothCount) {
-    return hasQrSuccess(completedQrCount) || hasBoothSuccess(participatedBoothCount);
+    return getMissionBoothCount(completedQrCount, participatedBoothCount) >= BOOTH_SUCCESS_REQUIRED;
 }

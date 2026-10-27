@@ -15,7 +15,7 @@
 }
 .hub-hero__copy { padding: clamp(20px, 5vw, 62px) 0; }
 .hub-pass { position: relative; overflow: hidden; padding: clamp(24px, 4vw, 36px); transform: rotate(1.5deg); background: linear-gradient(150deg, #fffdf7, #f4e4c8); }
-.hub-pass::before { content: "31"; position: absolute; right: -12px; top: -22px; color: rgb(255 106 42 / .12); font: 10rem/1 "Black Han Sans", sans-serif; }
+.hub-pass::before { content: "28"; position: absolute; right: -12px; top: -22px; color: rgb(255 106 42 / .12); font: 10rem/1 "Black Han Sans", sans-serif; }
 .hub-pass__eyebrow { color: var(--muted); font-size: .86rem; letter-spacing: .08em; }
 .hub-pass strong { display: block; margin: 18px 0 10px; color: var(--coral); font: clamp(4rem, 8vw, 6.5rem)/.9 "Black Han Sans", sans-serif; }
 .hub-pass__line { height: 2px; margin: 24px 0; background: var(--ink); }
@@ -56,18 +56,11 @@
 .booth-card__facts li + li { margin-top: 8px; }
 .booth-card__actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .booth-card__detail-link { align-self: flex-start; padding: 9px 12px; border: 2px solid #0c0611; border-radius: 7px; color: #211027; background: var(--lime); box-shadow: 3px 3px 0 #0c0611; font-weight: 900; text-decoration: none; }
-.hub-guide { margin-top: 62px; }
-.hub-guide__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; overflow: hidden; border: 2px solid var(--ink); border-radius: 12px; background: var(--ink); box-shadow: var(--shadow); }
-.hub-guide__steps article { padding: 24px; color: var(--cream); background: var(--paper-strong); }
-.hub-guide__steps b { display: block; margin-bottom: 26px; color: var(--coral); font: 2rem "Black Han Sans", sans-serif; }
-.hub-guide__steps h3 { margin: 0 0 8px; font-size: 1.2rem; }
-.hub-guide__steps p { margin: 0; color: var(--muted); }
 @media (max-width: 760px) {
     .hub-hero, .booth-grid { grid-template-columns: 1fr; }
     .hub-pass { transform: none; }
     .booth-card--featured { grid-row: auto; min-height: auto; }
     .section-heading { align-items: flex-start; flex-direction: column; }
-    .hub-guide__steps { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
     .booth-card__actions > * { width: 100%; }

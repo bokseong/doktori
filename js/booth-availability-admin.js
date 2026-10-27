@@ -1,5 +1,5 @@
 import { doc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { adminAccess, adminUser, requireHubEntry } from "./admin-guard.js";
+import { adminAccess, adminUser, clearAdminError, isAdminWriteBlocked, reportAdminError, requireHubEntry } from "./admin-guard.js";
 import { BOOTH_IDS, watchEventConfig } from "./event-config.js?v=20261027a";
 import { db } from "./firebase.js";
 
@@ -42,8 +42,8 @@ if (!adminAccess.isGrade1) {
             if (select) select.value = config.boothStatus?.[boothId] || "active";
         });
     };
-    const stopConfig = watchEventConfig(render, () => {
-        message.textContent = "부스 참여 상태를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+    const stopConfig = watchEventConfig(render, (error) => {
+        reportAdminError(error, message, "부스 참여 상태를 불러오지 못했습니다.");
     });
 
     save.addEventListener("click", async () => {
@@ -60,13 +60,12 @@ if (!adminAccess.isGrade1) {
                 updatedBy: adminUser.uid
             });
             message.textContent = "저장했습니다. 메인 화면의 부스 상태가 즉시 갱신됩니다.";
+            clearAdminError();
         } catch (error) {
             console.error(error);
-            message.textContent = error.code === "permission-denied"
-                ? "저장 권한이 없습니다. 1급 관리자 권한과 보안 규칙 배포 상태를 확인하세요."
-                : "부스 참여 상태를 저장하지 못했습니다.";
+            reportAdminError(error, message, "부스 참여 상태를 저장하지 못했습니다.");
         } finally {
-            save.disabled = false;
+            save.disabled = isAdminWriteBlocked();
         }
     });
     window.addEventListener("pagehide", () => stopConfig(), { once: true });

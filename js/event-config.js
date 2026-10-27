@@ -4,7 +4,7 @@ import { db } from "./firebase.js";
 export const BOOTH_IDS = Object.freeze(["booth1", "booth2", "booth3", "booth4", "booth5", "booth6"]);
 
 export const DEFAULT_EVENT_CONFIG = Object.freeze({
-    notice: "2·3층 곳곳의 QR 6개 중 3개 이상을 완료하면 QR 미션 성공입니다.",
+    notice: "QR 3개 완료는 부스 1개 참여로 인정되며, 총 3개 부스를 완료하면 미션 성공입니다.",
     participationEnabled: true,
     startAt: null,
     endAt: null,

@@ -84,7 +84,7 @@
                 <label>중요도<select id="announcementSeverity"><option value="info">안내</option><option value="warning">주의</option><option value="urgent">긴급</option></select></label>
                 <label class="wide">공지 내용<textarea id="announcementBody" maxlength="500" placeholder="사용자에게 즉시 알릴 내용을 입력하세요."></textarea></label>
             </div>
-            <div class="actions"><button id="publishAnnouncement" class="button--coral" type="button">공지 게시</button><button id="disableAnnouncement" class="button--paper" type="button">현재 공지 내리기</button></div>
+            <div class="actions"><button id="publishAnnouncement" class="button--coral" data-admin-write type="button">공지 게시</button><button id="disableAnnouncement" class="button--paper" data-admin-write type="button">현재 공지 내리기</button></div>
             <p id="announcementMessage" class="status" role="status"></p>
         </section>
         <section class="admin-panel panel" data-admin-view="event" aria-labelledby="eventConfigTitle">
@@ -95,7 +95,7 @@
                 <label>개인정보 보유 종료 시각<input id="retentionAt" type="datetime-local" value="2026-10-30T14:00" readonly></label>
             </div>
             <h3>QR별 상태</h3><div id="qrStateGrid" class="qr-state-grid"></div>
-            <div class="actions"><button id="saveEventConfig" class="button--coral" type="button">운영 설정 저장</button><button id="deleteExpired" class="button--paper" type="button">보유기간 만료 데이터 영구 삭제</button></div>
+            <div class="actions"><button id="saveEventConfig" class="button--coral" data-admin-write type="button">운영 설정 저장</button><button id="deleteExpired" class="button--paper" data-admin-write type="button">보유기간 만료 데이터 영구 삭제</button></div>
             <p id="configMessage" class="status" role="status"></p>
         </section>
 
@@ -103,7 +103,7 @@
 
         <section class="admin-panel panel" data-admin-view="event" aria-labelledby="manualTitle">
             <h2 id="manualTitle" class="section-title">진행도 수동 수정</h2>
-            <div class="manual-grid"><label>참여자<select id="manualUser"></select></label><label>QR<select id="manualQr"></select></label><button id="manualComplete" type="button">완료 처리</button><button id="manualCancel" class="button--paper" type="button">완료 취소</button></div>
+            <div class="manual-grid"><label>참여자<select id="manualUser"></select></label><label>QR<select id="manualQr"></select></label><button id="manualComplete" data-admin-write type="button">완료 처리</button><button id="manualCancel" class="button--paper" data-admin-write type="button">완료 취소</button></div>
             <p id="manualMessage" class="status" role="status"></p>
         </section>
 
@@ -126,6 +126,7 @@
     <script type="module">
         import { collection, deleteField, doc, getDocs, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "../js/auth.js";
+        import { clearAdminError, isAdminWriteBlocked, reportAdminError } from "../js/admin-guard.js";
         import { db } from "../js/firebase.js";
         import { hasQrSuccess, QR_IDS } from "../js/event-policy.js";
 
@@ -157,7 +158,7 @@
             adminContent.hidden = false;
             document.getElementById("refreshButton").addEventListener("click", loadUsers);
             document.body.style.visibility = "visible";
-            onSnapshot(collection(db, "users"), loadUsers, (error) => { console.error(error); message.textContent = "실시간 사용자 갱신에 실패했습니다."; });
+            onSnapshot(collection(db, "users"), loadUsers, (error) => { console.error(error); reportAdminError(error, message, "실시간 사용자 갱신에 실패했습니다."); });
         }
 
         function formatDate(value) {
@@ -185,9 +186,10 @@
                 document.getElementById("participantUsers").textContent = String(records.filter((item) => [undefined, "participant", "member"].includes(item.role)).length);
                 document.getElementById("blockedUsers").textContent = String(records.filter((item) => item.accountStatus === "blocked").length);
                 message.textContent = records.length ? `총 ${records.length}명의 정보를 불러왔습니다.` : "등록된 사용자가 없습니다.";
+                clearAdminError();
             } catch (error) {
                 console.error(error);
-                message.textContent = "사용자 정보를 불러오지 못했습니다. 권한과 네트워크를 확인하세요.";
+                reportAdminError(error, message, "사용자 정보를 불러오지 못했습니다.");
             }
         }
 
@@ -229,7 +231,7 @@
             const roleCell = document.createElement("td");
             const controls = document.createElement("div"); controls.className = "role-controls";
             const select = document.createElement("select"); select.append(new Option("일반회원", "member"), new Option("2급 관리자", "grade2"), new Option("1급 관리자", "grade1")); select.value = record.role === "admin" ? "grade1" : record.role === "participant" || !record.role ? "member" : record.role;
-            const save = document.createElement("button"); save.type = "button"; save.className = "small"; save.textContent = "저장";
+            const save = document.createElement("button"); save.type = "button"; save.className = "small"; save.dataset.adminWrite = ""; save.textContent = "저장";
             const master = (record.email || "").toLowerCase() === MASTER_ADMIN_EMAIL;
             const ownAccount = record.id === currentUser.uid;
             select.disabled = master || blocked || ownAccount;
@@ -250,8 +252,8 @@
                     record.role = select.value;
                     message.textContent = "권한을 변경했습니다.";
                 }
-                catch (error) { console.error(error); message.textContent = "권한을 변경하지 못했습니다."; }
-                finally { save.disabled = master || blocked || ownAccount; }
+                catch (error) { console.error(error); reportAdminError(error, message, "권한을 변경하지 못했습니다."); }
+                finally { save.disabled = master || blocked || ownAccount || isAdminWriteBlocked(); }
             });
             controls.append(select, save); roleCell.append(controls);
             const statusCell = document.createElement("td");
@@ -270,6 +272,7 @@
             blockControls.className = "status-controls";
             const blockButton = document.createElement("button");
             blockButton.type = "button";
+            blockButton.dataset.adminWrite = "";
             blockButton.className = `small ${blocked ? "button--paper" : "button--coral"}`;
             blockButton.textContent = master ? "보호됨" : ownAccount ? "내 계정" : blocked ? "차단 해제" : "계정 차단";
             blockButton.disabled = master || ownAccount;
@@ -307,8 +310,7 @@
                     message.textContent = blocked ? "계정 차단을 해제했습니다." : "계정을 차단했습니다.";
                 } catch (error) {
                     console.error(error);
-                    message.textContent = blocked ? "차단을 해제하지 못했습니다." : "계정을 차단하지 못했습니다.";
-                    blockButton.disabled = false;
+                    reportAdminError(error, message, blocked ? "차단을 해제하지 못했습니다." : "계정을 차단하지 못했습니다.");
                 }
             });
             blockControls.append(blockButton); blockCell.append(blockControls);

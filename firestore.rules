@@ -176,7 +176,7 @@ service cloud.firestore {
           "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
           "termsConsent", "termsConsentVersion", "termsConsentAt",
           "adminChatName", "accountStatus", "blockReason", "accountStatusAt",
-          "accountStatusBy", "storyMode"
+          "accountStatusBy"
         ])
         && data.studentNumber is string
         && data.studentNumber.matches('^[0-9]{4,20}$')
@@ -188,7 +188,6 @@ service cloud.firestore {
         && (!data.keys().hasAny(["adminChatName"])
           || data.adminChatName.matches('^[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.\\-]{0,29}$'))
         && (data.get("role", "member") in ["admin", "grade1", "grade2"] || data.get("adminChatName", "") == "")
-        && data.get("storyMode", "normal") in ["normal", "story"]
         && data.get("accountStatus", "active") in ["active", "blocked"]
         && data.get("blockReason", "") is string
         && data.get("blockReason", "").size() <= 200
@@ -258,7 +257,7 @@ service cloud.firestore {
           ])
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["adminChatName"]) || isAdmin())
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["storyMode"])
-            || request.resource.data.storyMode == "normal")
+            || !request.resource.data.keys().hasAny(["storyMode"]))
           && (!resource.data.keys().hasAny(["identityReservationId"])
             || request.resource.data.identityReservationId == resource.data.identityReservationId)
           && (
@@ -613,12 +612,6 @@ service cloud.firestore {
         && existsAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId))
         && getAfter(/databases/$(database)/documents/chatMessages/$(request.resource.data.lastMessageId)).data.senderUid == userId;
       allow delete: if isMasterAdmin() && isRetentionExpired();
-    }
-
-    // 기존 축전 사이트의 공개 운세 읽기 규칙은 그대로 유지합니다.
-    match /festivalHoroscopes/{date} {
-      allow read: if date == "2026-10-14";
-      allow write: if false;
     }
 
     match /{document=**} {

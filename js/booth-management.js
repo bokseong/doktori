@@ -8,7 +8,7 @@ import {
     where,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { adminAccess, adminUser, requireHubEntry } from "./admin-guard.js";
+import { adminAccess, adminUser, clearAdminError, isAdminWriteBlocked, reportAdminError, requireHubEntry } from "./admin-guard.js";
 import { db } from "./firebase.js";
 
 export const BOOTHS = Object.freeze([
@@ -96,13 +96,12 @@ async function saveRecord(member, participatedInput, rankInput, button) {
         }
         await batch.commit();
         status.textContent = "저장했습니다. 진행률·상품 수령 화면에도 즉시 반영됩니다.";
+        clearAdminError();
     } catch (error) {
         console.error(error);
-        status.textContent = error.code === "permission-denied"
-            ? "저장 권한이 없습니다. Firestore 보안 규칙 배포 상태를 확인하세요."
-            : "참여 정보를 저장하지 못했습니다.";
+        reportAdminError(error, status, "참여 정보를 저장하지 못했습니다.");
     } finally {
-        button.disabled = false;
+        button.disabled = isAdminWriteBlocked();
     }
 }
 
@@ -149,6 +148,7 @@ function render() {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "booth-save";
+        button.dataset.adminWrite = "";
         button.textContent = "저장";
         button.addEventListener("click", () => saveRecord(member, participatedInput, rankInput, button));
         actionCell.append(button);
@@ -171,17 +171,19 @@ async function loadUsers() {
             else participation.delete(member.id);
             render();
         },
-        () => {
+        (error) => {
             participation.delete(member.id);
             render();
+            reportAdminError(error, status, "부스 참여 기록을 실시간으로 불러오지 못했습니다.");
         }
     ));
     render();
 }
 
 search.addEventListener("input", render);
-await loadUsers();
-const stopUsers = onSnapshot(participantQuery, () => loadUsers(), () => {});
+try { await loadUsers(); clearAdminError(); }
+catch (error) { console.error(error); reportAdminError(error, status, "회원 목록을 불러오지 못했습니다."); }
+const stopUsers = onSnapshot(participantQuery, () => loadUsers(), (error) => reportAdminError(error, status, "회원 목록을 갱신하지 못했습니다."));
 window.addEventListener("pagehide", () => {
     stopUsers();
     stopParticipationListeners.forEach((stop) => stop());

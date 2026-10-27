@@ -122,7 +122,7 @@
                     <li>참여자는 본인의 Google 계정과 정확한 학번·이름을 사용해야 하며, 다른 사람의 계정을 대신 사용하거나 진행 기록을 조작해서는 안 됩니다.</li>
                     <li>QR 위치, 문제와 정답을 무단으로 공개하거나 자동화 도구로 정답을 반복 제출하는 등 행사 운영을 방해하는 행위를 금지합니다.</li>
                     <li>부정 참여 또는 운영 방해가 확인되면 해당 진행 기록을 무효로 처리하거나 참여를 제한할 수 있습니다.</li>
-                    <li>QR 6개 중 3개 이상 또는 현장 부스 3개 이상을 완료하면 행사 성공 조건을 충족합니다.</li>
+                    <li>QR 6개 중 3개를 완료하면 부스 1개로 인정되며, QR 인정분을 포함해 총 3개 부스를 완료하면 미션에 성공합니다.</li>
                     <li>1:1 도움 채팅은 해당 참여자와 관리자만 확인할 수 있습니다. 전화번호, 주소, 비밀번호 등 민감한 개인정보를 게시해서는 안 되며 운영 방해 메시지는 관리자가 삭제할 수 있습니다.</li>
                     <li>점검, 장애 또는 행사 운영상 필요한 경우 서비스 내용이나 이용 시간이 변경될 수 있으며, 중요한 변경 사항은 실시간 공지로 알릴 수 있습니다.</li>
                     <li>개인정보 처리에 관한 사항은 아래 개인정보 수집·이용 안내에 따릅니다.</li>
@@ -161,7 +161,7 @@
         import { collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "../js/auth.js";
         import { db } from "../js/firebase.js";
-        import { BOOTH_SUCCESS_REQUIRED, hasBoothSuccess, hasQrSuccess, QR_IDS, QR_SUCCESS_REQUIRED } from "../js/event-policy.js";
+        import { BOOTH_SUCCESS_REQUIRED, getMissionBoothCount, hasEventSuccess, hasQrSuccess, QR_IDS, QR_SUCCESS_REQUIRED } from "../js/event-policy.js";
         const BOOTHS = Object.freeze([
             { id: "booth1", name: "프랑켄슈타인 박사의 도서 대출" },
             { id: "booth2", name: "물약을 완성하라!" },
@@ -182,6 +182,15 @@
         const boothProgressMessage = document.getElementById("boothProgressMessage");
         let stopProgressListener = () => {};
         let stopBoothProgressListener = () => {};
+        let completedQrCount = 0;
+        let participatedBoothCount = 0;
+
+        function renderMissionSummary() {
+            const recognized = getMissionBoothCount(completedQrCount, participatedBoothCount);
+            boothProgressMessage.textContent = hasEventSuccess(completedQrCount, participatedBoothCount)
+                ? `미션 성공 조건을 달성했습니다. 인정 부스 ${recognized}개${hasQrSuccess(completedQrCount) ? "(QR 부스 포함)" : ""}입니다.`
+                : `현재 인정 부스는 ${recognized}/${BOOTH_SUCCESS_REQUIRED}개입니다. QR 3개 완료 시 부스 1개로 인정됩니다.`;
+        }
 
         function formatDate(value) {
             const date = value?.toDate?.();
@@ -191,6 +200,7 @@
         function renderProgress(documents) {
             const completed = new Set(documents.filter((item) => item.data().found === true && QR_IDS.includes(item.id)).map((item) => item.id));
             const count = completed.size;
+            completedQrCount = count;
             const remaining = Math.max(0, QR_SUCCESS_REQUIRED - count);
             document.getElementById("progressScore").textContent = `${count} / ${QR_IDS.length}`;
             document.getElementById("progressFill").style.width = `${(count / QR_IDS.length) * 100}%`;
@@ -203,13 +213,15 @@
                 progressItems.append(item);
             });
             progressMessage.textContent = hasQrSuccess(count)
-                ? `QR 미션 성공 조건을 달성했습니다. 총 ${count}개를 완료했습니다.`
-                : `QR 미션 성공까지 ${remaining}개가 남았습니다. 6개 중 ${QR_SUCCESS_REQUIRED}개 이상 완료하면 성공입니다.`;
+                ? `QR ${count}개를 완료해 부스 1개 참여로 인정되었습니다.`
+                : `QR 부스 인정까지 ${remaining}개가 남았습니다. 6개 중 ${QR_SUCCESS_REQUIRED}개를 완료해 주세요.`;
+            renderMissionSummary();
         }
 
         function renderBoothProgress(documents) {
             const records = new Map(documents.map((item) => [item.id, item.data()]));
             const participatedCount = BOOTHS.filter((booth) => records.get(booth.id)?.participated === true).length;
+            participatedBoothCount = participatedCount;
             document.getElementById("boothProgressScore").textContent = `${participatedCount} / ${BOOTHS.length}`;
             boothProgressItems.replaceChildren();
             BOOTHS.forEach((booth) => {
@@ -226,9 +238,7 @@
                 item.append(title, state);
                 boothProgressItems.append(item);
             });
-            boothProgressMessage.textContent = hasBoothSuccess(participatedCount)
-                ? `부스 참여 성공 조건을 달성했습니다. 총 ${participatedCount}개 부스가 기록되었습니다.`
-                : `현재 ${participatedCount}개 부스가 기록되었습니다. ${BOOTH_SUCCESS_REQUIRED}개 이상 참여하면 성공입니다.`;
+            renderMissionSummary();
         }
 
         function currentAdminName() {

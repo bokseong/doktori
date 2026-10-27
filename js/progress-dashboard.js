@@ -7,9 +7,9 @@ import {
     serverTimestamp,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import { adminAccess as access, adminUser as user, requireHubEntry } from "./admin-guard.js";
+import { adminAccess as access, adminUser as user, clearAdminError, reportAdminError, requireHubEntry } from "./admin-guard.js";
 import { db } from "./firebase.js";
-import { BOOTH_SUCCESS_REQUIRED, hasBoothSuccess, hasEventSuccess, hasQrSuccess, QR_IDS, QR_SUCCESS_REQUIRED } from "./event-policy.js";
+import { BOOTH_SUCCESS_REQUIRED, getMissionBoothCount, hasEventSuccess, hasQrSuccess, QR_IDS, QR_SUCCESS_REQUIRED } from "./event-policy.js";
 
 const BOOTHS = Object.freeze([
     { id: "booth1", name: "프랑켄슈타인 박사의 도서 대출" },
@@ -114,10 +114,11 @@ async function setPrizeReceived(record, received) {
     try {
         await batch.commit();
         status.textContent = `${action}했습니다.`;
+        clearAdminError();
         await loadRecords();
     } catch (error) {
         console.error(error);
-        status.textContent = "상품 수령 상태를 저장하지 못했습니다.";
+        reportAdminError(error, status, "상품 수령 상태를 저장하지 못했습니다.");
     }
 }
 
@@ -140,16 +141,11 @@ function render() {
         participationBadge.textContent = participated ? "참여" : "미참여";
         participation.append(participationBadge);
         row.append(participation, createCell(`${record.found.length} / 6`), createCell(`${boothCount} / ${BOOTHS.length}`));
-        const rankedBooths = Object.values(record.booths).filter((item) => Number.isInteger(item.rank)).length;
         const qrSuccess = hasQrSuccess(record.found.length);
-        const boothSuccess = hasBoothSuccess(boothCount);
-        const prizeBasis = qrSuccess && boothSuccess
-            ? `QR ${record.found.length}개 · 부스 ${boothCount}개 성공`
-            : qrSuccess
-                ? `QR ${record.found.length}개 성공`
-                : boothSuccess
-                    ? `부스 ${boothCount}개 성공`
-                    : `기준 미달 · QR ${record.found.length}/${QR_SUCCESS_REQUIRED}, 부스 ${boothCount}/${BOOTH_SUCCESS_REQUIRED}`;
+        const missionBoothCount = getMissionBoothCount(record.found.length, boothCount);
+        const prizeBasis = missionBoothCount >= BOOTH_SUCCESS_REQUIRED
+            ? `인정 부스 ${missionBoothCount}개 성공${qrSuccess ? " · QR 부스 포함" : ""}`
+            : `기준 미달 · 인정 부스 ${missionBoothCount}/${BOOTH_SUCCESS_REQUIRED}${qrSuccess ? " (QR 부스 포함)" : ` · QR ${record.found.length}/${QR_SUCCESS_REQUIRED}`}`;
         const prizeEligible = !isAdministrator(record) && hasEventSuccess(record.found.length, boothCount);
         row.append(createCell(prizeEligible ? prizeBasis : "관리자 제외"), createCell(prizeEligible ? (record.received ? "수령 완료" : "미수령") : "대상 아님"));
         const actionCell = document.createElement("td");
@@ -157,6 +153,7 @@ function render() {
             const button = document.createElement("button");
             button.type = "button";
             button.className = "receipt-button";
+            button.dataset.adminWrite = "";
             button.textContent = record.received ? "수령 취소" : "수령 완료";
             button.addEventListener("click", () => setPrizeReceived(record, !record.received));
             actionCell.append(button);
@@ -209,9 +206,10 @@ async function loadRecords() {
             .filter((record) => record.role !== "withdrawn" && !isAdministrator(record))
             .sort((a, b) => (a.studentName || a.email || "").localeCompare(b.studentName || b.email || "", "ko"));
         render();
+        clearAdminError();
     } catch (error) {
         console.error(error);
-        status.textContent = "전체 진행률을 불러오지 못했습니다. 권한과 네트워크를 확인하세요.";
+        reportAdminError(error, status, "전체 진행률을 불러오지 못했습니다.");
     }
 }
 
@@ -231,7 +229,7 @@ search.addEventListener("input", render);
 document.getElementById("closeMemberDetail").addEventListener("click", () => { selectedMemberId = null; memberDetail.hidden = true; });
 document.getElementById("exportButton").addEventListener("click", exportCsv);
 await loadRecords();
-onSnapshot(collection(db, "prizeClaims"), loadRecords, () => {});
-onSnapshot(collection(db, "users"), loadRecords, () => {});
-onSnapshot(collectionGroup(db, "progress"), loadRecords, () => {});
-onSnapshot(collectionGroup(db, "boothParticipation"), loadRecords, () => {});
+onSnapshot(collection(db, "prizeClaims"), loadRecords, (error) => reportAdminError(error, status, "상품 수령 상태를 갱신하지 못했습니다."));
+onSnapshot(collection(db, "users"), loadRecords, (error) => reportAdminError(error, status, "회원 목록을 갱신하지 못했습니다."));
+onSnapshot(collectionGroup(db, "progress"), loadRecords, (error) => reportAdminError(error, status, "QR 진행률을 갱신하지 못했습니다."));
+onSnapshot(collectionGroup(db, "boothParticipation"), loadRecords, (error) => reportAdminError(error, status, "부스 참여 현황을 갱신하지 못했습니다."));

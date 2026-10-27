@@ -7,6 +7,7 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
+    deleteField,
     doc,
     getDoc,
     serverTimestamp,
@@ -21,6 +22,7 @@ export const TERMS_CONSENT_VERSION = "2026-10-28-v1";
 
 const STUDENT_NUMBER_PATTERN = /^[0-9]{4,20}$/;
 const STUDENT_NAME_PATTERN = /^[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}$/u;
+const AUTH_RETURN_KEY = "doktori-auth-return";
 
 function normalizeIdentityPart(value) {
     return String(value || "").normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
@@ -90,20 +92,32 @@ export async function getMemberProfile(user = auth.currentUser) {
 export function getSafeNext(fallback = "./index.html") {
     const fallbackUrl = new URL(fallback, location.href);
     const requested = new URLSearchParams(location.search).get("next");
-
-    if (!requested) {
-        return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
+    const stored = sessionStorage.getItem(AUTH_RETURN_KEY);
+    for (const candidate of [requested, stored]) {
+        if (!candidate) continue;
+        try {
+            const target = new URL(candidate, location.href);
+            const isAuthPage = /\/(?:signin|register)\.html$/i.test(target.pathname);
+            if (target.origin !== location.origin || isAuthPage) continue;
+            const safe = `${target.pathname}${target.search}${target.hash}`;
+            sessionStorage.setItem(AUTH_RETURN_KEY, safe);
+            return safe;
+        } catch { /* 다음 후보를 확인합니다. */ }
     }
+    return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
+}
 
+export function rememberAuthReturn(next) {
     try {
-        const target = new URL(requested, location.href);
+        const target = new URL(next, location.href);
         const isAuthPage = /\/(?:signin|register)\.html$/i.test(target.pathname);
-        return target.origin === location.origin && !isAuthPage
-            ? `${target.pathname}${target.search}${target.hash}`
-            : `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
-    } catch {
-        return `${fallbackUrl.pathname}${fallbackUrl.search}${fallbackUrl.hash}`;
-    }
+        if (target.origin !== location.origin || isAuthPage) return;
+        sessionStorage.setItem(AUTH_RETURN_KEY, `${target.pathname}${target.search}${target.hash}`);
+    } catch { /* 잘못된 주소는 저장하지 않습니다. */ }
+}
+
+export function clearAuthReturn() {
+    sessionStorage.removeItem(AUTH_RETURN_KEY);
 }
 
 function redirectTo(page, next) {
@@ -115,6 +129,7 @@ function redirectTo(page, next) {
 export async function requireUser({ allowBlocked = false } = {}) {
     const user = await waitForAuth();
     const next = `${location.pathname}${location.search}${location.hash}`;
+    rememberAuthReturn(next);
 
     if (!user) {
         redirectTo("../account/signin.html", next);
@@ -183,7 +198,6 @@ export async function registerMember(user, studentNumber, studentName, privacyCo
         termsConsent: true,
         termsConsentVersion: TERMS_CONSENT_VERSION,
         termsConsentAt: serverTimestamp(),
-        storyMode: "normal",
         lastLoginAt: serverTimestamp()
     };
 
@@ -224,7 +238,8 @@ export async function touchMemberProfile(user) {
         uid: user.uid,
         email: user.email || "",
         displayName: user.displayName || "",
-        lastLoginAt: serverTimestamp()
+        lastLoginAt: serverTimestamp(),
+        ...(Object.prototype.hasOwnProperty.call(profile, "storyMode") ? { storyMode: deleteField() } : {})
     };
     if (isMasterAdmin(user) && normalizeRole(profile.role) !== "grade1") update.role = "grade1";
     await setDoc(doc(db, "users", user.uid), update, { merge: true });
