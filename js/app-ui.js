@@ -79,7 +79,7 @@ function startAdminChatAlerts() {
         if (!user || /\/chat\.html$/i.test(location.pathname)) return;
         try {
             const access = await getUserAccess(user);
-            if (!access.isGrade1) return;
+            if (!access.isAdmin) return;
             let initialSnapshotReceived = false;
             const latestMessage = query(collection(db, "chatMessages"), orderBy("createdAt", "desc"), limit(1));
             stopChatAlerts = onSnapshot(latestMessage, (snapshot) => {
@@ -118,9 +118,15 @@ function createAnnouncementPopup() {
     document.body.append(overlay);
 
     onSnapshot(doc(db, "announcements", "current"), (snapshot) => {
-        if (!snapshot.exists()) return;
+        if (!snapshot.exists()) {
+            dismiss();
+            return;
+        }
         const data = snapshot.data();
-        if (data.active !== true || !data.title || !data.message) return;
+        if (data.active !== true || !data.title || !data.message) {
+            dismiss();
+            return;
+        }
         const revision = `${data.updatedAt?.seconds || 0}:${data.title}:${data.message}`;
         if (sessionStorage.getItem("doktori-announcement-seen") === revision) return;
         sessionStorage.setItem("doktori-announcement-seen", revision);

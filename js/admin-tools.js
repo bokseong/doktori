@@ -12,14 +12,16 @@ import {
     serverTimestamp,
     setDoc,
     Timestamp,
+    updateDoc,
+    where,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { MASTER_ADMIN_EMAIL } from "./auth.js";
 import { adminUser as user, requireHubEntry } from "./admin-guard.js";
 import { DEFAULT_EVENT_CONFIG, getEventConfig } from "./event-config.js?v=20261023b";
+import { BOOTH_IDS, DATA_RETENTION_END, QR_IDS } from "./event-policy.js";
 import { appCheck, db } from "./firebase.js";
 
-const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
 if (!requireHubEntry()) await new Promise(() => {});
 
 const configMessage = document.getElementById("configMessage");
@@ -72,7 +74,7 @@ async function loadConfig() {
     document.getElementById("participationEnabled").value = currentConfig.participationEnabled === false ? "false" : "true";
     document.getElementById("eventStartAt").value = toInputValue(currentConfig.startAt);
     document.getElementById("eventEndAt").value = toInputValue(currentConfig.endAt);
-    document.getElementById("retentionAt").value = toInputValue(currentConfig.retentionAt);
+    document.getElementById("retentionAt").value = "2026-10-30T14:00";
     QR_IDS.forEach((qrId) => { document.getElementById(`state-${qrId}`).value = currentConfig.qrStatus?.[qrId] || "active"; });
 }
 
@@ -82,14 +84,13 @@ async function saveConfig() {
     configMessage.textContent = "운영 설정을 저장하는 중...";
     const qrStatus = Object.fromEntries(QR_IDS.map((qrId) => [qrId, document.getElementById(`state-${qrId}`).value]));
     try {
-        await setDoc(doc(db, "eventConfig", "current"), {
+        await updateDoc(doc(db, "eventConfig", "current"), {
             notice: document.getElementById("eventNotice").value.trim(),
             participationEnabled: document.getElementById("participationEnabled").value === "true",
             startAt: fromInput("eventStartAt"),
             endAt: fromInput("eventEndAt"),
-            retentionAt: fromInput("retentionAt"),
+            retentionAt: Timestamp.fromDate(DATA_RETENTION_END),
             qrStatus,
-            boothStatus: { ...DEFAULT_EVENT_CONFIG.boothStatus, ...(currentConfig?.boothStatus || {}) },
             updatedAt: serverTimestamp(),
             updatedBy: user.uid
         });
@@ -243,34 +244,57 @@ function loadAnnouncement(snapshot) {
     document.getElementById("announcementMessage").textContent = data.active ? "현재 공지가 게시 중입니다." : "게시 중인 공지가 없습니다.";
 }
 
-async function anonymizeExpiredUsers() {
+async function commitDeletes(references) {
+    const unique = [...new Map(references.map((reference) => [reference.path, reference])).values()];
+    for (let offset = 0; offset < unique.length; offset += 400) {
+        const batch = writeBatch(db);
+        unique.slice(offset, offset + 400).forEach((reference) => batch.delete(reference));
+        await batch.commit();
+    }
+}
+
+async function queryOwnedReferences(collectionName, field, uid) {
+    const snapshot = await getDocs(query(collection(db, collectionName), where(field, "==", uid)));
+    return snapshot.docs.map((item) => item.ref);
+}
+
+async function deleteExpiredUsers() {
     if ((user.email || "").toLowerCase() !== MASTER_ADMIN_EMAIL) return;
     const config = await getEventConfig();
     const retentionDate = config.retentionAt?.toDate?.();
-    if (!retentionDate || new Date() < retentionDate) {
+    if (!retentionDate || retentionDate.getTime() !== DATA_RETENTION_END.getTime() || new Date() < DATA_RETENTION_END) {
         configMessage.textContent = "아직 개인정보 보유기간이 끝나지 않았습니다.";
         return;
     }
     const users = await getDocs(collection(db, "users"));
-    const targets = users.docs.filter((item) => ["participant", "member"].includes(item.data().role || "member") && item.data().privacyConsent === true);
-    if (!targets.length) { configMessage.textContent = "익명화할 참여자가 없습니다."; return; }
-    if (!window.confirm(`${targets.length}명의 이름·학번·이메일을 익명화하고 QR 진행 기록을 삭제합니다. 이 작업은 되돌리기 어렵습니다. 실행할까요?`)) return;
-    configMessage.textContent = "개인정보를 익명화하는 중...";
+    const targets = users.docs.filter((item) => ["participant", "member", "withdrawn"].includes(item.data().role || "member"));
+    if (!targets.length) { configMessage.textContent = "영구 삭제할 참여자 데이터가 없습니다."; return; }
+    if (!window.confirm(`${targets.length}명의 회원정보·진행 기록·후기·문의·상품 기록을 영구 삭제합니다. 복구할 수 없습니다. 실행할까요?`)) return;
+    configMessage.textContent = "보유기간이 끝난 데이터를 영구 삭제하는 중...";
     try {
+        const references = [];
         for (const target of targets) {
-            const batch = writeBatch(db);
-            batch.update(target.ref, { email: "", displayName: "", studentNumber: "0000", studentName: "삭제됨", privacyConsent: false, privacyConsentVersion: "expired", privacyConsentAt: serverTimestamp(), lastActivityAt: serverTimestamp() });
+            references.push(target.ref, doc(db, "prizeClaims", target.id), doc(db, "chatRateLimits", target.id));
+            const reservationId = target.data().identityReservationId;
+            if (typeof reservationId === "string" && reservationId.includes("~")) references.push(doc(db, "identityReservations", reservationId));
             QR_IDS.forEach((qrId) => {
-                batch.delete(doc(db, "users", target.id, "progress", qrId));
-                batch.delete(doc(db, "answerAttempts", `${target.id}_${qrId}`));
+                references.push(doc(db, "users", target.id, "progress", qrId));
+                references.push(doc(db, "answerAttempts", `${target.id}_${qrId}`));
             });
-            await batch.commit();
+            BOOTH_IDS.forEach((boothId) => {
+                references.push(doc(db, "users", target.id, "boothParticipation", boothId));
+            });
+            references.push(...await queryOwnedReferences("boothReviews", "authorUid", target.id));
+            references.push(...await queryOwnedReferences("quizTelemetry", "uid", target.id));
+            references.push(...await queryOwnedReferences("clientErrors", "uid", target.id));
+            references.push(...await queryOwnedReferences("chatMessages", "conversationUid", target.id));
+            references.push(...await queryOwnedReferences("auditLogs", "targetUid", target.id));
         }
-        await audit("retention-anonymization", { count: targets.length });
-        configMessage.textContent = `${targets.length}명의 Firestore 회원정보와 진행 기록을 익명화했습니다. Firebase Authentication 계정은 별도 관리 대상입니다.`;
+        await commitDeletes(references);
+        configMessage.textContent = `${targets.length}명의 Firestore 회원정보와 관련 행사 기록을 영구 삭제했습니다.`;
     } catch (error) {
         console.error(error);
-        configMessage.textContent = "익명화를 완료하지 못했습니다. 권한과 로그를 확인하세요.";
+        configMessage.textContent = "영구 삭제를 완료하지 못했습니다. 권한과 로그를 확인한 뒤 다시 실행하세요.";
     }
 }
 
@@ -282,8 +306,8 @@ document.getElementById("manualCancel").addEventListener("click", () => setManua
 document.getElementById("runDiagnostics").addEventListener("click", runDiagnostics);
 document.getElementById("publishAnnouncement").addEventListener("click", () => saveAnnouncement(true));
 document.getElementById("disableAnnouncement").addEventListener("click", () => saveAnnouncement(false));
-document.getElementById("anonymizeExpired").addEventListener("click", anonymizeExpiredUsers);
-if ((user.email || "").toLowerCase() !== MASTER_ADMIN_EMAIL) document.getElementById("anonymizeExpired").hidden = true;
+document.getElementById("deleteExpired").addEventListener("click", deleteExpiredUsers);
+if ((user.email || "").toLowerCase() !== MASTER_ADMIN_EMAIL) document.getElementById("deleteExpired").hidden = true;
 
 await Promise.all([loadConfig(), loadUserOptions()]);
 onSnapshot(collection(db, "quizTelemetry"), (snapshot) => renderStats(snapshot.docs), (error) => console.warn("문항 통계 실시간 갱신 실패", error));

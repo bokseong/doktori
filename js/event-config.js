@@ -4,7 +4,7 @@ import { db } from "./firebase.js";
 export const BOOTH_IDS = Object.freeze(["booth1", "booth2", "booth3", "booth4", "booth5", "booth6"]);
 
 export const DEFAULT_EVENT_CONFIG = Object.freeze({
-    notice: "학교 곳곳에 숨은 QR을 찾아 6개의 미션을 완료하세요.",
+    notice: "2·3층 곳곳의 QR 6개 중 3개 이상을 완료하면 QR 미션 성공입니다.",
     participationEnabled: true,
     startAt: null,
     endAt: null,
@@ -45,7 +45,24 @@ export function getMissionAvailability(config, qrId, now = new Date()) {
     return { available: true, message: "" };
 }
 
-export function getBoothAvailability(config, boothId) {
+export function getQrEventAvailability(config, now = new Date()) {
+    if (config.participationEnabled === false) return { available: false, message: "현재 QR 이벤트 참여가 일시 중지되어 있습니다." };
+    const start = config.startAt?.toDate?.();
+    const end = config.endAt?.toDate?.();
+    if (start && now < start) return { available: false, message: `행사는 ${start.toLocaleString("ko-KR")}부터 시작합니다.` };
+    if (end && now > end) return { available: false, message: "행사가 종료되었습니다." };
+    const states = Object.values(config.qrStatus || {});
+    const activeCount = states.filter((state) => state === "active").length;
+    if (!activeCount) return { available: false, message: "현재 진행 가능한 QR이 없습니다." };
+    return { available: true, partial: activeCount < 6, message: activeCount < 6 ? `현재 QR ${activeCount}개를 진행할 수 있습니다.` : "" };
+}
+
+export function getBoothAvailability(config, boothId, now = new Date()) {
+    if (config.participationEnabled === false) return { available: false, message: "현재 행사 참여가 일시 중지되어 있습니다." };
+    const start = config.startAt?.toDate?.();
+    const end = config.endAt?.toDate?.();
+    if (start && now < start) return { available: false, message: "행사 시작 전입니다." };
+    if (end && now > end) return { available: false, message: "행사가 종료되었습니다." };
     const status = config.boothStatus?.[boothId] || "active";
     if (status === "paused") return { available: false, message: "이 부스는 현재 참여를 잠시 받고 있지 않습니다." };
     return { available: true, message: "" };

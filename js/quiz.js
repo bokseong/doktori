@@ -10,7 +10,7 @@ import {
 import { requireUser } from "./auth.js";
 import { db } from "./firebase.js";
 import { getEventConfig, getMissionAvailability } from "./event-config.js";
-import { getPreviousQrId, getStoryCompletionCopy, isStoryMode, isStoryStageUnlocked, STORY_STAGES } from "./story-mode.js";
+import { QR_ROUTES } from "./event-policy.js";
 
 const QUIZZES = Object.freeze({
     qr1: { question: "우리 학교 도서관에서는 1인당 책을 최대 ( )권, ( )주간 빌릴 수 있습니다. 빈칸에 들어갈 말은 무엇일까요?" },
@@ -42,13 +42,12 @@ export async function initQuiz(qrId, pageMode = "normal") {
     const quiz = QUIZZES[qrId];
     if (!quiz) throw new Error(`지원하지 않는 QR ID: ${qrId}`);
     if (!["normal", "story"].includes(pageMode)) throw new Error(`지원하지 않는 QR 페이지 모드: ${pageMode}`);
+    if (pageMode === "story") {
+        location.replace(new URL(`../qr/${QR_ROUTES[qrId]}`, import.meta.url));
+        return;
+    }
 
     const user = await requireUser();
-    const profileSnapshot = await getDoc(doc(db, "users", user.uid));
-    const selectedMode = profileSnapshot.data()?.storyMode;
-    const profileStoryMode = isStoryMode(profileSnapshot.data());
-    const storyActive = pageMode === "story" && profileStoryMode;
-    const story = STORY_STAGES[qrId];
     const form = document.getElementById("quizForm");
     const inlineInputs = [...form.querySelectorAll("[data-answer-part]")];
     const answerInputs = inlineInputs.length ? inlineInputs : [document.getElementById("answerInput")];
@@ -56,22 +55,6 @@ export async function initQuiz(qrId, pageMode = "normal") {
     const message = document.getElementById("quizMessage");
     const submit = document.getElementById("answerButton");
     const progressReference = doc(db, "users", user.uid, "progress", qrId);
-
-    function showStoryPanel() {
-        if (!storyActive || !story) return;
-        const panel = document.createElement("aside");
-        panel.className = "story-panel";
-        panel.innerHTML = `<span class="story-panel__label">BS-001 / 항목 ${story.number}</span><h2>${story.title}</h2><p>${story.lead}</p><p class="story-panel__location">현장 단서: ${story.location}</p>`;
-        document.querySelector(".quiz-card").before(panel);
-    }
-
-    function showStoryResolution() {
-        if (!storyActive || !story) return;
-        const panel = document.createElement("aside");
-        panel.className = "story-resolution";
-        panel.innerHTML = `<strong>항목 ${story.number} 복원 완료</strong><p>${story.record}</p><p>${qrId === "qr6" ? getStoryCompletionCopy() : story.next}</p>`;
-        message.before(panel);
-    }
 
     answerInputs.forEach((answerInput) => {
         if (!answerInput.placeholder) answerInput.placeholder = "정답";
@@ -100,10 +83,8 @@ export async function initQuiz(qrId, pageMode = "normal") {
     navigation.hidden = true;
     const scanAnother = document.createElement("a");
     scanAnother.className = "button button--coral";
-    scanAnother.href = qrId === "qr6" && storyActive
-        ? new URL("../account/mypage.html", import.meta.url).href
-        : new URL("../index.html#scan", import.meta.url).href;
-    scanAnother.textContent = qrId === "qr6" && storyActive ? "나의 기록 확인하기" : "다른 QR 스캔하기";
+    scanAnother.href = new URL("../booths/doktori/participate.html", import.meta.url).href;
+    scanAnother.textContent = "다른 QR 스캔하기";
     const goHome = document.createElement("a");
     goHome.className = "button button--paper";
     goHome.href = new URL("../index.html", import.meta.url).href;
@@ -114,39 +95,6 @@ export async function initQuiz(qrId, pageMode = "normal") {
     document.getElementById("quizQuestion").textContent = qrId === "qr1" && inlineInputs.length
         ? "빈칸을 채워 도서관 이용 규칙을 완성하세요."
         : quiz.question;
-    showStoryPanel();
-
-    if (!selectedMode) {
-        message.textContent = "QR 이벤트 참여하기에서 일반 모드 또는 스토리 모드를 먼저 선택해 주세요.";
-        setAnswerInputsDisabled(true);
-        submit.disabled = true;
-        document.body.style.visibility = "visible";
-        return;
-    }
-
-    if (pageMode === "story" && !profileStoryMode) {
-        message.textContent = "이 페이지는 스토리 모드 전용 QR입니다. 참여하기 페이지에서 스토리 모드를 선택한 뒤 이용해 주세요.";
-        setAnswerInputsDisabled(true);
-        submit.disabled = true;
-        document.body.style.visibility = "visible";
-        return;
-    }
-    if (pageMode === "normal" && profileStoryMode) {
-        message.textContent = "이 페이지는 일반 모드 전용 QR입니다. 스토리 모드 QR을 스캔해 주세요.";
-        setAnswerInputsDisabled(true);
-        submit.disabled = true;
-        document.body.style.visibility = "visible";
-        return;
-    }
-
-    if (storyActive && !(await isStoryStageUnlocked(user.uid, qrId))) {
-        const previousQrId = getPreviousQrId(qrId);
-        message.textContent = `이전 항목이 아직 복원되지 않았습니다. QR ${String(Number(previousQrId.slice(2))).padStart(2, "0")}을(를) 먼저 완료하세요.`;
-        setAnswerInputsDisabled(true);
-        submit.disabled = true;
-        document.body.style.visibility = "visible";
-        return;
-    }
     try {
         const availability = getMissionAvailability(await getEventConfig(), qrId);
         if (!availability.available) {
@@ -156,14 +104,16 @@ export async function initQuiz(qrId, pageMode = "normal") {
         }
     } catch (error) {
         console.warn("행사 설정 확인 실패", error);
+        message.textContent = "행사 운영 상태를 확인하지 못했습니다. 네트워크를 확인한 뒤 새로고침해 주세요.";
+        setAnswerInputsDisabled(true);
+        submit.disabled = true;
     }
     const existing = await getDoc(progressReference);
     if (existing.exists()) {
-        message.textContent = storyActive ? `BS-001의 항목 ${story.number}은(는) 이미 복원되었습니다.` : "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
+        message.textContent = "이미 찾은 QR입니다. 진행도에 기록되어 있습니다.";
         setAnswerInputsDisabled(true);
         submit.disabled = true;
         navigation.hidden = false;
-        showStoryResolution();
     }
     document.body.style.visibility = "visible";
     if (!existing.exists()) input.focus();
@@ -180,6 +130,8 @@ export async function initQuiz(qrId, pageMode = "normal") {
             }
         } catch (error) {
             console.warn("제출 전 행사 설정 확인 실패", error);
+            message.textContent = "행사 운영 상태를 확인하지 못해 제출하지 않았습니다. 네트워크를 확인해 주세요.";
+            return;
         }
         const throttleKey = `doktori-last-attempt-${user.uid}-${qrId}`;
         const lastAttempt = Number(localStorage.getItem(throttleKey) || 0);
@@ -217,16 +169,13 @@ export async function initQuiz(qrId, pageMode = "normal") {
             }
             message.textContent = "2/3 · 진행도를 저장했습니다. 완료 기록을 확인하는 중...";
             await recordQuizTelemetry(user, qrId, "correct");
-            message.textContent = storyActive
-                ? `BS-001의 항목 ${story.number}을(를) 복원했습니다. 다음 단서를 확인하세요.`
-                : "3/3 · 정답입니다! 진행도 저장을 완료했습니다.";
+            message.textContent = "3/3 · 정답입니다! 진행도 저장을 완료했습니다.";
             navigation.hidden = false;
-            showStoryResolution();
         } catch (error) {
             console.error(error);
-            await recordQuizTelemetry(user, qrId, error.code === "permission-denied" ? "incorrect" : "save-error");
+            await recordQuizTelemetry(user, qrId, "save-error");
             message.textContent = error.code === "permission-denied"
-                ? "정답이 아닙니다. 다시 생각해 보세요."
+                ? "정답이 아니거나 보안 확인에 실패했습니다. 입력을 확인한 뒤 다시 시도해 주세요."
                 : "진행도를 저장하지 못했습니다. 네트워크를 확인하고 다시 시도하세요.";
             submit.disabled = false;
             setAnswerInputsDisabled(false);

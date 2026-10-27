@@ -79,10 +79,11 @@
         const route = match[2].toLowerCase();
         const number = (isStory ? STORY_QR_ROUTES : QR_ROUTES)[route];
         if (!number) return null;
+        const normalRoute = Object.keys(QR_ROUTES).find((candidate) => QR_ROUTES[candidate] === number);
         return {
             number,
-            label: `${isStory ? "스토리 " : "일반 "}QR ${String(number).padStart(2, "0")}`,
-            target: new URL(`${document.body.dataset.root || "./"}qr/${isStory ? "story/" : ""}${route}.html`, location.href).href
+            label: `QR ${String(number).padStart(2, "0")}`,
+            target: new URL(`${document.body.dataset.root || "./"}qr/${normalRoute}.html`, location.href).href
         };
     }
 

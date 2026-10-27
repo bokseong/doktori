@@ -14,18 +14,14 @@ import { db } from "./firebase.js";
 
 const user = await requireUser({ allowBlocked: true });
 const [profile, access] = await Promise.all([getMemberProfile(user), getUserAccess(user)]);
-if (access.isGrade2) {
-    location.replace(new URL("../admin/", import.meta.url));
-    await new Promise(() => {});
-}
 const adminModeRequested = new URLSearchParams(location.search).get("admin") === "1";
-if (adminModeRequested && !access.isGrade1) {
+if (adminModeRequested && !access.isAdmin) {
     location.replace(new URL("../index.html", import.meta.url));
     await new Promise(() => {});
 }
-if (access.isGrade1) {
+if (access.isAdmin) {
     onSnapshot(doc(db, "users", user.uid), async () => {
-        if (!(await getUserAccess(user)).isGrade1) location.replace(new URL("../index.html", import.meta.url));
+        if (!(await getUserAccess(user)).isAdmin) location.replace(new URL("../index.html", import.meta.url));
     }, () => {});
 }
 const list = document.getElementById("messageList");
@@ -38,7 +34,7 @@ const conversationUser = document.getElementById("conversationUser");
 const conversationTitle = document.getElementById("conversationTitle");
 const adminIdentityForm = document.getElementById("adminIdentityForm");
 const adminChatName = document.getElementById("adminChatName");
-let selectedConversationUid = access.isGrade1 ? "" : user.uid;
+let selectedConversationUid = access.isAdmin ? "" : user.uid;
 let stopConversation = () => {};
 
 function currentAdminName() {
@@ -46,15 +42,15 @@ function currentAdminName() {
 }
 
 function updateChatIdentity() {
-    document.getElementById("chatIdentity").textContent = access.isGrade1
+    document.getElementById("chatIdentity").textContent = access.isAdmin
         ? `관리자 · ${currentAdminName()}`
         : `${profile.studentNumber} · ${profile.studentName} · 참여자`;
 }
 
 updateChatIdentity();
-document.getElementById("adminLink").hidden = !access.isGrade1;
-document.getElementById("chatTitle").textContent = access.isGrade1 ? "1:1 도움 채팅 관리" : "관리자와 1:1 채팅";
-document.getElementById("chatLead").textContent = access.isGrade1
+document.getElementById("adminLink").hidden = !access.isAdmin;
+document.getElementById("chatTitle").textContent = access.isAdmin ? "1:1 도움 채팅 관리" : "관리자와 1:1 채팅";
+document.getElementById("chatLead").textContent = access.isAdmin
     ? "참여자를 선택해 문의를 확인하고 답변하세요."
     : access.isBlocked
         ? "계정 이용 제한에 관해 관리자에게 문의할 수 있습니다."
@@ -129,7 +125,7 @@ async function initializeAdminPicker() {
     adminIdentityForm.hidden = false;
     adminChatName.value = currentAdminName();
     conversationPicker.hidden = false;
-    const snapshot = await getDocs(collection(db, "users"));
+    const snapshot = await getDocs(query(collection(db, "users"), where("role", "in", ["participant", "member"])));
     const participants = snapshot.docs
         .map((item) => ({ uid: item.id, ...item.data() }))
         .filter((item) => ["participant", "member"].includes(item.role || "member") && item.privacyConsent === true)
@@ -156,7 +152,7 @@ async function initializeAdminPicker() {
 
 adminIdentityForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!access.isGrade1 || !adminIdentityForm.reportValidity()) return;
+    if (!access.isAdmin || !adminIdentityForm.reportValidity()) return;
     const nextName = adminChatName.value.trim();
     const saveButton = adminIdentityForm.querySelector("button");
     saveButton.disabled = true;
@@ -186,11 +182,11 @@ form.addEventListener("submit", async (event) => {
         batch.set(messageReference, {
             conversationUid: selectedConversationUid,
             senderUid: user.uid,
-            studentNumber: access.isGrade1 ? "관리자" : profile.studentNumber,
-            studentName: access.isGrade1 ? currentAdminName() : profile.studentName,
+            studentNumber: access.isAdmin ? "관리자" : profile.studentNumber,
+            studentName: access.isAdmin ? currentAdminName() : profile.studentName,
             senderEmail: user.email || profile.email || "",
             text,
-            senderRole: access.isGrade1 ? "admin" : "participant",
+            senderRole: access.isAdmin ? "admin" : "participant",
             createdAt: serverTimestamp()
         });
         batch.set(doc(db, "chatRateLimits", user.uid), {
@@ -210,7 +206,7 @@ form.addEventListener("submit", async (event) => {
     }
 });
 
-if (access.isGrade1) {
+if (access.isAdmin) {
     try { await initializeAdminPicker(); }
     catch (error) {
         console.error(error);

@@ -7,26 +7,28 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
-    collection,
     doc,
     getDoc,
-    getDocs,
-    limit,
-    query,
     serverTimestamp,
     setDoc,
-    where,
     writeBatch
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
 
 export const MASTER_ADMIN_EMAIL = "github.jwastro09@gmail.com";
-export const PRIVACY_CONSENT_VERSION = "2026-10-19-v2";
+export const PRIVACY_CONSENT_VERSION = "2026-10-28-v3";
+export const TERMS_CONSENT_VERSION = "2026-10-28-v1";
 
 const STUDENT_NUMBER_PATTERN = /^[0-9]{4,20}$/;
 const STUDENT_NAME_PATTERN = /^[가-힣A-Za-z][가-힣A-Za-z .·-]{0,29}$/u;
-const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
-const BOOTH_IDS = Array.from({ length: 6 }, (_, index) => `booth${index + 1}`);
+
+function normalizeIdentityPart(value) {
+    return String(value || "").normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function identityReservationId(studentNumber, studentName) {
+    return `${normalizeIdentityPart(studentNumber)}~${normalizeIdentityPart(studentName)}`;
+}
 
 export function normalizeRole(role) {
     if (role === "admin") return "grade1";
@@ -67,8 +69,11 @@ export function isMemberProfileComplete(profile) {
     return Boolean(
         STUDENT_NUMBER_PATTERN.test(profile?.studentNumber || "")
         && STUDENT_NAME_PATTERN.test(profile?.studentName || "")
+        && profile?.identityReservationId === identityReservationId(profile?.studentNumber, profile?.studentName)
         && profile?.privacyConsent === true
         && profile?.privacyConsentVersion === PRIVACY_CONSENT_VERSION
+        && profile?.termsConsent === true
+        && profile?.termsConsentVersion === TERMS_CONSENT_VERSION
     );
 }
 
@@ -132,16 +137,19 @@ export async function signInWithGoogle() {
     return result.user;
 }
 
-export async function registerMember(user, studentNumber, studentName, privacyConsent) {
+export async function registerMember(user, studentNumber, studentName, privacyConsent, termsConsent) {
     if (!user) {
         throw new Error("로그인한 사용자만 회원 정보를 등록할 수 있습니다.");
     }
     if (privacyConsent !== true) {
         throw new Error("개인정보 수집·이용에 동의해야 참여할 수 있습니다.");
     }
+    if (termsConsent !== true) {
+        throw new Error("독토리 이용약관에 동의해야 참여할 수 있습니다.");
+    }
 
-    const normalizedStudentNumber = String(studentNumber || "").trim();
-    const normalizedStudentName = String(studentName || "").trim();
+    const normalizedStudentNumber = String(studentNumber || "").normalize("NFKC").trim();
+    const normalizedStudentName = String(studentName || "").normalize("NFKC").trim().replace(/\s+/g, " ");
     if (!STUDENT_NUMBER_PATTERN.test(normalizedStudentNumber)) {
         throw new Error("학번은 숫자 4~20자리로 입력해 주세요.");
     }
@@ -154,15 +162,28 @@ export async function registerMember(user, studentNumber, studentName, privacyCo
     if (snapshot.exists() && isAccountBlocked(snapshot.data())) {
         throw new Error("차단된 계정은 회원 정보를 변경할 수 없습니다.");
     }
+    if (snapshot.exists()) {
+        const previous = snapshot.data();
+        const changedIdentity = previous.studentNumber && previous.studentName
+            && (normalizeIdentityPart(previous.studentNumber) !== normalizeIdentityPart(normalizedStudentNumber)
+                || normalizeIdentityPart(previous.studentName) !== normalizeIdentityPart(normalizedStudentName));
+        if (changedIdentity) throw new Error("등록한 학번·이름은 직접 변경할 수 없습니다. 관리자에게 문의해 주세요.");
+    }
+    const reservationId = identityReservationId(normalizedStudentNumber, normalizedStudentName);
     const profile = {
         uid: user.uid,
         email: user.email || "",
         displayName: user.displayName || "",
         studentNumber: normalizedStudentNumber,
         studentName: normalizedStudentName,
+        identityReservationId: reservationId,
         privacyConsent: true,
         privacyConsentVersion: PRIVACY_CONSENT_VERSION,
         privacyConsentAt: serverTimestamp(),
+        termsConsent: true,
+        termsConsentVersion: TERMS_CONSENT_VERSION,
+        termsConsentAt: serverTimestamp(),
+        storyMode: "normal",
         lastLoginAt: serverTimestamp()
     };
 
@@ -174,7 +195,23 @@ export async function registerMember(user, studentNumber, studentName, privacyCo
         profile.role = "grade1";
     }
 
-    await setDoc(reference, profile, { merge: true });
+    const batch = writeBatch(db);
+    batch.set(doc(db, "identityReservations", reservationId), {
+        identityKey: reservationId,
+        uid: user.uid,
+        updatedAt: serverTimestamp()
+    });
+    batch.set(reference, profile, { merge: true });
+    try {
+        await batch.commit();
+    } catch (error) {
+        if (error?.code === "permission-denied") {
+            const duplicate = new Error("이미 존재하는 계정입니다.");
+            duplicate.code = "registration/duplicate-identity";
+            throw duplicate;
+        }
+        throw error;
+    }
     return { ...(snapshot.exists() ? snapshot.data() : {}), ...profile };
 }
 
@@ -212,49 +249,15 @@ export async function logout() {
     location.replace(new URL("../account/signin.html", import.meta.url));
 }
 
-async function deleteOwnedDocuments(collectionName, uid, ownerField = "uid") {
-    while (true) {
-        const snapshot = await getDocs(query(
-            collection(db, collectionName),
-            where(ownerField, "==", uid),
-            limit(300)
-        ));
-        if (snapshot.empty) return;
-        const batch = writeBatch(db);
-        snapshot.docs.forEach((item) => batch.delete(item.ref));
-        await batch.commit();
-        if (snapshot.size < 300) return;
-    }
-}
-
 export async function deleteMemberAccount(user = auth.currentUser) {
     if (!user) throw new Error("로그인한 사용자만 회원 탈퇴를 진행할 수 있습니다.");
     if (isMasterAdmin(user)) throw new Error("마스터 관리자 계정은 사이트에서 탈퇴할 수 없습니다.");
 
     await reauthenticateWithPopup(user, provider);
-    await deleteOwnedDocuments("quizTelemetry", user.uid);
-    await deleteOwnedDocuments("clientErrors", user.uid);
-    await deleteOwnedDocuments("boothReviews", user.uid, "authorUid");
-    const profileBatch = writeBatch(db);
-    QR_IDS.forEach((qrId) => {
-        profileBatch.delete(doc(db, "users", user.uid, "progress", qrId));
-        profileBatch.delete(doc(db, "answerAttempts", `${user.uid}_${qrId}`));
-    });
-    BOOTH_IDS.forEach((boothId) => profileBatch.delete(doc(db, "users", user.uid, "boothParticipation", boothId)));
-    profileBatch.delete(doc(db, "chatRateLimits", user.uid));
-    profileBatch.set(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: "",
-        displayName: "",
-        studentNumber: "0000",
-        studentName: "탈퇴회원",
+    await setDoc(doc(db, "users", user.uid), {
         role: "withdrawn",
-        privacyConsent: false,
-        privacyConsentVersion: "withdrawn",
-        privacyConsentAt: serverTimestamp(),
         withdrawnAt: serverTimestamp(),
         lastActivityAt: serverTimestamp()
-    });
-    await profileBatch.commit();
+    }, { merge: true });
     await deleteUser(user);
 }

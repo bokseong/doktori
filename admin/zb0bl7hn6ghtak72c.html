@@ -64,7 +64,7 @@
             <button id="refreshButton" type="button">데이터 새로고침</button>
         </section>
         <section class="summary" data-admin-view="members" aria-label="참여 현황">
-            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">완주자<strong id="completedUsers">0</strong></div><div class="card">참여자<strong id="participantUsers">0</strong></div><div class="card">차단 계정<strong id="blockedUsers">0</strong></div>
+            <div class="card">전체 사용자<strong id="totalUsers">0</strong></div><div class="card">관리자<strong id="adminUsers">0</strong></div><div class="card">QR 성공<strong id="completedUsers">0</strong></div><div class="card">참여자<strong id="participantUsers">0</strong></div><div class="card">차단 계정<strong id="blockedUsers">0</strong></div>
         </section>
         <section class="shortcut-panel panel" data-admin-view="event" aria-labelledby="shortcutTitle">
             <div class="shortcut-head">
@@ -92,10 +92,10 @@
             <div class="config-grid">
                 <label class="wide">메인 공지<textarea id="eventNotice" maxlength="300"></textarea></label>
                 <label>QR 이벤트 참여 상태<select id="participationEnabled"><option value="true">참여 가능</option><option value="false">참여 불가능</option></select></label><label>시작 시각<input id="eventStartAt" type="datetime-local"></label><label>종료 시각<input id="eventEndAt" type="datetime-local"></label>
-                <label>개인정보 보유 종료 시각<input id="retentionAt" type="datetime-local"></label>
+                <label>개인정보 보유 종료 시각<input id="retentionAt" type="datetime-local" value="2026-10-30T14:00" readonly></label>
             </div>
             <h3>QR별 상태</h3><div id="qrStateGrid" class="qr-state-grid"></div>
-            <div class="actions"><button id="saveEventConfig" class="button--coral" type="button">운영 설정 저장</button><button id="anonymizeExpired" class="button--paper" type="button">보유기간 만료 사용자 익명화</button></div>
+            <div class="actions"><button id="saveEventConfig" class="button--coral" type="button">운영 설정 저장</button><button id="deleteExpired" class="button--paper" type="button">보유기간 만료 데이터 영구 삭제</button></div>
             <p id="configMessage" class="status" role="status"></p>
         </section>
 
@@ -124,11 +124,11 @@
     <script type="module" src="../js/app-ui.js"></script>
     <script type="module" src="../js/admin-tools.js?v=20261023b"></script>
     <script type="module">
-        import { collection, doc, getDocs, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { collection, deleteField, doc, getDocs, onSnapshot, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getUserAccess, logout, MASTER_ADMIN_EMAIL, requireUser } from "../js/auth.js";
         import { db } from "../js/firebase.js";
+        import { hasQrSuccess, QR_IDS } from "../js/event-policy.js";
 
-        const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
         const currentUser = await requireUser();
         const access = await getUserAccess(currentUser);
         const adminContent = document.getElementById("adminContent");
@@ -181,7 +181,7 @@
                 renderRecords();
                 document.getElementById("totalUsers").textContent = String(records.length);
                 document.getElementById("adminUsers").textContent = String(records.filter((item) => ["admin", "grade1", "grade2"].includes(item.role)).length);
-                document.getElementById("completedUsers").textContent = String(records.filter((item) => item.found.length === QR_IDS.length).length);
+                document.getElementById("completedUsers").textContent = String(records.filter((item) => hasQrSuccess(item.found.length)).length);
                 document.getElementById("participantUsers").textContent = String(records.filter((item) => [undefined, "participant", "member"].includes(item.role)).length);
                 document.getElementById("blockedUsers").textContent = String(records.filter((item) => item.accountStatus === "blocked").length);
                 message.textContent = records.length ? `총 ${records.length}명의 정보를 불러왔습니다.` : "등록된 사용자가 없습니다.";
@@ -242,7 +242,9 @@
                 try {
                     const previousRole = record.role || "member";
                     const batch = writeBatch(db);
-                    batch.update(doc(db, "users", record.id), { role: select.value });
+                    const roleUpdate = { role: select.value };
+                    if (select.value === "member") roleUpdate.adminChatName = deleteField();
+                    batch.update(doc(db, "users", record.id), roleUpdate);
                     batch.set(doc(collection(db, "auditLogs")), { actorUid: currentUser.uid, actorEmail: currentUser.email || "", action: "role-updated", targetUid: record.id, qrId: "", details: JSON.stringify({ from: previousRole, to: select.value }), createdAt: serverTimestamp() });
                     await batch.commit();
                     record.role = select.value;

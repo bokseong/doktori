@@ -88,7 +88,6 @@
                 <div class="panel-head"><div><span class="label">MY PROGRESS</span><h2 id="progressTitle" class="section-title">나의 진행률</h2><p>정답을 맞혀 완료된 QR만 표시됩니다.</p></div><strong id="progressScore" class="progress-score">0 / 6</strong></div>
                 <div id="progressTrack" class="progress-track" role="progressbar" aria-label="QR 미션 진행률" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><span id="progressFill"></span></div>
                 <div id="progressItems" class="progress-items" aria-live="polite"></div>
-                <section id="storyRecord" class="story-record" hidden aria-labelledby="storyRecordTitle"><h3 id="storyRecordTitle">BS-001 탐색 카드</h3><p id="storyRecordMessage"></p><div id="storyRecordItems" class="story-record__items"></div></section>
                 <section class="booth-progress" aria-labelledby="boothProgressTitle">
                     <div class="booth-progress__head"><div><span class="label">BOOTH PARTICIPATION</span><h3 id="boothProgressTitle">부스 참여 현황</h3></div><strong id="boothProgressScore" class="booth-progress__score">0 / 6</strong></div>
                     <div id="boothProgressItems" class="booth-progress__items" aria-live="polite"></div>
@@ -123,7 +122,7 @@
                     <li>참여자는 본인의 Google 계정과 정확한 학번·이름을 사용해야 하며, 다른 사람의 계정을 대신 사용하거나 진행 기록을 조작해서는 안 됩니다.</li>
                     <li>QR 위치, 문제와 정답을 무단으로 공개하거나 자동화 도구로 정답을 반복 제출하는 등 행사 운영을 방해하는 행위를 금지합니다.</li>
                     <li>부정 참여 또는 운영 방해가 확인되면 해당 진행 기록을 무효로 처리하거나 참여를 제한할 수 있습니다.</li>
-                    <li>QR 미션 진행률이 100%에 도달한 참여자는 행사 운영자의 확인을 거쳐 안내된 상품을 받을 수 있습니다.</li>
+                    <li>QR 6개 중 3개 이상 또는 현장 부스 3개 이상을 완료하면 행사 성공 조건을 충족합니다.</li>
                     <li>1:1 도움 채팅은 해당 참여자와 관리자만 확인할 수 있습니다. 전화번호, 주소, 비밀번호 등 민감한 개인정보를 게시해서는 안 되며 운영 방해 메시지는 관리자가 삭제할 수 있습니다.</li>
                     <li>점검, 장애 또는 행사 운영상 필요한 경우 서비스 내용이나 이용 시간이 변경될 수 있으며, 중요한 변경 사항은 실시간 공지로 알릴 수 있습니다.</li>
                     <li>개인정보 처리에 관한 사항은 아래 개인정보 수집·이용 안내에 따릅니다.</li>
@@ -136,17 +135,17 @@
                 <dl class="privacy-grid">
                     <dt>수집 목적</dt><dd>참여자 본인 확인, 중복 참여 방지, QR 미션 진행도 저장, 문의 지원, 상품 지급 확인 및 행사 운영</dd>
                     <dt>수집 항목</dt><dd>Firebase UID, Google 이메일, 이름, 학번, QR 진행 기록, 채팅 내용, 상품 수령 여부, 로그인·활동·동의 시각</dd>
-                    <dt>보유 기간</dt><dd id="retentionText">행사 운영을 위해 필요한 기간 동안 보유하며, 관리자가 설정한 보유 종료 시각 이후 익명화·삭제 처리합니다.</dd>
+                    <dt>보유 기간</dt><dd id="retentionText">2026년 10월 28일 00:00부터 10월 30일 14:00까지 익명화하지 않고 보관하며, 보유 종료 후 영구 삭제합니다.</dd>
                     <dt>거부 권리</dt><dd>동의를 거부할 수 있으나, 개인별 진행도 확인에 필요한 필수 정보이므로 미동의 시 행사에 참여할 수 없습니다.</dd>
-                    <dt>회원 탈퇴</dt><dd>아래 회원 탈퇴 기능으로 개인정보와 진행 기록의 삭제 또는 익명화를 요청할 수 있습니다.</dd>
+                    <dt>회원 탈퇴</dt><dd>탈퇴하더라도 행사 기록은 보유 종료 시각까지 익명화하지 않고 보관하며, 이후 영구 삭제합니다.</dd>
                 </dl>
                 <p id="consentState" class="consent-state">동의 상태 확인 중...</p>
             </section>
 
             <section class="info-panel panel danger-zone" aria-labelledby="withdrawTitle">
                 <span class="label">ACCOUNT</span><h2 id="withdrawTitle" class="section-title">회원 탈퇴</h2>
-                <p class="danger-copy">탈퇴하면 Firestore의 개인정보·진행 기록·본인이 작성한 채팅이 삭제 또는 익명화되고 Firebase 로그인 계정도 삭제됩니다. 완료한 QR 진행 기록은 복구할 수 없습니다. 이미 지급된 상품 수령 기록은 중복 지급 방지를 위해 최소 정보로 보관될 수 있습니다.</p>
-                <label class="withdraw-check"><input id="withdrawConsent" type="checkbox"><span>삭제되는 정보와 복구할 수 없다는 점을 확인했습니다.</span></label>
+                <p class="danger-copy">탈퇴하면 로그인 계정은 즉시 삭제되어 더 이상 참여할 수 없습니다. 개인정보·진행 기록·후기·채팅·상품 기록은 2026년 10월 30일 14:00까지 익명화하지 않고 보관한 뒤 영구 삭제합니다.</p>
+                <label class="withdraw-check"><input id="withdrawConsent" type="checkbox"><span>탈퇴 후에도 보유 종료 시각까지 기록이 익명화 없이 보관된다는 점을 확인했습니다.</span></label>
                 <div class="withdraw-actions"><button id="withdrawButton" type="button" disabled>회원 탈퇴</button><p id="withdrawMessage" class="status" role="status"></p></div>
             </section>
         </div>
@@ -161,11 +160,8 @@
     <script type="module">
         import { collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { deleteMemberAccount, getMemberProfile, getUserAccess, isMasterAdmin, logout, requireUser } from "../js/auth.js";
-        import { getEventConfig } from "../js/event-config.js";
         import { db } from "../js/firebase.js";
-        import { isStoryMode, STORY_STAGES } from "../js/story-mode.js";
-
-        const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
+        import { BOOTH_SUCCESS_REQUIRED, hasBoothSuccess, hasQrSuccess, QR_IDS, QR_SUCCESS_REQUIRED } from "../js/event-policy.js";
         const BOOTHS = Object.freeze([
             { id: "booth1", name: "프랑켄슈타인 박사의 도서 대출" },
             { id: "booth2", name: "물약을 완성하라!" },
@@ -182,9 +178,6 @@
         const withdrawConsent = document.getElementById("withdrawConsent");
         const withdrawButton = document.getElementById("withdrawButton");
         const withdrawMessage = document.getElementById("withdrawMessage");
-        const storyRecord = document.getElementById("storyRecord");
-        const storyRecordMessage = document.getElementById("storyRecordMessage");
-        const storyRecordItems = document.getElementById("storyRecordItems");
         const boothProgressItems = document.getElementById("boothProgressItems");
         const boothProgressMessage = document.getElementById("boothProgressMessage");
         let stopProgressListener = () => {};
@@ -198,7 +191,7 @@
         function renderProgress(documents) {
             const completed = new Set(documents.filter((item) => item.data().found === true && QR_IDS.includes(item.id)).map((item) => item.id));
             const count = completed.size;
-            const remaining = QR_IDS.length - count;
+            const remaining = Math.max(0, QR_SUCCESS_REQUIRED - count);
             document.getElementById("progressScore").textContent = `${count} / ${QR_IDS.length}`;
             document.getElementById("progressFill").style.width = `${(count / QR_IDS.length) * 100}%`;
             document.getElementById("progressTrack").setAttribute("aria-valuenow", String(count));
@@ -209,23 +202,9 @@
                 item.textContent = `QR ${String(index + 1).padStart(2, "0")} ${completed.has(qrId) ? "완료" : "미완료"}`;
                 progressItems.append(item);
             });
-            if (isStoryMode(profile)) {
-                storyRecord.hidden = false;
-                storyRecordItems.replaceChildren();
-                storyRecordMessage.textContent = remaining === 0
-                    ? "BS-001 탐색 카드가 완성되었습니다. 다음 책을 펼칠 여섯 개의 출발점을 모두 찾았습니다."
-                    : `현재 ${count}/6 항목을 복원했습니다. 다음 단서는 현재 단계의 QR에서 확인할 수 있습니다.`;
-                QR_IDS.forEach((qrId) => {
-                    const stage = STORY_STAGES[qrId];
-                    const item = document.createElement("article");
-                    item.className = `story-record__item${completed.has(qrId) ? " completed" : ""}`;
-                    item.innerHTML = completed.has(qrId)
-                        ? `<strong>항목 ${stage.number} · ${stage.title}</strong><p>${stage.record}</p>`
-                        : `<strong>항목 ${stage.number} · 잠김</strong><p>이전 항목을 복원하면 내용이 표시됩니다.</p>`;
-                    storyRecordItems.append(item);
-                });
-            }
-            progressMessage.textContent = remaining === 0 ? "모든 QR 미션을 완료했습니다." : `완료까지 ${remaining}개의 QR이 남았습니다.`;
+            progressMessage.textContent = hasQrSuccess(count)
+                ? `QR 미션 성공 조건을 달성했습니다. 총 ${count}개를 완료했습니다.`
+                : `QR 미션 성공까지 ${remaining}개가 남았습니다. 6개 중 ${QR_SUCCESS_REQUIRED}개 이상 완료하면 성공입니다.`;
         }
 
         function renderBoothProgress(documents) {
@@ -247,9 +226,9 @@
                 item.append(title, state);
                 boothProgressItems.append(item);
             });
-            boothProgressMessage.textContent = participatedCount === BOOTHS.length
-                ? "모든 현장 부스 참여가 기록되었습니다."
-                : `현재 ${participatedCount}개 부스의 참여가 기록되었습니다.`;
+            boothProgressMessage.textContent = hasBoothSuccess(participatedCount)
+                ? `부스 참여 성공 조건을 달성했습니다. 총 ${participatedCount}개 부스가 기록되었습니다.`
+                : `현재 ${participatedCount}개 부스가 기록되었습니다. ${BOOTH_SUCCESS_REQUIRED}개 이상 참여하면 성공입니다.`;
         }
 
         function currentAdminName() {
@@ -294,10 +273,6 @@
         document.getElementById("consentState").textContent = profile.privacyConsent === true
             ? `개인정보 수집·이용 동의 완료 · ${formatDate(profile.privacyConsentAt)}`
             : "개인정보 수집·이용에 동의하지 않은 상태입니다.";
-        getEventConfig().then((config) => {
-            const retentionDate = config.retentionAt?.toDate?.();
-            if (retentionDate) document.getElementById("retentionText").textContent = `${new Intl.DateTimeFormat("ko-KR", { dateStyle: "long", timeStyle: "short" }).format(retentionDate)}까지 보유한 뒤 관리자가 익명화·삭제 처리합니다.`;
-        }).catch(() => {});
         document.getElementById("logoutButton").addEventListener("click", logout);
         withdrawConsent.addEventListener("change", () => { withdrawButton.disabled = !withdrawConsent.checked; });
         if (isMasterAdmin(user)) {
@@ -312,11 +287,11 @@
                     withdrawMessage.textContent = "확인 문구가 일치하지 않아 탈퇴를 취소했습니다.";
                     return;
                 }
-                if (!window.confirm("회원정보와 진행 기록을 삭제하며 복구할 수 없습니다. 정말 탈퇴할까요?")) return;
+                if (!window.confirm("로그인 계정은 즉시 삭제되며, 행사 기록은 10월 30일 14:00까지 보관 후 영구 삭제됩니다. 정말 탈퇴할까요?")) return;
 
                 withdrawButton.disabled = true;
                 withdrawConsent.disabled = true;
-                withdrawMessage.textContent = "Google 계정을 다시 확인한 뒤 회원정보를 삭제합니다...";
+                withdrawMessage.textContent = "Google 계정을 다시 확인한 뒤 회원 이용을 종료합니다...";
                 window.__DOKTORI_ACCOUNT_DELETING__ = true;
                 try {
                     await deleteMemberAccount(user);

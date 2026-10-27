@@ -1,6 +1,5 @@
 import {
     collection,
-    collectionGroup,
     doc,
     getDocs,
     onSnapshot,
@@ -30,6 +29,7 @@ const search = document.getElementById("boothSearch");
 const status = document.getElementById("boothStatus");
 let users = [];
 let participation = new Map();
+let stopParticipationListeners = [];
 const participantQuery = query(collection(db, "users"), where("role", "in", ["member", "participant"]));
 
 if (!adminAccess.canManageBooths || !booth) {
@@ -163,21 +163,27 @@ async function loadUsers() {
     users = snapshot.docs
         .map((item) => ({ id: item.id, ...item.data() }))
         .sort((left, right) => (left.studentName || left.email || "").localeCompare(right.studentName || right.email || "", "ko"));
+    stopParticipationListeners.forEach((stop) => stop());
+    stopParticipationListeners = users.map((member) => onSnapshot(
+        doc(db, "users", member.id, "boothParticipation", booth.id),
+        (item) => {
+            if (item.exists()) participation.set(member.id, item.data());
+            else participation.delete(member.id);
+            render();
+        },
+        () => {
+            participation.delete(member.id);
+            render();
+        }
+    ));
     render();
 }
 
 search.addEventListener("input", render);
 await loadUsers();
 const stopUsers = onSnapshot(participantQuery, () => loadUsers(), () => {});
-const stopParticipation = onSnapshot(collectionGroup(db, "boothParticipation"), (snapshot) => {
-    participation = new Map(snapshot.docs
-        .filter((item) => item.id === booth.id)
-        .map((item) => [item.ref.parent.parent?.id, item.data()])
-        .filter(([userId]) => Boolean(userId)));
-    render();
-}, () => {});
 window.addEventListener("pagehide", () => {
     stopUsers();
-    stopParticipation();
+    stopParticipationListeners.forEach((stop) => stop());
 }, { once: true });
 document.body.style.visibility = "visible";

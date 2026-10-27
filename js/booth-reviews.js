@@ -33,7 +33,7 @@ if (root) {
         <form id="boothReviewForm" class="booth-review-form">
             <label for="boothReviewContent">후기 작성<textarea id="boothReviewContent" maxlength="400" placeholder="부스 참여 후기를 남겨 주세요. 개인정보·비방·욕설은 작성하지 마세요." required></textarea></label>
             <div class="booth-review-form__options"><label class="booth-review-form__anonymous"><input id="boothReviewAnonymous" type="checkbox">익명으로 작성</label><button id="boothReviewSubmit" class="button--coral" type="submit">후기 등록</button></div>
-            <p class="booth-review-form__notice">익명 후기는 다른 참가자에게 ‘익명’으로 표시됩니다. 작성한 후기와 1·2급 관리자는 삭제할 수 있습니다.</p>
+            <p class="booth-review-form__notice">익명 후기는 다른 참가자에게 ‘익명’으로 표시되지만 운영을 위해 데이터베이스에는 이름과 UID가 저장됩니다. 작성자 본인 또는 1·2급 관리자가 삭제할 수 있습니다.</p>
         </form>
         <p id="boothReviewStatus" class="booth-review-status" role="status"></p>
         <ol id="boothReviewList" class="booth-review-list"></ol>
@@ -157,10 +157,19 @@ if (root) {
         }
     }
 
-    const reviewQuery = query(collection(db, "boothReviews"), where("boothId", "==", boothId));
-    const stopReviews = onSnapshot(reviewQuery, (snapshot) => renderReviews(snapshot.docs), (error) => {
-        console.error(error);
-        status.textContent = user ? "후기를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요." : status.textContent;
-    });
-    window.addEventListener("pagehide", () => stopReviews(), { once: true });
+    if (user) {
+        const reviewQuery = query(collection(db, "boothReviews"), where("boothId", "==", boothId));
+        const stopReviews = onSnapshot(reviewQuery, (snapshot) => renderReviews(snapshot.docs), (error) => {
+            console.error(error);
+            status.textContent = "후기를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+        });
+        window.addEventListener("pagehide", () => stopReviews(), { once: true });
+    } else {
+        count.textContent = "-";
+        const loginLink = document.createElement("a");
+        loginLink.className = "button button--paper";
+        loginLink.href = new URL(`../account/signin.html?next=${encodeURIComponent(location.pathname + location.search)}`, import.meta.url).href;
+        loginLink.textContent = "로그인하고 후기 보기";
+        status.after(loginLink);
+    }
 }

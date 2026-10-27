@@ -7,25 +7,25 @@
 - 정적 사이트: GitHub Pages
 - 로그인·진행도·정답 검증: Firebase Authentication, Firestore, App Check
 - 진행도·상품 수령 관리: 관리자 전용 Firestore 대시보드
-- 회원 탈퇴: Google 재인증 후 Firestore 개인정보 익명화 및 활동 기록 삭제, Firebase Authentication 계정 삭제
+- 회원 탈퇴: Google 재인증 후 Firebase Authentication 계정 삭제. Firestore 개인정보·활동 기록은 2026-10-30 14:00(KST)까지 익명화 없이 보관한 뒤 마스터 관리자가 영구 삭제
+- 중복 등록 차단: 정규화한 학번·이름 조합 예약 문서를 회원 저장과 같은 batch로 생성하고 보안 규칙에서 조합 일치를 검증
 
 디렉터리 구성:
 
 - `account/`: 로그인, 회원 등록, 내 정보, 차단 안내
 - `admin/`: 1급·2급 관리자 메뉴, 전체 진행률, 부스별 참여·등수 관리, QR 생성기
 - `support/`: 사이트 안내·이용약관, 관리자와의 1:1 채팅
-- `booths/doktori/`: 독토리 부스 상세 안내와 참여 방식 선택
-- `qr/`: 인쇄된 QR과 연결되는 일반·스토리 문제 페이지
+- `booths/doktori/`: 독토리 부스 상세 안내와 QR 보물찾기 진입
+- `qr/`: 인쇄된 QR과 연결되는 문제 페이지 (`qr/story/`의 기존 주소는 일반 문제로 호환 이동)
 - `game/`: 행사 보조 게임
 - `css/`, `js/`: 공통 스타일과 동작 코드 (`js/vendor/`는 외부 라이브러리)
 - `assets/`: 이미지 등 정적 자산
-- `apps-script/`: Firebase 회원 탈퇴 보조 Apps Script
 
 인쇄된 QR 주소의 호환성을 위해 `qr/` 아래 문제 페이지 경로는 변경하지 않습니다.
 
-권한은 `grade1`(1급 관리자), `grade2`(2급 관리자), `member`(일반회원)로 구분합니다. 기존 `admin`과 `participant` 값은 각각 1급 관리자와 일반회원으로 호환 처리됩니다. 2급 관리자는 부스 참여·등수만 관리하며 등급 변경을 포함한 나머지 관리자 기능은 1급 관리자만 사용할 수 있습니다.
+권한은 `grade1`(1급 관리자), `grade2`(2급 관리자), `member`(일반회원)로 구분합니다. 기존 `admin`과 `participant` 값은 각각 1급 관리자와 일반회원으로 호환 처리됩니다. 2급 관리자는 일반회원의 부스 참여 여부만 관리하며 등수·등급 변경을 포함한 나머지 관리자 기능은 1급 관리자만 사용할 수 있습니다.
 
-배포 시 GitHub Pages 파일만 갱신해서는 Firestore 규칙이 바뀌지 않습니다. `firestore.rules`는 Firebase 프로젝트에 별도로 게시하고, Apps Script를 수정한 경우 새 웹 앱 버전을 배포해야 합니다. 특히 회원 탈퇴 기능은 두 배포가 모두 완료되어야 정상 작동합니다.
+배포 시 GitHub Pages 파일만 갱신해서는 Firestore 규칙이 바뀌지 않습니다. `firestore.rules`는 Firebase 프로젝트에 별도로 게시해야 합니다. 보유기간 종료 후 마스터 관리자는 행사 운영 화면의 `보유기간 만료 데이터 영구 삭제`를 실행하고 완료 건수를 확인해야 합니다. Cloud Functions API가 비활성 상태이므로 자동 삭제로 오인하면 안 됩니다.
 
 
 도박(카드게임)<br>

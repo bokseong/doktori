@@ -9,8 +9,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { adminAccess as access, adminUser as user, requireHubEntry } from "./admin-guard.js";
 import { db } from "./firebase.js";
+import { BOOTH_SUCCESS_REQUIRED, hasBoothSuccess, hasEventSuccess, hasQrSuccess, QR_IDS, QR_SUCCESS_REQUIRED } from "./event-policy.js";
 
-const QR_IDS = Array.from({ length: 6 }, (_, index) => `qr${index + 1}`);
 const BOOTHS = Object.freeze([
     { id: "booth1", name: "프랑켄슈타인 박사의 도서 대출" },
     { id: "booth2", name: "물약을 완성하라!" },
@@ -132,16 +132,25 @@ function render() {
             createMemberCell(record, displayStudentNumber(record)),
             createMemberCell(record, record.email || "이메일 없음")
         );
+        const boothCount = Object.values(record.booths).filter((item) => item.participated === true).length;
+        const participated = record.found.length > 0 || boothCount > 0;
         const participation = document.createElement("td");
         const participationBadge = document.createElement("span");
-        participationBadge.className = `badge${record.found.length ? " yes" : ""}`;
-        participationBadge.textContent = record.found.length ? "참여" : "미참여";
+        participationBadge.className = `badge${participated ? " yes" : ""}`;
+        participationBadge.textContent = participated ? "참여" : "미참여";
         participation.append(participationBadge);
-        const boothCount = Object.values(record.booths).filter((item) => item.participated === true).length;
         row.append(participation, createCell(`${record.found.length} / 6`), createCell(`${boothCount} / ${BOOTHS.length}`));
         const rankedBooths = Object.values(record.booths).filter((item) => Number.isInteger(item.rank)).length;
-        const prizeBasis = record.found.length === QR_IDS.length ? "QR 완주" : rankedBooths ? `등수 기록 ${rankedBooths}개` : boothCount ? `부스 참여 ${boothCount}개` : "기록 없음";
-        const prizeEligible = !isAdministrator(record);
+        const qrSuccess = hasQrSuccess(record.found.length);
+        const boothSuccess = hasBoothSuccess(boothCount);
+        const prizeBasis = qrSuccess && boothSuccess
+            ? `QR ${record.found.length}개 · 부스 ${boothCount}개 성공`
+            : qrSuccess
+                ? `QR ${record.found.length}개 성공`
+                : boothSuccess
+                    ? `부스 ${boothCount}개 성공`
+                    : `기준 미달 · QR ${record.found.length}/${QR_SUCCESS_REQUIRED}, 부스 ${boothCount}/${BOOTH_SUCCESS_REQUIRED}`;
+        const prizeEligible = !isAdministrator(record) && hasEventSuccess(record.found.length, boothCount);
         row.append(createCell(prizeEligible ? prizeBasis : "관리자 제외"), createCell(prizeEligible ? (record.received ? "수령 완료" : "미수령") : "대상 아님"));
         const actionCell = document.createElement("td");
         if (prizeEligible) {
@@ -159,7 +168,10 @@ function render() {
     });
     document.getElementById("registeredCount").textContent = String(records.length);
     document.getElementById("startedCount").textContent = String(records.filter((record) => record.found.length > 0 || Object.values(record.booths).some((item) => item.participated === true)).length);
-    document.getElementById("completedCount").textContent = String(records.filter((record) => record.found.length === QR_IDS.length).length);
+    document.getElementById("completedCount").textContent = String(records.filter((record) => {
+        const boothCount = Object.values(record.booths).filter((item) => item.participated === true).length;
+        return hasEventSuccess(record.found.length, boothCount);
+    }).length);
     document.getElementById("receivedCount").textContent = String(records.filter((record) => record.received).length);
     status.textContent = `${filtered.length}명을 표시하고 있습니다.`;
     const selected = records.find((record) => record.id === selectedMemberId);

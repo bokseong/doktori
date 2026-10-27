@@ -1,6 +1,6 @@
-import { doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { doc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { adminAccess, adminUser, requireHubEntry } from "./admin-guard.js";
-import { BOOTH_IDS, DEFAULT_EVENT_CONFIG, getEventConfig, watchEventConfig } from "./event-config.js?v=20261023b";
+import { BOOTH_IDS, watchEventConfig } from "./event-config.js?v=20261027a";
 import { db } from "./firebase.js";
 
 const BOOTHS = Object.freeze([
@@ -18,7 +18,6 @@ const panel = document.getElementById("boothAvailabilityPanel");
 const grid = document.getElementById("boothAvailabilityGrid");
 const save = document.getElementById("saveBoothAvailability");
 const message = document.getElementById("boothAvailabilityMessage");
-let currentConfig = null;
 
 if (!adminAccess.isGrade1) {
     panel.hidden = true;
@@ -38,7 +37,6 @@ if (!adminAccess.isGrade1) {
     panel.hidden = false;
 
     const render = (config) => {
-        currentConfig = config;
         BOOTH_IDS.forEach((boothId) => {
             const select = document.querySelector(`[data-booth-availability="${boothId}"]`);
             if (select) select.value = config.boothStatus?.[boothId] || "active";
@@ -55,15 +53,8 @@ if (!adminAccess.isGrade1) {
             boothId,
             document.querySelector(`[data-booth-availability="${boothId}"]`)?.value === "paused" ? "paused" : "active"
         ]));
-        const config = currentConfig || await getEventConfig();
         try {
-            await setDoc(doc(db, "eventConfig", "current"), {
-                notice: config.notice || DEFAULT_EVENT_CONFIG.notice,
-                participationEnabled: config.participationEnabled !== false,
-                startAt: config.startAt || null,
-                endAt: config.endAt || null,
-                retentionAt: config.retentionAt || null,
-                qrStatus: { ...DEFAULT_EVENT_CONFIG.qrStatus, ...(config.qrStatus || {}) },
+            await updateDoc(doc(db, "eventConfig", "current"), {
                 boothStatus,
                 updatedAt: serverTimestamp(),
                 updatedBy: adminUser.uid
