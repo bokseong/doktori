@@ -160,7 +160,7 @@ service cloud.firestore {
           "privacyConsent", "privacyConsentVersion", "privacyConsentAt",
           "termsConsent", "termsConsentVersion", "termsConsentAt",
           "adminChatName", "accountStatus", "blockReason", "accountStatusAt",
-          "accountStatusBy"
+          "accountStatusBy", "storyMode"
         ])
         && data.studentNumber is string
         && data.studentNumber.matches('^[0-9]{4,20}$')
@@ -172,6 +172,7 @@ service cloud.firestore {
         && (!data.keys().hasAny(["adminChatName"])
           || data.adminChatName.matches('^[가-힣A-Za-z0-9][가-힣A-Za-z0-9 _.\\-]{0,29}$'))
         && (data.get("role", "member") in ["admin", "grade1", "grade2"] || data.get("adminChatName", "") == "")
+        && data.get("storyMode", "normal") in ["normal", "story"]
         && data.get("accountStatus", "active") in ["active", "blocked"]
         && data.get("blockReason", "") is string
         && data.get("blockReason", "").size() <= 200
