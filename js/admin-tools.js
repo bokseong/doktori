@@ -124,6 +124,16 @@ async function loadUserOptions() {
     if ([...userSelect.options].some((option) => option.value === previous)) userSelect.value = previous;
 }
 
+async function refreshUserOptions() {
+    try {
+        await loadUserOptions();
+        clearAdminError();
+    } catch (error) {
+        console.error(error);
+        reportAdminError(error, manualMessage, "참여자 목록을 불러오지 못했습니다.");
+    }
+}
+
 async function setManualProgress(completed) {
     const targetUid = userSelect.value;
     const qrId = qrSelect.value;
@@ -319,9 +329,9 @@ document.getElementById("disableAnnouncement").addEventListener("click", () => s
 document.getElementById("deleteExpired").addEventListener("click", deleteExpiredUsers);
 if ((user.email || "").toLowerCase() !== MASTER_ADMIN_EMAIL) document.getElementById("deleteExpired").hidden = true;
 
-await Promise.all([loadConfig(), loadUserOptions()]);
+await Promise.all([loadConfig(), refreshUserOptions()]);
 onSnapshot(collection(db, "quizTelemetry"), (snapshot) => renderStats(snapshot.docs), (error) => reportAdminError(error, configMessage, "문항 통계를 갱신하지 못했습니다."));
-onSnapshot(collection(db, "users"), loadUserOptions, (error) => reportAdminError(error, manualMessage, "참여자 목록을 갱신하지 못했습니다."));
+onSnapshot(collection(db, "users"), refreshUserOptions, (error) => reportAdminError(error, manualMessage, "참여자 목록을 갱신하지 못했습니다."));
 onSnapshot(doc(db, "announcements", "current"), loadAnnouncement, (error) => reportAdminError(error, document.getElementById("announcementMessage"), "공지 상태를 갱신하지 못했습니다."));
 onSnapshot(query(collection(db, "auditLogs"), orderBy("createdAt", "desc"), limit(20)), (snapshot) => renderAuditLogs(snapshot.docs), (error) => reportAdminError(error, configMessage, "감사 기록을 갱신하지 못했습니다."));
 

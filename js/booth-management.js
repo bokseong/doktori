@@ -183,7 +183,12 @@ async function loadUsers() {
 search.addEventListener("input", render);
 try { await loadUsers(); clearAdminError(); }
 catch (error) { console.error(error); reportAdminError(error, status, "회원 목록을 불러오지 못했습니다."); }
-const stopUsers = onSnapshot(participantQuery, () => loadUsers(), (error) => reportAdminError(error, status, "회원 목록을 갱신하지 못했습니다."));
+const stopUsers = onSnapshot(participantQuery, () => {
+    loadUsers().then(clearAdminError).catch((error) => {
+        console.error(error);
+        reportAdminError(error, status, "회원 목록을 갱신하지 못했습니다.");
+    });
+}, (error) => reportAdminError(error, status, "회원 목록을 갱신하지 못했습니다."));
 window.addEventListener("pagehide", () => {
     stopUsers();
     stopParticipationListeners.forEach((stop) => stop());
