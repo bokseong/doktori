@@ -1,6 +1,5 @@
 import {
     addDoc,
-    arrayUnion,
     collection,
     doc,
     getDoc,
@@ -170,11 +169,6 @@ export async function initQuiz(qrId, pageMode = "normal") {
                     found: true,
                     completedAt: serverTimestamp()
                 });
-                batch.set(doc(db, "users", user.uid), {
-                    uid: user.uid,
-                    completedQrIds: arrayUnion(qrId),
-                    lastActivityAt: serverTimestamp()
-                }, { merge: true });
                 await batch.commit();
             }
             message.textContent = "2/3 · 진행도를 저장했습니다. 완료 기록을 확인하는 중...";
